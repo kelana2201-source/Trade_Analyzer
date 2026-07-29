@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XAUUSD Standalone Analyzer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0e17; --card-bg: #131722; --border-color: #2a2e39;
+      --text-main: #d1d4dc; --text-muted: #787b86;
+      --buy-color: #26a69a; --sell-color: #ef5350; --wait-color: #ffb74d;
+      --info-color: #29b6f6; --glass-bg: rgba(19, 23, 34, 0.7);
+    }
+    * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+    body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 15px; overflow-x: hidden; }
+    .glass-card { background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .form-select, .form-control { background-color: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); }
+    .form-select:focus, .form-control:focus { background-color: var(--bg-dark); color: var(--text-main); border-color: var(--info-color); box-shadow: none; }
+    .btn-analyze { background: linear-gradient(135deg, var(--info-color), #0288d1); border: none; font-weight: 600; }
+    .badge-buy { background-color: rgba(38, 166, 154, 0.15); color: var(--buy-color); border: 1px solid var(--buy-color); }
+    .badge-sell { background-color: rgba(239, 83, 80, 0.15); color: var(--sell-color); border: 1px solid var(--sell-color); }
+    .badge-wait { background-color: rgba(255, 183, 77, 0.15); color: var(--wait-color); border: 1px solid var(--wait-color); }
+    .gauge { position: relative; width: 100%; height: 150px; overflow: hidden; }
+    .gauge-fill { position: absolute; bottom: 0; left: 0; width: 100%; transition: height 0.5s ease; border-radius: 0 0 12px 12px; }
+    .gauge-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 2;}
+    .progress { background-color: var(--bg-dark); height: 8px; border-radius: 4px; }
+    .progress-bar { transition: width 0.5s ease; }
+    #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 23, 0.9); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+    .spinner-custom { width: 50px; height: 50px; border: 4px solid var(--border-color); border-top-color: var(--info-color); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .action-box { padding: 15px; border-radius: 8px; text-align: center; font-weight: 600; font-size: 1.2rem; }
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; }
+    .history-table th, .history-table td { padding: 8px; font-size: 0.85rem; vertical-align: middle; }
+    .hover-card:hover { transform: translateY(-2px); transition: 0.2s; border-color: var(--info-color); }
+    .smc-box { font-size: 0.8rem; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+  <div id="loadingOverlay">
+    <div class="spinner-custom mb-3"></div>
+    <h5 class="text-info">Fetching Live Market Data & Scanning SMC...</h5>
+  </div>
+  <div class="toast-container"></div>
+
+  <div class="container-fluid">
+    <div class="row mb-4">
+      <div class="col-12 text-center">
+        <h3 class="fw-bold text-info mb-0"><i class="fas fa-robot"></i> XAUUSD STANDALONE ANALYZER</h3>
+        <p class="text-muted small mb-0">100% Frontend Engine | Auto-Fetch | LocalStorage History</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- LEFT COLUMN -->
+      <div class="col-lg-4 col-md-12 mb-4">
+        <div class="glass-card hover-card">
+          <h5 class="mb-3"><i class="fas fa-satellite-dish text-info"></i> Market Scanner</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small">Timeframe</label>
+              <select class="form-select" id="timeframe">
+                <option value="1m">M1</option><option value="5m">M5</option><option value="15m">M15</option>
+                <option value="30m">M30</option><option value="1h" selected>H1</option>
+                <option value="4h">H4</option><option value="1d">D1</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small">Modal ($)</label>
+              <input type="number" class="form-control" id="capital" value="10000">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small">Risiko (%)</label>
+              <input type="number" step="0.1" class="form-control" id="risk" value="1.0">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small">Telegram Token (Opsional)</label>
+              <input type="password" class="form-control" id="teleToken" placeholder="Bot Token">
+            </div>
+            <div class="col-md-12">
+              <label class="form-label small">Telegram Chat ID (Opsional)</label>
+              <input type="text" class="form-control" id="teleChat" placeholder="Chat ID">
+            </div>
+          </div>
+          <button id="fetchBtn" class="btn btn-analyze w-100 mt-4 py-2"><i class="fas fa-bolt"></i> SCAN & ANALYZE MARKET</button>
+          
+          <hr class="mt-4" style="border-color: var(--border-color)">
+          <h6 class="text-muted mb-3">SMC Array Status</h6>
+          <div id="smcStatus"><div class="smc-box text-muted">Waiting for scan...</div></div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="col-lg-8 col-md-12">
+        <div class="row mb-3">
+          <div class="col-12">
+            <div class="glass-card hover-card p-2" style="height: 400px;">
+              <div class="tradingview-widget-container" style="height: 100%; width: 100%;">
+                <div id="tradingview_xauusd" style="height: 100%; width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="glass-card hover-card h-100">
+              <h6 class="text-muted text-center">CONFLUENCE SCORE</h6>
+              <div class="gauge">
+                <div id="gaugeFill" class="gauge-fill" style="height: 0%; background: var(--border-color);"></div>
+                <div class="gauge-text">
+                  <span id="gaugeValue" class="fw-bold fs-2">0%</span><br>
+                  <span id="gaugeLabel" class="badge bg-secondary mt-1">WAIT</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="glass-card hover-card h-100">
+              <h6 class="text-muted text-center">TRADING ACTION</h6>
+              <div id="actionBox" class="action-box mt-4 bg-secondary text-white">NO TRADE</div>
+              <p class="text-center small mt-3 mb-0"><i class="fas fa-clock text-info"></i> Update: <span id="updateTime">--:--:--</span></p>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="glass-card hover-card h-100">
+              <h6 class="text-muted text-center">MARKET STATUS</h6>
+              <div class="mt-3">
+                <div class="d-flex justify-content-between mb-2"><span class="small">Price</span><span id="mPrice" class="fw-bold text-info">0.00</span></div>
+                <div class="d-flex justify-content-between mb-2"><span class="small">Trend</span><span id="mTrend" class="fw-bold">-</span></div>
+                <div class="d-flex justify-content-between mb-2"><span class="small">Session</span><span id="mSession" class="fw-bold text-warning">-</span></div>
+                <div class="d-flex justify-content-between mb-2"><span class="small">Volatility</span><span id="mVolatility" class="fw-bold">-</span></div>
+                <div class="d-flex justify-content-between"><span class="small">Regime</span><span id="mRegime" class="fw-bold">-</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-12 mb-3">
+            <div class="glass-card hover-card">
+              <h6 class="text-muted mb-3"><i class="fas fa-clipboard-list"></i> TRADING PLAN & SETUP</h6>
+              <div class="row text-center">
+                <div class="col-md-2 mb-2"><small class="text-muted d-block">Bias</small><span id="pBias" class="badge bg-secondary">-</span></div>
+                <div class="col-md-2 mb-2"><small class="text-muted d-block">Entry</small><span id="pEntry" class="fw-bold text-warning">0.00</span></div>
+                <div class="col-md-2 mb-2"><small class="text-muted d-block">Stop Loss</small><span id="pSL" class="fw-bold text-danger">0.00</span></div>
+                <div class="col-md-2 mb-2"><small class="text-muted d-block">TP 1</small><span id="pTP1" class="fw-bold text-success">0.00</span></div>
+                <div class="col-md-2 mb-2"><small class="text-muted d-block">TP 2</small><span id="pTP2" class="fw-bold text-success">0.00</span></div>
+                <div class="col-md-2 mb-2"><small class="text-muted d-block">TP 3</small><span id="pTP3" class="fw-bold text-success">0.00</span></div>
+              </div>
+              <hr style="border-color: var(--border-color)">
+              <div class="row text-center">
+                <div class="col-md-3"><small class="text-muted d-block">Risk Reward</small><span id="pRR" class="fw-bold text-info">1:0</span></div>
+                <div class="col-md-3"><small class="text-muted d-block">Confidence</small><span id="pConf" class="fw-bold text-info">0%</span></div>
+                <div class="col-md-3"><small class="text-muted d-block">Distance to Entry</small><span id="pDist" class="fw-bold text-warning">0.00</span></div>
+                <div class="col-md-3"><small class="text-muted d-block">Setup Quality</small><span id="pQuality" class="fw-bold text-warning">★☆☆☆☆</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="glass-card hover-card h-100">
+              <h6 class="text-muted mb-3"><i class="fas fa-cogs"></i> ADAPTIVE SCORING BREAKDOWN</h6>
+              <div id="scoringContainer"></div>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <div class="glass-card hover-card h-100">
+              <h6 class="text-muted mb-3"><i class="fas fa-wallet"></i> MONEY MANAGEMENT</h6>
+              <div class="d-flex justify-content-between mb-2"><span>Lot Size</span><span id="mmLot" class="fw-bold text-info">0.00</span></div>
+              <div class="d-flex justify-content-between mb-2"><span>Max Loss ($)</span><span id="mmLoss" class="fw-bold text-danger">$0.00</span></div>
+              <div class="d-flex justify-content-between mb-2"><span>Profit TP1 ($)</span><span id="mmTP1" class="fw-bold text-success">$0.00</span></div>
+              <div class="d-flex justify-content-between mb-2"><span>Profit TP2 ($)</span><span id="mmTP2" class="fw-bold text-success">$0.00</span></div>
+              <div class="d-flex justify-content-between"><span>Profit TP3 ($)</span><span id="mmTP3" class="fw-bold text-success">$0.00</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-12 mb-3">
+            <div class="glass-card hover-card h-100">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="text-muted mb-0"><i class="fas fa-history"></i> ANALYSIS HISTORY (Local Storage)</h6>
+                <button id="clearHistory" class="btn btn-sm btn-outline-danger">Clear</button>
+              </div>
+              <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                <table class="table table-sm history-table">
+                  <thead><tr><th>Time</th><th>Price</th><th>Action</th><th>Signal</th><th>Conf</th></tr></thead>
+                  <tbody id="historyBody"><tr><td colspan="5" class="text-center text-muted">No history yet</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /** STANDALONE FRONTEND ENGINE */
+    const fmt = (num, dec=2) => parseFloat(num).toFixed(dec);
+    
+    function showToast(msg, type='info') {
+      const colorMap = { info: 'text-info', success: 'text-success', error: 'text-danger', warning: 'text-warning' };
+      const toast = `<div class="toast show" role="alert"><div class="toast-header ${colorMap[type]}"><strong class="me-auto">System</strong><button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button></div><div class="toast-body">${msg}</div></div>`;
+      $('.toast-container').append(toast);
+      setTimeout(() => $('.toast').toast('hide'), 4000);
+    }
+
+    // Direct Binance API Fetch (No Backend Needed)
+    async function fetchXAUUSDData(interval) {
+      try {
+        const url = `https://api.binance.com/api/v3/klines?symbol=XAUUSDT&interval=${interval}&limit=150`;
+        const res = await fetch(url);
+        const json = await res.json();
+        
+        const candles = json.map(k => ({
+          open: parseFloat(k[1]), high: parseFloat(k[2]),
+          low: parseFloat(k[3]), close: parseFloat(k[4]), volume: parseFloat(k[5])
+        }));
+
+        const tickerRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=XAUUSDT');
+        const ticker = await tickerRes.json();
+        
+        return { success: true, candles: candles, currentPrice: parseFloat(ticker.price) };
+      } catch (error) {
+        return { success: false, message: error.toString() };
+      }
+    }
+
+    function calcEMA(values, period) {
+      const k = 2 / (period + 1); let ema = values[0];
+      for(let i=1; i<values.length; i++) ema = values[i] * k + ema * (1-k);
+      return ema;
+    }
+    function calcRSI(closes, period=14) {
+      if(closes.length < period) return 50;
+      let gains=0, losses=0;
+      for(let i=closes.length-period; i<closes.length; i++) {
+        const diff = closes[i] - closes[i-1];
+        if(diff >= 0) gains += diff; else losses -= diff;
+      }
+      const rs = (gains/period) / (losses/period || 1);
+      return 100 - (100 / (1 + rs));
+    }
+    function calcATR(candles, period=14) {
+      if(candles.length < period) return 1; let trs = [];
+      for(let i=candles.length-period; i<candles.length; i++) {
+        const tr = Math.max(candles[i].high - candles[i].low, Math.abs(candles[i].high - candles[i-1].close), Math.abs(candles[i].low - candles[i-1].close));
+        trs.push(tr);
+      }
+      return trs.reduce((a,b) => a+b, 0) / period;
+    }
+
+    function analyzeSMC_V3(candles) {
+      let swingHighs = [], swingLows = [], unmitigatedFVG = null;
+      let structure = 'Ranging', score = 50;
+      for(let i=2; i<candles.length-2; i++) {
+        if(candles[i].high > candles[i-1].high && candles[i].high > candles[i-2].high && candles[i].high > candles[i+1].high && candles[i].high > candles[i+2].high) swingHighs.push({ index: i, price: candles[i].high });
+        if(candles[i].low < candles[i-1].low && candles[i].low < candles[i-2].low && candles[i].low < candles[i+1].low && candles[i].low < candles[i+2].low) swingLows.push({ index: i, price: candles[i].low });
+      }
+      const lastSH = swingHighs.length > 0 ? swingHighs[swingHighs.length-1].price : 0;
+      const lastSL = swingLows.length > 0 ? swingLows[swingLows.length-1].price : 0;
+      const currentClose = candles[candles.length-1].close;
+      if(currentClose > lastSH) { structure = 'BOS Bullish'; score = 100; }
+      else if(currentClose < lastSL) { structure = 'BOS Bearish'; score = 0; }
+      else { structure = 'Inside Range'; score = 50; }
+
+      for(let i=candles.length-3; i>=candles.length-10; i--) {
+        if(candles[i].low > candles[i-2].high) {
+          let mitigated = false;
+          for(let j=i+1; j<candles.length; j++) if(candles[j].low <= candles[i-2].high) mitigated = true;
+          if(!mitigated) { unmitigatedFVG = { type: 'Bullish', top: candles[i].low, bottom: candles[i-2].high }; break; }
+        }
+        if(candles[i].high < candles[i-2].low) {
+          let mitigated = false;
+          for(let j=i+1; j<candles.length; j++) if(candles[j].high >= candles[i-2].low) mitigated = true;
+          if(!mitigated) { unmitigatedFVG = { type: 'Bearish', top: candles[i-2].low, bottom: candles[i].high }; break; }
+        }
+      }
+      const mid = (lastSH + lastSL) / 2; let zone = 'Equilibrium';
+      if(currentClose > mid && lastSH !== 0) zone = 'Premium';
+      else if(currentClose < mid && lastSL !== 0) zone = 'Discount';
+      return { structure, zone, score, swingHigh: lastSH, swingLow: lastSL, fvg: unmitigatedFVG };
+    }
+
+    function analyzeTrend(closes) {
+      const ema20 = calcEMA(closes.slice(-20), 20); const ema50 = calcEMA(closes.slice(-50), 50);
+      const ema100 = calcEMA(closes.slice(-100), 100); const ema200 = calcEMA(closes.slice(-200 >= 0 ? -200 : 0), 200);
+      const close = closes[closes.length-1]; let score = 50, trend = 'Sideways';
+      if (ema20 > ema50 && ema50 > ema100 && close > ema200) { trend = 'Bullish'; score = 100; }
+      else if (ema20 < ema50 && ema50 < ema100 && close < ema200) { trend = 'Bearish'; score = 0; }
+      else if (ema20 > ema50) { trend = 'Weak Bullish'; score = 70; }
+      else if (ema20 < ema50) { trend = 'Weak Bearish'; score = 30; }
+      return { trend, score };
+    }
+
+    function analyzeRSI(rsi) {
+      let score = 50, status = 'Neutral';
+      if (rsi < 30) { status = 'Oversold'; score = 80; }
+      else if (rsi > 70) { status = 'Overbought'; score = 20; }
+      else if (rsi > 50) { status = 'Bullish Momentum'; score = 70; }
+      else { status = 'Bearish Momentum'; score = 30; }
+      return { status, score };
+    }
+
+    function analyzeCandle(data) {
+      const { open, high, low, close } = data; const body = Math.abs(close - open); const range = high - low;
+      let pattern = 'Indecisive', score = 50;
+      if (close > open && body > range * 0.6) { pattern = 'Bullish Engulfing'; score = 90; }
+      else if (close < open && body > range * 0.6) { pattern = 'Bearish Engulfing'; score = 10; }
+      else if (body < range * 0.1) { pattern = 'Doji'; score = 50; }
+      return { pattern, score };
+    }
+
+    function analyzeMACDVol(closes, volumes) {
+      const ema12 = calcEMA(closes.slice(-12), 12); const ema26 = calcEMA(closes.slice(-26), 26);
+      const macdHist = ema12 - ema26; let macdScore = macdHist > 0 ? 75 : 25;
+      const lastVol = volumes[volumes.length-1]; const avgVol = volumes.slice(-20).reduce((a,b)=>a+b,0)/20;
+      let volStatus = 'Normal', volScore = 50;
+      if (lastVol > avgVol * 1.5) { volStatus = 'Spike'; volScore = 80; } 
+      else if (lastVol < avgVol * 0.5) { volStatus = 'Weak'; volScore = 30; }
+      return { macdScore, volStatus, volScore };
+    }
+
+    function calculateConfluence(c) {
+      const w = { trend: 0.20, smc: 0.20, rsi: 0.10, candle: 0.10, macd: 0.05, vol: 0.05 };
+      return Math.round((c.trend.score * w.trend) + (c.smc.score * w.smc) + (c.rsi.score * w.rsi) + (c.candle.score * w.candle) + (c.macdVol.macdScore * w.macd) + (c.macdVol.volScore * w.vol));
+    }
+
+    function generatePlan(data, confluence, smc) {
+      const { price, atr, high, low } = data;
+      let
