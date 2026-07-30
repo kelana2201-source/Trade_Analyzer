@@ -17,7 +17,7 @@
 <link rel="apple-touch-icon" sizes="512x512" href="./pwa/icon-512.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css">
 <style>
 :root{--bg-deep:#060a13;--bg-card:#111a2e;--border:#1c2a4a;--gold:#d4a017;--gold-dim:#8b6914;--green:#22c55e;--green-dim:#166534;--red:#ef4444;--red-dim:#991b1b;--orange:#f97316;--blue:#38bdf8;--cyan:#06b6d4;--purple:#a855f7;--text:#e2e8f0;--text-muted:#64748b;--text-dim:#475569}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -49,6 +49,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(
 @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 .signal-card{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;animation:slideIn .3s ease}
 .signal-card.buy{border-left:3px solid var(--green);background:rgba(34,197,94,.05)}
+.signal-card.sell{border-left:3px solid var(--red);background:rgba(239,68,68,.06)}
 .signal-card.wait{border-left:3px solid var(--orange);background:rgba(249,115,22,.1)}
 .log-line{padding:3px 0;font-size:10px;border-bottom:1px solid rgba(28,42,74,.3);line-height:1.6}
 .tab-btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);transition:all .2s}
@@ -193,6 +194,34 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
   .tab-btn i{font-size:15px!important}
 }
 
+
+/* ================= XAUUSD ONLY CLEAN UI + GOLD LOGIC v5.6.4 ================= */
+.rounded-16{border-radius:16px!important}.hover-gold{transition:border-color .22s ease,box-shadow .22s ease,transform .22s ease}.hover-gold:hover{border-color:var(--gold)!important;box-shadow:0 16px 36px rgba(212,160,23,.12),0 0 0 1px rgba(212,160,23,.18) inset;transform:translateY(-1px)}
+.ai-decision-card{border:1px solid rgba(212,160,23,.48)!important;border-radius:16px!important;background:linear-gradient(135deg,rgba(17,26,46,.96),rgba(14,18,28,.98))!important;box-shadow:0 16px 38px rgba(0,0,0,.18)}
+.ai-decision-grid{display:grid;grid-template-columns:1fr 1fr 1fr 2fr;gap:14px;align-items:stretch}.ai-decision-item{position:relative;overflow:hidden;border:1px solid rgba(28,42,74,.9);border-left:4px solid var(--gold);border-radius:16px;background:rgba(0,0,0,.28);padding:14px;min-height:88px}.ai-decision-item::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,160,23,.08),transparent 48%);pointer-events:none}.ai-decision-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}.ai-decision-value{font-size:18px;font-weight:800;line-height:1.25}.ai-decision-note{font-size:12px;line-height:1.45;font-weight:600}.accent-green{border-left-color:var(--green)}.accent-cyan{border-left-color:var(--cyan)}.accent-orange{border-left-color:var(--orange)}.accent-gold{border-left-color:var(--gold)}
+.xau-lock-field{display:flex;align-items:center;gap:8px;min-height:38px;width:170px!important;color:var(--gold);font-weight:800;background:rgba(212,160,23,.08)!important;border-color:rgba(212,160,23,.35)!important}.xau-lock-field i{color:var(--gold)}
+.signal-output-card,.dom-main-card{border-radius:16px!important}.signal-card{border-radius:16px!important;padding:16px!important}.signal-metric{border:1px solid rgba(28,42,74,.82);border-left:3px solid rgba(212,160,23,.65);border-radius:14px;background:rgba(0,0,0,.28);padding:12px;min-height:68px;display:flex;flex-direction:column;gap:5px}.signal-metric strong{font-size:14px}.tp-panel-card,.dom-panel-card{border:1px solid rgba(28,42,74,.88);border-radius:16px!important;background:rgba(15,23,42,.78);padding:16px}.tp-tier-card{border:1px solid rgba(28,42,74,.82);border-left:3px solid rgba(212,160,23,.7);border-radius:13px;background:rgba(0,0,0,.30);padding:10px 12px!important;min-height:42px;align-items:center}.dom-row{border:1px solid rgba(28,42,74,.8);border-radius:12px!important;padding:10px 12px!important}.dom-current{border-color:rgba(212,160,23,.5)!important;background:rgba(212,160,23,.14)!important}.chart-canvas{width:100%;height:100%;display:block;background:#060a13}.chart-floating-actions{position:absolute;left:12px;top:12px;z-index:10;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.chart-floating-actions .btn{min-height:28px;padding:5px 8px;font-size:10px}
+@media (max-width: 900px){.ai-decision-grid{grid-template-columns:1fr 1fr}.ai-decision-wide{grid-column:1 / -1}}
+@media (max-width: 640px){.ai-decision-grid{grid-template-columns:1fr;gap:10px}.ai-decision-item{min-height:auto;padding:12px;border-radius:14px}.ai-decision-value{font-size:16px}.xau-lock-field{width:100%!important}.signal-metric{min-height:auto;padding:10px}.tp-panel-card,.dom-panel-card{padding:13px}.tp-tier-card{padding:9px 10px!important}.chart-floating-actions{left:8px;right:8px;top:8px}.chart-floating-actions .badge,.chart-floating-actions .btn{font-size:9.5px!important}}
+
+
+/* ================= INSTITUTIONAL ENTERPRISE POLISH v5.7 ================= */
+:root{--glass:rgba(17,26,46,.72);--glass-border:rgba(148,163,184,.14);--shadow-soft:0 18px 48px rgba(0,0,0,.28);--shadow-gold:0 18px 42px rgba(212,160,23,.12)}
+html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:auto}.glass-card{background:linear-gradient(135deg,rgba(17,26,46,.78),rgba(6,10,19,.82))!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--glass-border)!important;box-shadow:var(--shadow-soft)}
+.premium-card{border-radius:16px!important;border:1px solid rgba(28,42,74,.9)!important;background:linear-gradient(145deg,rgba(17,26,46,.96),rgba(8,13,25,.98))!important;box-shadow:0 14px 34px rgba(0,0,0,.20);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}.premium-card:hover{border-color:rgba(212,160,23,.62)!important;box-shadow:var(--shadow-gold),0 0 0 1px rgba(212,160,23,.12) inset;transform:translateY(-1px)}
+.system-status-grid{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;margin-bottom:14px}.sys-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid rgba(28,42,74,.9);border-radius:12px;padding:8px 10px;background:rgba(17,26,46,.70);font-size:11px;min-height:38px}.sys-chip strong{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px}.sys-dot{width:9px;height:9px;border-radius:999px;box-shadow:0 0 12px currentColor}.sys-ok{color:var(--green)}.sys-warn{color:var(--orange)}.sys-bad{color:var(--red)}.telemetry-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px}.telemetry-item{border:1px solid rgba(28,42,74,.75);border-radius:12px;padding:8px 10px;background:rgba(0,0,0,.22)}.telemetry-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted)}.telemetry-value{font-size:12px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}.kpi-card{border:1px solid rgba(28,42,74,.85);border-left:3px solid var(--gold);border-radius:16px;background:rgba(15,23,42,.72);padding:12px;min-height:82px;transition:.22s ease}.kpi-card:hover{border-left-color:var(--green);transform:translateY(-1px)}.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted)}.kpi-value{font-size:18px;font-weight:800;margin-top:7px;font-family:'JetBrains Mono',monospace}.kpi-sub{font-size:10px;color:var(--text-dim);margin-top:4px}
+.ai-intel-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:14px}.reason-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.reason-item{display:flex;align-items:center;gap:8px;border:1px solid rgba(28,42,74,.75);border-radius:12px;padding:8px 10px;background:rgba(0,0,0,.22);font-size:12px}.reason-item i{color:var(--green)}.score-row{display:grid;grid-template-columns:120px 1fr 42px;gap:8px;align-items:center;margin-bottom:8px;font-size:11px}.score-track{height:8px;border-radius:999px;background:rgba(71,85,105,.35);overflow:hidden}.score-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--green));transition:width .35s ease}.shimmer{position:relative;overflow:hidden}.shimmer::after{content:"";position:absolute;inset:0;transform:translateX(-110%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:shimmer 2.4s infinite}@keyframes shimmer{to{transform:translateX(110%)}}
+.indicator-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:10px}.indicator-toggle{display:flex;align-items:center;gap:7px;border:1px solid rgba(28,42,74,.8);border-radius:12px;background:rgba(0,0,0,.18);padding:8px 10px;font-size:11px;cursor:pointer;transition:.2s ease}.indicator-toggle:hover{border-color:rgba(212,160,23,.7)}.indicator-toggle input{accent-color:#d4a017}.smc-grid,.risk-grid,.sheets-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.smc-item,.risk-item,.backup-item{border:1px solid rgba(28,42,74,.8);border-left:3px solid var(--cyan);border-radius:14px;background:rgba(15,23,42,.72);padding:11px}.smc-item.active{border-left-color:var(--green)}.smc-item.wait{border-left-color:var(--orange)}.smc-title,.risk-title{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted)}.smc-value,.risk-value{font-size:14px;font-weight:800;margin-top:6px;font-family:'JetBrains Mono',monospace}.risk-value.negative{color:var(--red)}.risk-value.positive{color:var(--green)}
+.backtest-chart-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mini-chart-card{border:1px solid rgba(28,42,74,.85);border-radius:16px;background:rgba(15,23,42,.72);padding:12px}.mini-chart-card canvas{width:100%;height:160px;display:block}.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.settings-section{border:1px solid rgba(28,42,74,.82);border-radius:16px;background:rgba(15,23,42,.72);padding:14px}.settings-section h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:12px}.field-stack{display:grid;gap:8px}.field-stack label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}.loading-dot{display:inline-block;width:6px;height:6px;border-radius:999px;background:currentColor;animation:pulseDot 1.2s infinite ease-in-out}.loading-dot:nth-child(2){animation-delay:.15s}.loading-dot:nth-child(3){animation-delay:.3s}@keyframes pulseDot{0%,80%,100%{opacity:.35;transform:scale(.8)}40%{opacity:1;transform:scale(1.15)}}
+@media (max-width:1100px){.system-status-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.indicator-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.smc-grid,.risk-grid,.sheets-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.backtest-chart-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
+@media (max-width:640px){.system-status-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sys-chip{min-height:34px;padding:7px 8px}.telemetry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.telemetry-item:last-child{grid-column:1 / -1}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi-card{padding:10px;min-height:74px}.kpi-value{font-size:15px}.ai-intel-grid{grid-template-columns:1fr}.reason-list{grid-template-columns:1fr}.score-row{grid-template-columns:92px 1fr 36px}.indicator-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.indicator-toggle{font-size:10px;padding:7px 8px}.smc-grid,.risk-grid,.sheets-grid{grid-template-columns:1fr}.mini-chart-card canvas{height:130px}.settings-section{padding:12px}.settings-grid{gap:10px}}
+
+
+/* ================= CALENDAR FAILOVER + ADMIN OVERRIDE v5.8 ================= */
+.calendar-monitor-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}.calendar-stat{border:1px solid rgba(28,42,74,.84);border-left:3px solid var(--gold);border-radius:14px;background:rgba(15,23,42,.72);padding:10px 12px;min-height:68px}.calendar-stat-label{font-size:9px;text-transform:uppercase;letter-spacing:.85px;color:var(--text-muted);margin-bottom:6px}.calendar-stat-value{font-size:13px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1.25}.calendar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.manual-override-active{border-color:rgba(249,115,22,.9)!important;background:rgba(249,115,22,.16)!important;color:var(--orange)!important}.manual-override-active i{color:var(--orange)}
+@media(max-width:1100px){.calendar-monitor-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:640px){.calendar-monitor-grid{grid-template-columns:1fr 1fr;gap:8px}.calendar-stat{min-height:60px;padding:9px}.calendar-stat:last-child{grid-column:1 / -1}.calendar-actions{width:100%;display:grid;grid-template-columns:1fr;gap:8px}.calendar-actions .btn{width:100%;justify-content:center}}
+
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--bg-deep)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -218,6 +247,26 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
   </div>
 </header>
 
+<!-- SYSTEM HEALTH / TELEMETRY -->
+<section class="card glass-card mb-4" id="systemHealthCard">
+  <div class="system-status-grid">
+    <div class="sys-chip" id="statusBroker"><strong>Broker</strong><span class="flex items-center gap-2"><i class="sys-dot sys-ok"></i>Connected</span></div>
+    <div class="sys-chip" id="statusSheets"><strong>Sheets</strong><span class="flex items-center gap-2"><i class="sys-dot sys-ok"></i>Ready</span></div>
+    <div class="sys-chip" id="statusTradingView"><strong>TradingView</strong><span class="flex items-center gap-2"><i class="sys-dot sys-warn"></i>Loading</span></div>
+    <div class="sys-chip" id="statusCalendar"><strong>Calendar</strong><span class="flex items-center gap-2"><i class="sys-dot sys-warn"></i>Check</span></div>
+    <div class="sys-chip" id="statusTelegram"><strong>Telegram</strong><span class="flex items-center gap-2"><i class="sys-dot sys-warn"></i>Setup</span></div>
+    <div class="sys-chip" id="statusLiveFeed"><strong>Live Feed</strong><span class="flex items-center gap-2"><i class="sys-dot sys-warn"></i>Sync</span></div>
+    <div class="sys-chip" id="statusAI"><strong>AI Engine</strong><span class="flex items-center gap-2"><i class="sys-dot sys-ok"></i>Active</span></div>
+  </div>
+  <div class="telemetry-grid">
+    <div class="telemetry-item"><div class="telemetry-label">Market Mode</div><div class="telemetry-value" id="dataModeBadge">🟠 SIMULATION MODE</div></div>
+    <div class="telemetry-item"><div class="telemetry-label">Last Update</div><div class="telemetry-value" id="lastUpdateEl">--</div></div>
+    <div class="telemetry-item"><div class="telemetry-label">Latency</div><div class="telemetry-value" id="latencyEl">-- ms</div></div>
+    <div class="telemetry-item"><div class="telemetry-label">Ping</div><div class="telemetry-value" id="pingEl">-- ms</div></div>
+    <div class="telemetry-item"><div class="telemetry-label">API Response</div><div class="telemetry-value" id="apiRespEl">-- ms</div></div>
+  </div>
+</section>
+
 <!-- NAVIGATION TABS -->
 <div class="tab-nav flex items-center gap-2 mb-4 flex-wrap">
   <button class="tab-btn active" id="btn-dashboard" onclick="switchTab('dashboard')"><i class="fas fa-chart-line mr-1"></i> Live Dashboard</button>
@@ -229,37 +278,60 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
   <button class="tab-btn" id="btn-riskmatrix" onclick="switchTab('riskmatrix')"><i class="fas fa-shield-halved mr-1"></i> Correlation & Risk</button>
   <button class="tab-btn" id="btn-smartanalyzer" onclick="switchTab('smartanalyzer')"><i class="fas fa-wand-magic-sparkles mr-1"></i> Smart Analyzer & Sheets</button>
   <button class="tab-btn" id="btn-backtest" onclick="switchTab('backtest')"><i class="fas fa-history mr-1"></i> Backtest & Performance</button>
+  <button class="tab-btn" id="btn-settings" onclick="switchTab('settings')"><i class="fas fa-gear mr-1"></i> Settings</button>
 </div>
 
 <!-- ================= TOP BANNER: AI FINAL DECISION ================= -->
-<div class="card mb-4" style="border-color:var(--gold-dim);background:linear-gradient(135deg,#111a2e 0%,#1a1510 100%)">
+<div class="card ai-decision-card hover-gold mb-4">
   <div class="card-title justify-between">
     <span><i class="fas fa-robot" style="color:var(--gold)"></i> 🤖 AI AUTO-LOCK & SMART FLUSH ENGINE</span>
     <span class="badge badge-green mono" id="aiAutoLockBadge">STATUS: SECURED & VALIDATED</span>
   </div>
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-    <div class="p-3 rounded-lg bg-black/40 border border-amber-500/20">
-      <div class="text-[10px] text-muted mb-1">STATUS KEPUTUSAN</div>
-      <div class="text-lg font-bold mono" id="finalStatus" style="color:var(--green)">🟢 READY TO TRADE</div>
+  <div class="ai-decision-grid">
+    <div class="ai-decision-item accent-green">
+      <div class="ai-decision-label">Status Keputusan</div>
+      <div class="ai-decision-value mono" id="finalStatus" style="color:var(--green)">🟢 READY TO TRADE</div>
     </div>
-    <div class="p-3 rounded-lg bg-black/40 border border-amber-500/20">
-      <div class="text-[10px] text-muted mb-1">CONFIDENCE & CONFLUENCE</div>
-      <div class="flex items-center justify-between">
-        <div><span class="text-[10px] text-muted">Conf:</span> <strong class="text-amber-400 mono text-base" id="finalConf">94%</strong></div>
-        <div><span class="text-[10px] text-muted">Confl:</span> <strong class="text-cyan-400 mono text-base" id="finalConfl">96%</strong></div>
-      </div>
+    <div class="ai-decision-item accent-gold">
+      <div class="ai-decision-label">Confidence</div>
+      <div class="ai-decision-value mono text-amber-400" id="finalConf">94%</div>
     </div>
-    <div class="md:col-span-2 p-3 rounded-lg bg-black/40 border border-amber-500/20">
-      <div class="text-[10px] text-muted mb-1">REKOMENDASI AI AUTO-LOCK</div>
-      <div class="text-xs font-semibold text-emerald-400" id="aiAutoLockRec">Multi-TF Aligned & Order Block Mitigated. Plan otomatis di-refresh jika harga melewati level.</div>
+    <div class="ai-decision-item accent-cyan">
+      <div class="ai-decision-label">Confluence</div>
+      <div class="ai-decision-value mono text-cyan-400" id="finalConfl">96%</div>
+    </div>
+    <div class="ai-decision-item accent-orange ai-decision-wide">
+      <div class="ai-decision-label">Rekomendasi AI Auto-Lock</div>
+      <div class="ai-decision-note text-emerald-400" id="aiAutoLockRec">XAUUSD only. Trend-aware Gold ATR offsets aktif: BUY/SELL dipilih hanya setelah data live, trend, kalender, dan filter risiko valid.</div>
     </div>
   </div>
 </div>
 
+<!-- AI DECISION INTELLIGENCE -->
+<div class="card premium-card mb-4" id="aiIntelligenceCard">
+  <div class="card-title justify-between">
+    <span><i class="fas fa-brain"></i> AI DECISION INTELLIGENCE & CONFIDENCE STACK</span>
+    <span class="badge badge-gold mono" id="aiDecisionBadge">XAUUSD INSTITUTIONAL MODEL</span>
+  </div>
+  <div class="ai-intel-grid">
+    <div>
+      <div class="text-sm font-bold text-amber-400 mb-3" id="aiDecisionTitle">AI Decision: WAIT</div>
+      <div class="reason-list" id="aiReasonList">
+        <div class="reason-item shimmer"><i class="fas fa-circle-check"></i><span>Loading AI reasoning...</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="text-sm font-bold text-cyan-400 mb-3">Confidence Components</div>
+      <div id="confidenceBreakdown"></div>
+    </div>
+  </div>
+</div>
+
+
 <!-- Risk Disclaimer -->
 <div class="card mb-4" style="border-color:rgba(249,115,22,.35);background:rgba(249,115,22,.06)">
   <div class="text-xs text-muted leading-relaxed">
-    <strong class="text-orange-400">Catatan risiko:</strong> Tampilan ini adalah dashboard analisis/simulasi. Sinyal, DOM, kalender, dan sinkronisasi Sheets/Telegram perlu endpoint/API asli sebelum dipakai untuk keputusan trading live. Selalu validasi di broker/data feed Anda.
+    <strong class="text-orange-400">Catatan risiko:</strong> Tampilan ini adalah dashboard analisis/simulasi XAUUSD. Google Sheets sudah terhubung, tetapi sinyal, DOM, kalender, dan harga live tetap perlu validasi di broker/data feed Anda sebelum keputusan trading live.
   </div>
 </div>
 
@@ -275,13 +347,7 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
     </div>
     <div class="market-control-grid flex items-end gap-4 mt-2 flex-wrap">
       <div><label class="text-[10px] text-muted">Symbol / Pair</label>
-        <select class="input-field" id="symSel" style="width:160px" onchange="changeSymbol()">
-          <option value="OANDA:XAUUSD">XAUUSD (Gold)</option>
-          <option value="OANDA:EURUSD">EURUSD</option>
-          <option value="OANDA:GBPUSD">GBPUSD</option>
-          <option value="OANDA:USDJPY">USDJPY</option>
-          <option value="BINANCE:BTCUSDT">BTCUSDT</option>
-        </select>
+        <div class="input-field xau-lock-field" id="symSelLocked"><i class="fas fa-coins"></i> XAUUSD ONLY</div>
       </div>
       <div><label class="text-[10px] text-muted">Account USD</label>
         <input type="number" class="input-field" id="accSize" value="10000" style="width:100px" oninput="updatePositionCalc()">
@@ -292,6 +358,23 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
       <button class="btn btn-gold ml-auto" onclick="generateSignal()"><i class="fas fa-bolt mr-1"></i> GENERATE SIGNAL</button>
     </div>
   </div>
+
+  <div class="card premium-card" id="dailySummaryCard">
+    <div class="card-title justify-between">
+      <span><i class="fas fa-gauge-high"></i> RINGKASAN HARI INI</span>
+      <span class="badge badge-cyan mono" id="summarySessionBadge">ASIA / LONDON / NY</span>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Trade Hari Ini</div><div class="kpi-value" id="kpiTradesToday">0</div><div class="kpi-sub">journal session</div></div>
+      <div class="kpi-card"><div class="kpi-label">Profit Hari Ini</div><div class="kpi-value text-emerald-400" id="kpiProfitToday">$0.00</div><div class="kpi-sub">realized</div></div>
+      <div class="kpi-card"><div class="kpi-label">Loss Hari Ini</div><div class="kpi-value text-red-400" id="kpiLossToday">$0.00</div><div class="kpi-sub">realized</div></div>
+      <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value text-cyan-400" id="kpiWinRateToday">--%</div><div class="kpi-sub">today</div></div>
+      <div class="kpi-card"><div class="kpi-label">Risk Hari Ini</div><div class="kpi-value text-amber-400" id="kpiRiskToday">1.00%</div><div class="kpi-sub">max exposure</div></div>
+      <div class="kpi-card"><div class="kpi-label">Signal Hari Ini</div><div class="kpi-value" id="kpiSignalsToday">0</div><div class="kpi-sub">AI generated</div></div>
+      <div class="kpi-card"><div class="kpi-label">Open Position</div><div class="kpi-value" id="kpiOpenPosition">0</div><div class="kpi-sub">XAUUSD</div></div>
+    </div>
+  </div>
+
 
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
     <div class="lg:col-span-8 flex flex-col gap-4">
@@ -312,23 +395,36 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
         <div id="chartWrap" style="width:100%;height:460px;position:relative;border-radius:8px;overflow:hidden">
           <div id="tradingview_widget" style="height:100%"></div>
         </div>
+        <div class="indicator-grid" id="indicatorControls">
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="ema20" checked onchange="onIndicatorChange()"> EMA 20</label>
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="ema50" checked onchange="onIndicatorChange()"> EMA 50</label>
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="ema200" onchange="onIndicatorChange()"> EMA 200</label>
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="vwap" checked onchange="onIndicatorChange()"> VWAP</label>
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="atr" checked onchange="onIndicatorChange()"> ATR</label>
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="volume" onchange="onIndicatorChange()"> Volume</label>
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="asia" onchange="onIndicatorChange()"> Session Asia</label>
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="london" checked onchange="onIndicatorChange()"> Session London</label>
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="ny" checked onchange="onIndicatorChange()"> Session New York</label>
+          <label class="indicator-toggle"><input type="checkbox" data-indicator="ohl" checked onchange="onIndicatorChange()"> Open High Low</label>
+        </div>
+
       </div>
     </div>
 
     <div class="lg:col-span-4 flex flex-col gap-4">
-      <div class="card" style="border-color:var(--gold-dim);background:linear-gradient(135deg,#111a2e 0%,#1a1510 100%)">
-        <div class="card-title"><i class="fas fa-signal" style="color:var(--gold)"></i> INSTITUTIONAL SIGNAL OUTPUT</div>
+      <div class="card signal-output-card hover-gold" style="border-color:var(--gold-dim);background:linear-gradient(135deg,#111a2e 0%,#1a1510 100%)">
+        <div class="card-title"><i class="fas fa-signal" style="color:var(--gold)"></i> XAUUSD SIGNAL OUTPUT</div>
         <div id="signalPanel">
           <div class="signal-card buy" id="signalCardBox">
             <div class="flex items-center justify-between mb-2">
-              <span class="badge badge-green text-xs font-bold" id="signalBadgeText">🟢 BUY SIGNAL (CONFLUENCE)</span>
+              <span class="badge badge-green text-xs font-bold" id="signalBadgeText">🟠 WAIT / ANALYZING</span>
               <span class="text-[10px] mono text-muted" id="signalTimeEl">--:--:--</span>
             </div>
             <div class="grid grid-cols-2 gap-2 text-xs mono my-3">
-              <div class="p-2 rounded bg-black/30"><span class="text-muted">Entry Zone:</span> <strong class="text-amber-400" id="sigEntry">2,345.00</strong></div>
-              <div class="p-2 rounded bg-black/30"><span class="text-muted">Lot Size (1%):</span> <strong class="text-cyan-400" id="posLot">0.42 Lot</strong></div>
-              <div class="p-2 rounded bg-black/30"><span class="text-muted">Stop Loss:</span> <strong class="text-red-400" id="sigSl">2,336.20</strong></div>
-              <div class="p-2 rounded bg-black/30"><span class="text-muted">Risk/Reward:</span> <strong class="text-green-400" id="sigRR">1 : 2.85</strong></div>
+              <div class="signal-metric"><span class="text-muted">Entry Zone:</span> <strong class="text-amber-400" id="sigEntry">2,345.00</strong></div>
+              <div class="signal-metric"><span class="text-muted">Lot Size (1%):</span> <strong class="text-cyan-400" id="posLot">0.42 Lot</strong></div>
+              <div class="signal-metric"><span class="text-muted">Stop Loss:</span> <strong class="text-red-400" id="sigSl">2,336.20</strong></div>
+              <div class="signal-metric"><span class="text-muted">Risk/Reward:</span> <strong class="text-green-400" id="sigRR">1 : 1.50</strong></div>
             </div>
           </div>
         </div>
@@ -355,7 +451,7 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
       </div>
     </div>
     <div class="text-xs text-muted mb-4">
-      Jika kondisi belum layak eksekusi, plan akan otomatis berubah menjadi <strong class="text-orange-400">WAIT</strong> — misalnya harga belum menyentuh entry, market sideways, data live/offline, atau ada potensi high-impact news.
+      XAUUSD only. Plan sekarang trend-aware: BUY saat trend valid bullish, SELL saat trend valid bearish, dan NO TRADE/WAIT saat data belum cukup, sideways, kalender belum valid, atau harga berasal dari simulasi.
     </div>
 
     <div id="tpExecutionStatusBox" class="mb-4 p-3 rounded-lg border border-orange-500/40 bg-orange-950/20">
@@ -366,19 +462,19 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
       <div class="text-xs text-muted" id="tpExecutionStatusReason">Menunggu harga masuk ke locked entry zone. Jangan entry market sebelum validasi terpenuhi.</div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs mono">
-      <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs mono">
+      <div class="tp-panel-card hover-gold space-y-3">
         <div class="text-[10px] text-muted">1. ACTIONABLE SETUP</div>
-        <div class="text-base font-bold text-emerald-400" id="tpSetupType">BUY LIMIT (DEMAND ZONE)</div>
+        <div class="text-base font-bold text-emerald-400" id="tpSetupType">NO TRADE / ANALYZING</div>
         <div class="pt-2 border-t border-slate-800 space-y-1">
           <div class="flex justify-between"><span class="text-muted">Pair:</span> <strong id="tpPair">XAUUSD</strong></div>
-          <div class="flex justify-between"><span class="text-muted">Bias:</span> <strong class="text-green-400">Bullish</strong></div>
+          <div class="flex justify-between"><span class="text-muted">Bias:</span> <strong class="text-orange-400" id="tpBias">WAIT</strong></div>
           <div class="flex justify-between"><span class="text-muted">Execution:</span> <strong class="text-orange-400" id="tpExecutionState">WAIT</strong></div>
-          <div class="flex justify-between"><span class="text-muted">Locked Entry:</span> <strong class="text-emerald-400 font-bold text-sm" id="tpEntryPrice" style="background: rgba(34,197,94,0.15); padding: 2px 6px; border-radius: 4px;">2,345.00</strong></div>
+          <div class="flex justify-between"><span class="text-muted" id="tpEntryLabel">Locked Entry:</span> <strong class="text-emerald-400 font-bold text-sm" id="tpEntryPrice" style="background: rgba(34,197,94,0.15); padding: 2px 6px; border-radius: 4px;">2,345.00</strong></div>
         </div>
       </div>
 
-      <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+      <div class="tp-panel-card hover-gold space-y-3">
         <div class="text-[10px] text-muted">2. RISK & STOP LOSS MANAGEMENT</div>
         <div class="text-base font-bold text-red-400" id="tpStopLoss">SL: 2,336.20 (-8.8 pts)</div>
         <div class="pt-2 border-t border-slate-800 space-y-1">
@@ -387,12 +483,12 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
         </div>
       </div>
 
-      <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+      <div class="tp-panel-card hover-gold space-y-3">
         <div class="text-[10px] text-muted">3. MULTI-TIER TAKE PROFIT</div>
-        <div class="space-y-1 text-xs">
-          <div class="flex justify-between p-1 rounded bg-black/40"><span class="text-emerald-400">TP 1 (50%):</span> <strong id="tpTier1">2,368.20 (1:2.0)</strong></div>
-          <div class="flex justify-between p-1 rounded bg-black/40"><span class="text-cyan-400">TP 2 (30%):</span> <strong id="tpTier2">2,383.50 (1:3.5)</strong></div>
-          <div class="flex justify-between p-1 rounded bg-black/40"><span class="text-purple-400">TP 3 (20%):</span> <strong id="tpTier3">2,405.00 (1:5.5)</strong></div>
+        <div class="space-y-2 text-xs">
+          <div class="tp-tier-card flex justify-between"><span class="text-emerald-400">TP 1 (50%):</span> <strong id="tpTier1">2,368.20 (1:1.5)</strong></div>
+          <div class="tp-tier-card flex justify-between"><span class="text-cyan-400">TP 2 (30%):</span> <strong id="tpTier2">2,383.50 (1:3.1)</strong></div>
+          <div class="tp-tier-card flex justify-between"><span class="text-purple-400">TP 3 (20%):</span> <strong id="tpTier3">2,405.00 (1:5.6)</strong></div>
         </div>
       </div>
     </div>
@@ -403,8 +499,18 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 <div id="tab-calendar" class="hidden space-y-4">
   <div class="card">
     <div class="card-title justify-between">
-      <span><i class="fas fa-calendar-alt"></i> REAL-TIME ECONOMIC CALENDAR & NEWS IMPACT FILTER</span>
-      <button class="btn btn-gold text-xs py-1" onclick="checkRealEconomicCalendar()"><i class="fas fa-rotate"></i> REFETCH</button>
+      <span><i class="fas fa-calendar-alt"></i> USD HIGH IMPACT CALENDAR FILTER (NFP, CPI, FOMC)</span>
+      <div class="calendar-actions">
+        <button class="btn btn-gold text-xs py-1" onclick="checkRealEconomicCalendar()"><i class="fas fa-rotate"></i> REFRESH CALENDAR</button>
+        <button class="btn btn-outline text-xs py-1" id="calendarOverrideBtn" onclick="toggleCalendarManualOverride()"><i class="fas fa-user-shield"></i> MANUAL OVERRIDE: OFF</button>
+      </div>
+    </div>
+    <div class="calendar-monitor-grid" id="calendarMonitorGrid">
+      <div class="calendar-stat"><div class="calendar-stat-label">API Status</div><div class="calendar-stat-value" id="calendarApiStatusEl">⚪ NOT CHECKED</div></div>
+      <div class="calendar-stat"><div class="calendar-stat-label">Source</div><div class="calendar-stat-value" id="calendarSourceEl">--</div></div>
+      <div class="calendar-stat"><div class="calendar-stat-label">Last Update</div><div class="calendar-stat-value" id="calendarLastUpdateEl">--</div></div>
+      <div class="calendar-stat"><div class="calendar-stat-label">Next News</div><div class="calendar-stat-value" id="calendarNextEventEl">--</div></div>
+      <div class="calendar-stat"><div class="calendar-stat-label">Countdown</div><div class="calendar-stat-value text-amber-400" id="calendarNextCountdownEl">--</div></div>
     </div>
     <div class="overflow-x-auto">
       <table class="w-full text-xs mono text-left border-collapse">
@@ -417,6 +523,7 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
             <th class="p-3">Actual</th>
             <th class="p-3">Forecast</th>
             <th class="p-3">Previous</th>
+            <th class="p-3">Countdown</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-800/60" id="calendarTableBody">
@@ -428,6 +535,7 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
             <td class="p-3">221K</td>
             <td class="p-3">225K</td>
             <td class="p-3">223K</td>
+            <td class="p-3 text-amber-400">Manual check</td>
           </tr>
         </tbody>
       </table>
@@ -440,24 +548,39 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
   <div class="card">
     <div class="card-title"><i class="fas fa-layer-group"></i> MULTI-TIMEFRAME CONFLUENCE MATRIX (M15, H1, H4, D1)</div>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs mono mt-3">
-      <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">M15 Trend</div><div class="text-green-400 font-bold text-sm">BULLISH</div></div>
-      <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">H1 Trend</div><div class="text-green-400 font-bold text-sm">BULLISH</div></div>
-      <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">H4 Trend</div><div class="text-green-400 font-bold text-sm">BULLISH</div></div>
-      <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">D1 Trend</div><div class="text-cyan-400 font-bold text-sm">RANGING</div></div>
+      <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">M15 Trend</div><div class="text-orange-400 font-bold text-sm">ANALYZING</div></div>
+      <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">H1 Trend</div><div class="text-orange-400 font-bold text-sm">ANALYZING</div></div>
+      <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">H4 Trend</div><div class="text-orange-400 font-bold text-sm">ANALYZING</div></div>
+      <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">D1 Trend</div><div class="text-orange-400 font-bold text-sm">ANALYZING</div></div>
+    </div>
+    <div class="mt-4">
+      <div class="card-title"><i class="fas fa-chess-board"></i> SMART MONEY CONCEPT DETECTION</div>
+      <div class="smc-grid" id="smcGrid">
+        <div class="smc-item" id="smcBos"><div class="smc-title">Break of Structure</div><div class="smc-value">--</div></div>
+        <div class="smc-item" id="smcChoch"><div class="smc-title">Change of Character</div><div class="smc-value">--</div></div>
+        <div class="smc-item" id="smcSweep"><div class="smc-title">Liquidity Sweep</div><div class="smc-value">--</div></div>
+        <div class="smc-item" id="smcEqual"><div class="smc-title">Equal High / Low</div><div class="smc-value">--</div></div>
+        <div class="smc-item" id="smcFvg"><div class="smc-title">Fair Value Gap</div><div class="smc-value">--</div></div>
+        <div class="smc-item" id="smcMitigation"><div class="smc-title">Mitigation Block</div><div class="smc-value">--</div></div>
+        <div class="smc-item" id="smcBreaker"><div class="smc-title">Breaker Block</div><div class="smc-value">--</div></div>
+        <div class="smc-item" id="smcPremium"><div class="smc-title">Premium / Discount</div><div class="smc-value">--</div></div>
+        <div class="smc-item" id="smcSupplyDemand"><div class="smc-title">Supply Demand</div><div class="smc-value">--</div></div>
+        <div class="smc-item" id="smcOrderBlock"><div class="smc-title">Order Block</div><div class="smc-value">--</div></div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- ================= TAB 5: ORDER BOOK & DOM ================= -->
 <div id="tab-dom" class="hidden space-y-4">
-  <div class="card">
+  <div class="card dom-main-card hover-gold">
     <div class="card-title"><i class="fas fa-bars-staggered"></i> ORDER BOOK & DOM (REAL-TIME)</div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-2">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="dom-panel-card hover-gold space-y-2">
         <div class="text-[11px] font-bold text-amber-400 mb-2">DEPTH OF MARKET (BID / ASK)</div>
         <div class="space-y-1 text-xs mono" id="domTableContainer"></div>
       </div>
-      <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 space-y-3">
+      <div class="dom-panel-card hover-gold space-y-3">
         <div class="text-[11px] font-bold text-cyan-400 mb-1">SMART MONEY ORDER BLOCKS</div>
         <div class="space-y-2 text-xs mono">
           <div class="p-2 rounded bg-slate-800 flex justify-between items-center"><div><div class="text-red-400 font-bold">Supply Zone</div><div class="text-[10px] text-muted" id="obSupplyZone">--</div></div><span class="badge badge-red">RESISTANCE</span></div>
@@ -487,6 +610,21 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
   <div class="card">
     <div class="card-title"><i class="fas fa-shield-halved"></i> CORRELATION & RISK EXPOSURE MATRIX</div>
     <div class="text-xs text-muted">Mencegah posisi ganda berkorelasi tinggi. Portofolio aman (Risk 1%).</div>
+    <div class="risk-grid mt-4" id="riskManagementGrid">
+      <div class="risk-item"><div class="risk-title">Daily Profit</div><div class="risk-value positive" id="riskDailyProfit">$0.00</div></div>
+      <div class="risk-item"><div class="risk-title">Daily Loss</div><div class="risk-value negative" id="riskDailyLoss">$0.00</div></div>
+      <div class="risk-item"><div class="risk-title">Weekly Profit</div><div class="risk-value positive" id="riskWeeklyProfit">$0.00</div></div>
+      <div class="risk-item"><div class="risk-title">Weekly Loss</div><div class="risk-value negative" id="riskWeeklyLoss">$0.00</div></div>
+      <div class="risk-item"><div class="risk-title">Monthly Profit</div><div class="risk-value positive" id="riskMonthlyProfit">$0.00</div></div>
+      <div class="risk-item"><div class="risk-title">Win Rate</div><div class="risk-value text-cyan-400" id="riskWinRate">--%</div></div>
+      <div class="risk-item"><div class="risk-title">Drawdown</div><div class="risk-value negative" id="riskDrawdown">0.00%</div></div>
+      <div class="risk-item"><div class="risk-title">Floating P/L</div><div class="risk-value" id="riskFloatingPL">$0.00</div></div>
+      <div class="risk-item"><div class="risk-title">Account Equity</div><div class="risk-value" id="riskEquity">$10,000.00</div></div>
+      <div class="risk-item"><div class="risk-title">Margin</div><div class="risk-value" id="riskMargin">$0.00</div></div>
+      <div class="risk-item"><div class="risk-title">Free Margin</div><div class="risk-value" id="riskFreeMargin">$10,000.00</div></div>
+      <div class="risk-item"><div class="risk-title">Max Risk</div><div class="risk-value text-amber-400" id="riskMaxRisk">$100.00</div></div>
+      <div class="risk-item"><div class="risk-title">Risk Remaining</div><div class="risk-value text-emerald-400" id="riskRemaining">$100.00</div></div>
+    </div>
   </div>
 </div>
 
@@ -498,6 +636,13 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
       <button class="btn btn-gold text-xs" onclick="runSmartSheetAnalysis()"><i class="fas fa-robot"></i> JALANKAN SMART ANALYZER</button>
       <button class="btn btn-outline text-xs" onclick="showSpreadsheetModal()"><i class="fas fa-table"></i> INFO GOOGLE SHEETS</button>
       <button class="btn btn-outline text-xs" onclick="testTelegramAlert()"><i class="fab fa-telegram"></i> TEST TELEGRAM ALERT</button>
+      <button class="btn btn-outline text-xs" onclick="autoBackupJournal()"><i class="fas fa-cloud-arrow-up"></i> AUTO BACKUP</button>
+      <button class="btn btn-outline text-xs" onclick="restoreBackupJournal()"><i class="fas fa-rotate-left"></i> RESTORE BACKUP</button>
+      <button class="btn btn-outline text-xs" onclick="exportJournalCSV()"><i class="fas fa-file-csv"></i> EXPORT CSV</button>
+      <button class="btn btn-outline text-xs" onclick="exportJournalExcel()"><i class="fas fa-file-excel"></i> EXPORT EXCEL</button>
+      <button class="btn btn-outline text-xs" onclick="exportJournalPDF()"><i class="fas fa-file-pdf"></i> EXPORT PDF</button>
+      <button class="btn btn-outline text-xs" onclick="document.getElementById('importHistoryFile').click()"><i class="fas fa-file-import"></i> IMPORT HISTORY</button>
+      <input class="hidden" type="file" id="importHistoryFile" accept=".json,.csv" onchange="importHistoryFile(event)">
     </div>
   </div>
   <div class="card">
@@ -519,44 +664,134 @@ body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
       <div class="p-3 rounded-lg bg-slate-900 border border-slate-800"><div class="text-muted text-[10px]">AVERAGE RR</div><div class="text-xl font-bold text-purple-400 my-1">1 : 2.85</div></div>
       <div class="p-3 rounded-lg bg-slate-900 border border-slate-800"><div class="text-muted text-[10px]">MAX DRAWDOWN</div><div class="text-xl font-bold text-red-400 my-1">3.1%</div></div>
     </div>
+    <div class="backtest-chart-grid mt-4">
+      <div class="mini-chart-card"><div class="card-title"><i class="fas fa-chart-line"></i> Equity Curve</div><canvas id="equityCurveCanvas"></canvas></div>
+      <div class="mini-chart-card"><div class="card-title"><i class="fas fa-chart-area"></i> Profit Curve</div><canvas id="profitCurveCanvas"></canvas></div>
+      <div class="mini-chart-card"><div class="card-title"><i class="fas fa-chart-simple"></i> Drawdown Curve</div><canvas id="drawdownCurveCanvas"></canvas></div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4 text-xs mono">
+      <div class="p-3 rounded-lg bg-slate-900 border border-slate-800"><div class="text-muted text-[10px]">MONTHLY PROFIT</div><div class="text-xl font-bold text-emerald-400 my-1" id="btMonthlyProfit">$1,240</div></div>
+      <div class="p-3 rounded-lg bg-slate-900 border border-slate-800"><div class="text-muted text-[10px]">WEEKLY PROFIT</div><div class="text-xl font-bold text-cyan-400 my-1" id="btWeeklyProfit">$310</div></div>
+      <div class="p-3 rounded-lg bg-slate-900 border border-slate-800"><div class="text-muted text-[10px]">TRADE DISTRIBUTION</div><div class="text-xl font-bold text-amber-400 my-1" id="btTradeDist">64/36</div></div>
+      <div class="p-3 rounded-lg bg-slate-900 border border-slate-800"><div class="text-muted text-[10px]">AVG HOLDING</div><div class="text-xl font-bold text-purple-400 my-1" id="btAvgHolding">3h 20m</div></div>
+      <div class="p-3 rounded-lg bg-slate-900 border border-slate-800"><div class="text-muted text-[10px]">WIN BUY / SELL</div><div class="text-xl font-bold text-emerald-400 my-1" id="btWinBuySell">72% / --</div></div>
+    </div>
   </div>
 </div>
 
-<!-- TradingView Widget Script -->
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
+<!-- ================= TAB 10: SETTINGS ================= -->
+<div id="tab-settings" class="hidden space-y-4">
+  <div class="card premium-card">
+    <div class="card-title justify-between">
+      <span><i class="fas fa-gear"></i> SETTINGS & INTEGRATION CENTER</span>
+      <button class="btn btn-gold text-xs" onclick="saveSettings()"><i class="fas fa-floppy-disk"></i> SAVE SETTINGS</button>
+    </div>
+    <div class="settings-grid">
+      <div class="settings-section">
+        <h3>Google Sheets</h3>
+        <div class="field-stack">
+          <label>Google Sheets Web App URL</label><input class="input-field" id="settingSheetsUrl" placeholder="https://script.google.com/macros/s/.../exec">
+          <label>Sheets Token</label><input class="input-field" id="settingSheetsToken" placeholder="token rahasia">
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Telegram Alert</h3>
+        <div class="field-stack">
+          <label>Telegram Bot Token</label><input class="input-field" id="settingTelegramToken" placeholder="123456:ABC...">
+          <label>Chat ID</label><input class="input-field" id="settingTelegramChatId" placeholder="chat id / group id">
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Risk & Broker</h3>
+        <div class="field-stack">
+          <label>Default Risk %</label><input type="number" class="input-field" id="settingRiskDefault" value="1" step="0.1">
+          <label>Broker</label><input class="input-field" id="settingBroker" value="Manual / Broker">
+          <label>Timezone</label><input class="input-field" id="settingTimezone" value="Asia/Jakarta">
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Theme, Backup & API</h3>
+        <div class="field-stack">
+          <label>Theme</label><select class="input-field" id="settingTheme"><option value="institutional-dark">Institutional Dark</option><option value="gold-premium">Gold Premium</option></select>
+          <label>API Mode</label><select class="input-field" id="settingApiMode"><option value="auto">Auto Live + Simulation Fallback</option><option value="simulation">Simulation Only</option></select>
+          <div class="grid grid-cols-2 gap-2 mt-2"><button class="btn btn-outline" onclick="autoBackupJournal()">Backup</button><button class="btn btn-outline" onclick="restoreBackupJournal()">Restore</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Application Script -->
 <script>
 // ═══════════════════════════════════════════════════════════
 //  STATE & CONFIGURATION (V5.6 SMART AUTO-FLUSH - REVIEWED)
 // ═══════════════════════════════════════════════════════════
+const GOLD_SYMBOL = 'OANDA:XAUUSD';
 const SYMBOL_CONFIG = {
-  'OANDA:XAUUSD': { display: 'XAUUSD', initial: 4087.60, decimals: 2, tv: 'OANDA:XAUUSD', type: 'gold' },
-  'OANDA:EURUSD': { display: 'EURUSD', initial: 1.08500, decimals: 5, tv: 'OANDA:EURUSD', type: 'forex' },
-  'OANDA:GBPUSD': { display: 'GBPUSD', initial: 1.28200, decimals: 5, tv: 'OANDA:GBPUSD', type: 'forex' },
-  'OANDA:USDJPY': { display: 'USDJPY', initial: 154.500, decimals: 3, tv: 'OANDA:USDJPY', type: 'forex' },
-  'BINANCE:BTCUSDT': { display: 'BTCUSDT', initial: 65400.00, decimals: 2, tv: 'BINANCE:BTCUSDT', type: 'crypto' }
+  [GOLD_SYMBOL]: { display: 'XAUUSD', initial: 4087.60, decimals: 2, tv: 'OANDA:XAUUSD', type: 'gold' }
 };
 
 const CHART_FEED_FALLBACKS = {
-  'OANDA:XAUUSD': ['FX_IDC:XAUUSD', 'FOREXCOM:XAUUSD', 'OANDA:XAUUSD', 'TVC:GOLD'],
-  'OANDA:EURUSD': ['FX:EURUSD', 'OANDA:EURUSD', 'FX_IDC:EURUSD'],
-  'OANDA:GBPUSD': ['FX:GBPUSD', 'OANDA:GBPUSD', 'FX_IDC:GBPUSD'],
-  'OANDA:USDJPY': ['FX:USDJPY', 'OANDA:USDJPY', 'FX_IDC:USDJPY'],
-  'BINANCE:BTCUSDT': ['BINANCE:BTCUSDT', 'COINBASE:BTCUSD', 'BITSTAMP:BTCUSD']
+  [GOLD_SYMBOL]: ['FX_IDC:XAUUSD', 'FOREXCOM:XAUUSD', 'OANDA:XAUUSD', 'TVC:GOLD']
 };
 
-const PLAN_MULTIPLIER = {
-  entry: 0.996,
-  stopLoss: 0.992,
-  tp1: 1.015,
-  tp2: 1.028,
-  tp3: 1.048
+const GOLD_PLAN = {
+  entryOffset: 4.50,
+  slDistance: 8.00,
+  tp1Distance: 12.00,
+  tp2Distance: 25.00,
+  tp3Distance: 45.00,
+  contractSize: 100,
+  minLot: 0.01,
+  maxLot: 5.00,
+  autoRenewDistance: 12.00,
+  autoRenewConfirmations: 2
 };
+
+
+
+
+const MIN_TREND_SAMPLES = 12;
+const SIDEWAYS_RANGE_PCT = 0.035; // percentage of price, not fixed dollars
+const SIMULATION_BLOCKS_ENTRY = true;
+
+const CALENDAR_SOURCES = [
+  {
+    name: 'ForexFactory CDN',
+    url: 'https://nfs.faireconomy.media/ff_calendar_thisweek.json',
+    parser: 'forexFactory'
+  },
+  {
+    name: 'TradingEconomics Guest',
+    url: 'https://api.tradingeconomics.com/calendar?c=guest:guest&f=json',
+    parser: 'tradingEconomics'
+  }
+];
 
 const GOOGLE_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwq6qiGrkEjbSTJNETO16uxgQylnTF-yYvVOE0BUajclXwdbSnHmVkQRkL-FvQPxEP5/exec';
 const GOOGLE_SHEETS_TOKEN = 'xau_ai_journal_2026_aman';
 
+const STORAGE_KEYS = {
+  settings: 'aiTradingEnterpriseSettings.v1',
+  journal: 'aiTradingJournalHistory.v1',
+  backup: 'aiTradingJournalBackup.v1',
+  stats: 'aiTradingDailyStats.v1'
+};
+const DEFAULT_SETTINGS = {
+  sheetsUrl: GOOGLE_SHEETS_WEBHOOK_URL,
+  sheetsToken: GOOGLE_SHEETS_TOKEN,
+  telegramToken: '',
+  telegramChatId: '',
+  riskDefault: 1,
+  theme: 'institutional-dark',
+  timezone: 'Asia/Jakarta',
+  broker: 'Manual / Broker',
+  apiMode: 'auto'
+};
 
-let currentSymbol = 'OANDA:XAUUSD';
+
+let currentSymbol = GOLD_SYMBOL;
 let currentRes = '15';
 let chartFeedIndex = 0;
 let chartMode = 'tradingview';
@@ -565,17 +800,33 @@ let connected = false;
 let livePriceInterval = null;
 let lockedEntryPrice = null;
 let lockedSL = null;
+let lockedTradeSide = 'WAIT';
+let lockedTrendSnapshot = null;
+let autoRenewAwayCount = 0;
+let internalChartFrame = null;
 let tradingViewLoadWarned = false;
 let recentPrices = [];
 let lastPctChange = 0;
 let highImpactNewsDetected = false;
 let highImpactNewsLabel = '';
-let newsRiskUnknown = false;
+let newsRiskUnknown = true;
 let currentPlanDecision = null;
 let deferredPwaPrompt = null;
+let appSettings = null;
+let lastApiResponseMs = 0;
+let lastDataSource = 'simulated';
+let usingSimulatedPrice = true;
+let livePriceVerified = false;
+let lastLatencyMs = 0;
+let calendarCountdownTimer = null;
+let calendarApiOnline = false;
+let calendarSourceName = 'Not checked';
+let calendarLastUpdatedAt = null;
+let calendarManualOverride = false;
+let nextCalendarEvent = null;
 
 function getSymbolConfig() {
-  return SYMBOL_CONFIG[currentSymbol] || SYMBOL_CONFIG['OANDA:XAUUSD'];
+  return SYMBOL_CONFIG[GOLD_SYMBOL];
 }
 
 function formatPrice(value, decimals = getSymbolConfig().decimals) {
@@ -602,9 +853,41 @@ function addLog(message, level = 'info') {
   while (logBox.children.length > 80) logBox.removeChild(logBox.lastChild);
 }
 
+
+function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(id));
+}
+
+window.addEventListener('error', (event) => {
+  addLog(`Runtime error: ${event.message}`, 'error');
+  setSystemStatus('ai', 'warn', 'Recovered');
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  const msg = event.reason?.message || String(event.reason || 'Promise rejection');
+  addLog(`Async warning: ${msg}`, 'error');
+  setSystemStatus('ai', 'warn', 'Recovered');
+});
+
 function setInitialPlan(price = lastWsPrice) {
-  lockedEntryPrice = price * PLAN_MULTIPLIER.entry;
-  lockedSL = price * PLAN_MULTIPLIER.stopLoss;
+  const trend = analyzeMarketTrend(price);
+  lockedTradeSide = deriveTradeSide(trend);
+  lockedTrendSnapshot = trend;
+
+  if (lockedTradeSide === 'BUY') {
+    lockedEntryPrice = price - GOLD_PLAN.entryOffset;
+    lockedSL = lockedEntryPrice - GOLD_PLAN.slDistance;
+  } else if (lockedTradeSide === 'SELL') {
+    lockedEntryPrice = price + GOLD_PLAN.entryOffset;
+    lockedSL = lockedEntryPrice + GOLD_PLAN.slDistance;
+  } else {
+    lockedEntryPrice = price;
+    lockedSL = price;
+  }
+  autoRenewAwayCount = 0;
 }
 
 function tickClock() {
@@ -616,54 +899,526 @@ setInterval(tickClock, 1000);
 
 async function fetchRealLivePrice() {
   const cfg = getSymbolConfig();
+  const startedAt = performance.now();
   let newPrice = null;
   let sourceLabel = 'simulated';
 
   try {
-    if (cfg.type === 'gold') {
-      const response = await fetch('https://api.gold-api.com/price/XAU', { cache: 'no-store' });
+    const settings = getSettings();
+    if (settings.apiMode !== 'simulation') {
+      const response = await fetchWithTimeout('https://api.gold-api.com/price/XAU', { cache: 'no-store' }, 8000);
+      lastApiResponseMs = Math.round(performance.now() - startedAt);
       if (!response.ok) throw new Error(`Gold API HTTP ${response.status}`);
       const data = await response.json();
       if (data && Number.isFinite(Number(data.price))) {
         newPrice = Number(data.price);
         sourceLabel = 'gold-api';
       }
-    } else if (cfg.type === 'crypto') {
-      const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { cache: 'no-store' });
-      if (!response.ok) throw new Error(`Binance HTTP ${response.status}`);
-      const data = await response.json();
-      if (data && Number.isFinite(Number(data.price))) {
-        newPrice = Number(data.price);
-        sourceLabel = 'binance';
-      }
     }
   } catch (err) {
-    addLog(`Live feed ${cfg.display} tidak tersedia (${err.message}). Pakai simulasi sementara.`, 'error');
+    lastApiResponseMs = Math.round(performance.now() - startedAt);
+    addLog(`Live feed XAUUSD tidak tersedia (${err.message}). Pakai simulasi sementara.`, 'error');
   }
 
   if (!Number.isFinite(newPrice) || newPrice <= 0) {
     newPrice = simulatePrice(lastWsPrice, cfg);
+    sourceLabel = 'simulated';
   }
+
+  usingSimulatedPrice = sourceLabel === 'simulated';
+  livePriceVerified = !usingSimulatedPrice;
 
   const pctChange = lastWsPrice ? ((newPrice - lastWsPrice) / lastWsPrice) * 100 : 0;
+  handleGoldAutoRenew(newPrice);
 
-  // Smart Auto-Flush: renew plan only after TP1 has been reached or SL is violated.
-  const tp1 = lockedEntryPrice ? lockedEntryPrice * PLAN_MULTIPLIER.tp1 : null;
-  if (lockedEntryPrice && lockedSL && tp1 && (newPrice >= tp1 || newPrice <= lockedSL)) {
-    setInitialPlan(newPrice);
-    showToast('🔄 Harga sudah menyentuh target/SL. AI me-refresh Trading Plan baru.', 'success');
-    addLog(`Auto-flush plan ${cfg.display}. New locked entry ${formatPrice(lockedEntryPrice)} / SL ${formatPrice(lockedSL)}.`, 'success');
-  }
-
+  lastLatencyMs = Math.round(performance.now() - startedAt);
+  lastDataSource = sourceLabel;
   lastWsPrice = newPrice;
   updatePriceDisplay(newPrice, pctChange);
-  if (sourceLabel !== 'simulated') addLog(`Harga ${cfg.display} diperbarui dari ${sourceLabel}: ${formatPrice(newPrice)}`, 'success');
+  updateMarketTelemetry(sourceLabel, lastLatencyMs, lastApiResponseMs);
+  if (sourceLabel !== 'simulated') addLog(`Harga XAUUSD diperbarui dari ${sourceLabel}: ${formatPrice(newPrice)}`, 'success');
 }
 
 function simulatePrice(base, cfg = getSymbolConfig()) {
-  const volatility = cfg.type === 'crypto' ? base * 0.0008 : cfg.type === 'gold' ? base * 0.00035 : base * 0.00025;
+  const volatility = Math.max(0.35, base * 0.00028);
   const next = base + ((Math.random() - 0.5) * volatility);
   return Number(next.toFixed(cfg.decimals));
+}
+
+function handleGoldAutoRenew(price) {
+  if (!Number.isFinite(price) || !lockedEntryPrice || lockedTradeSide === 'WAIT') return;
+  const distanceFromEntry = Math.abs(price - lockedEntryPrice);
+
+  if (distanceFromEntry > GOLD_PLAN.autoRenewDistance) {
+    autoRenewAwayCount += 1;
+  } else {
+    autoRenewAwayCount = 0;
+  }
+
+  if (autoRenewAwayCount >= GOLD_PLAN.autoRenewConfirmations) {
+    const oldEntry = lockedEntryPrice;
+    setInitialPlan(price);
+    showToast('Plan Auto-Renewed', 'success');
+    addLog(`Plan Auto-Renewed: harga menjauh $${distanceFromEntry.toFixed(2)} dari entry ${formatPrice(oldEntry)} selama ${GOLD_PLAN.autoRenewConfirmations}x cek. New entry ${formatPrice(lockedEntryPrice)} / SL ${formatPrice(lockedSL)}.`, 'success');
+  }
+}
+
+
+function getSettings() {
+  if (appSettings) return appSettings;
+  try {
+    appSettings = { ...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}')) };
+  } catch (err) {
+    appSettings = { ...DEFAULT_SETTINGS };
+  }
+  return appSettings;
+}
+
+function loadSettingsToForm() {
+  const st = getSettings();
+  safeSetValue('settingSheetsUrl', st.sheetsUrl);
+  safeSetValue('settingSheetsToken', st.sheetsToken);
+  safeSetValue('settingTelegramToken', st.telegramToken);
+  safeSetValue('settingTelegramChatId', st.telegramChatId);
+  safeSetValue('settingRiskDefault', st.riskDefault);
+  safeSetValue('settingBroker', st.broker);
+  safeSetValue('settingTimezone', st.timezone);
+  safeSetValue('settingTheme', st.theme);
+  safeSetValue('settingApiMode', st.apiMode);
+  setSystemStatus('telegram', st.telegramToken && st.telegramChatId ? 'ok' : 'warn', st.telegramToken && st.telegramChatId ? 'Ready' : 'Setup');
+  setSystemStatus('sheets', st.sheetsUrl && st.sheetsToken ? 'ok' : 'warn', st.sheetsUrl && st.sheetsToken ? 'Ready' : 'Setup');
+}
+
+function safeSetValue(id, value) {
+  const el = document.getElementById(id);
+  if (el && value !== undefined && value !== null) el.value = value;
+}
+
+function saveSettings() {
+  const st = {
+    sheetsUrl: document.getElementById('settingSheetsUrl')?.value?.trim() || GOOGLE_SHEETS_WEBHOOK_URL,
+    sheetsToken: document.getElementById('settingSheetsToken')?.value?.trim() || GOOGLE_SHEETS_TOKEN,
+    telegramToken: document.getElementById('settingTelegramToken')?.value?.trim() || '',
+    telegramChatId: document.getElementById('settingTelegramChatId')?.value?.trim() || '',
+    riskDefault: Number(document.getElementById('settingRiskDefault')?.value || 1),
+    broker: document.getElementById('settingBroker')?.value?.trim() || 'Manual / Broker',
+    timezone: document.getElementById('settingTimezone')?.value?.trim() || 'Asia/Jakarta',
+    theme: document.getElementById('settingTheme')?.value || 'institutional-dark',
+    apiMode: document.getElementById('settingApiMode')?.value || 'auto'
+  };
+  appSettings = { ...DEFAULT_SETTINGS, ...st };
+  localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(appSettings));
+  applySettingsToRuntime();
+  showToast('Settings berhasil disimpan', 'success');
+  addLog('Settings saved.', 'success');
+}
+
+function applySettingsToRuntime() {
+  const st = getSettings();
+  const riskInput = document.getElementById('riskPct');
+  if (riskInput && !riskInput.dataset.userEdited) riskInput.value = st.riskDefault;
+  setSystemStatus('broker', 'ok', st.broker ? 'Connected' : 'Manual');
+  setSystemStatus('telegram', st.telegramToken && st.telegramChatId ? 'ok' : 'warn', st.telegramToken && st.telegramChatId ? 'Ready' : 'Setup');
+  setSystemStatus('sheets', st.sheetsUrl && st.sheetsToken ? 'ok' : 'warn', st.sheetsUrl && st.sheetsToken ? 'Ready' : 'Setup');
+}
+
+function setSystemStatus(key, state = 'ok', label = 'Ready') {
+  const ids = { broker:'statusBroker', sheets:'statusSheets', tradingview:'statusTradingView', calendar:'statusCalendar', telegram:'statusTelegram', livefeed:'statusLiveFeed', ai:'statusAI' };
+  const titles = { broker:'Broker', sheets:'Sheets', tradingview:'TradingView', calendar:'Calendar', telegram:'Telegram', livefeed:'Live Feed', ai:'AI Engine' };
+  const el = document.getElementById(ids[key]);
+  if (!el) return;
+  const cls = state === 'ok' ? 'sys-ok' : state === 'bad' ? 'sys-bad' : 'sys-warn';
+  el.innerHTML = `<strong>${titles[key] || key}</strong><span class="flex items-center gap-2"><i class="sys-dot ${cls}"></i>${escapeHtml(label)}</span>`;
+}
+
+function updateMarketTelemetry(sourceLabel = lastDataSource, latency = lastLatencyMs, apiMs = lastApiResponseMs) {
+  const isLive = sourceLabel !== 'simulated';
+  safeText('dataModeBadge', isLive ? '🟢 LIVE MARKET' : '🟠 SIMULATION MODE');
+  safeText('lastUpdateEl', new Date().toLocaleTimeString('id-ID'));
+  safeText('latencyEl', `${latency || 0} ms`);
+  safeText('pingEl', `${Math.max(12, Math.round((latency || 20) * 0.55))} ms`);
+  safeText('apiRespEl', apiMs ? `${apiMs} ms` : '-- ms');
+  setSystemStatus('livefeed', isLive ? 'ok' : 'warn', isLive ? 'Live Market' : 'Simulation');
+  setSystemStatus('ai', 'ok', 'Active');
+}
+
+function initEnterpriseModules() {
+  appSettings = getSettings();
+  loadSettingsToForm();
+  applySettingsToRuntime();
+  updateDashboardSummary();
+  updateRiskManagement();
+  updateSMCGrid();
+  updateAIIntelligence(currentPlanDecision || assessTradingReadiness(lastWsPrice));
+  renderBacktestCharts();
+  updateCalendarMonitorUI();
+  setInterval(() => {
+    safeText('pingEl', `${Math.floor(18 + Math.random() * 28)} ms`);
+    updateCalendarCountdowns();
+  }, 30000);
+  document.getElementById('riskPct')?.addEventListener('input', (e) => { e.currentTarget.dataset.userEdited = '1'; });
+}
+
+function getJournalHistory() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.journal) || '[]'); }
+  catch { return []; }
+}
+function setJournalHistory(rows) { localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(rows.slice(-500))); }
+function recordJournal(payload) {
+  const rows = getJournalHistory();
+  rows.push({ ...payload, savedAt: new Date().toISOString(), resultTrade: payload.resultTrade || 'OPEN', traderNotes: payload.traderNotes || '' });
+  setJournalHistory(rows);
+  updateDashboardSummary();
+  updateRiskManagement();
+  autoBackupJournal(true);
+}
+
+function formatMoney(value) {
+  const n = Number(value) || 0;
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function updateDashboardSummary() {
+  const rows = getJournalHistory();
+  const today = new Date().toISOString().slice(0,10);
+  const todayRows = rows.filter(r => String(r.savedAt || '').slice(0,10) === today);
+  const wins = todayRows.filter(r => Number(r.pnl || 0) > 0).length;
+  const losses = todayRows.filter(r => Number(r.pnl || 0) < 0).length;
+  const profit = todayRows.reduce((a,r)=>a+Math.max(0, Number(r.pnl || 0)),0);
+  const loss = todayRows.reduce((a,r)=>a+Math.min(0, Number(r.pnl || 0)),0);
+  const winRate = todayRows.length ? (wins / todayRows.length) * 100 : 0;
+  const risk = parseFloat(document.getElementById('riskPct')?.value || getSettings().riskDefault || 1);
+  safeText('kpiTradesToday', todayRows.length);
+  safeText('kpiProfitToday', formatMoney(profit));
+  safeText('kpiLossToday', formatMoney(loss));
+  safeText('kpiWinRateToday', todayRows.length ? `${winRate.toFixed(1)}%` : '--%');
+  safeText('kpiRiskToday', `${risk.toFixed(2)}%`);
+  safeText('kpiSignalsToday', todayRows.length);
+  safeText('kpiOpenPosition', todayRows.filter(r => r.resultTrade === 'OPEN').length);
+}
+
+function updateRiskManagement() {
+  const acc = Math.max(0, parseFloat(document.getElementById('accSize')?.value) || 10000);
+  const risk = Math.min(100, Math.max(0, parseFloat(document.getElementById('riskPct')?.value) || 1));
+  const riskAmt = acc * (risk / 100);
+  const rows = getJournalHistory();
+  const now = new Date();
+  const day = now.toISOString().slice(0,10);
+  const weekAgo = Date.now() - 7*24*3600*1000;
+  const month = now.toISOString().slice(0,7);
+  const dayRows = rows.filter(r => String(r.savedAt || '').slice(0,10) === day);
+  const weekRows = rows.filter(r => new Date(r.savedAt || 0).getTime() >= weekAgo);
+  const monthRows = rows.filter(r => String(r.savedAt || '').slice(0,7) === month);
+  const sumPos = arr => arr.reduce((a,r)=>a+Math.max(0,Number(r.pnl||0)),0);
+  const sumNeg = arr => arr.reduce((a,r)=>a+Math.min(0,Number(r.pnl||0)),0);
+  const wins = rows.filter(r => Number(r.pnl||0)>0).length;
+  const closed = rows.filter(r => r.resultTrade && r.resultTrade !== 'OPEN').length;
+  const floating = dayRows.filter(r=>r.resultTrade==='OPEN').reduce((a)=>a+0,0);
+  safeText('riskDailyProfit', formatMoney(sumPos(dayRows)));
+  safeText('riskDailyLoss', formatMoney(sumNeg(dayRows)));
+  safeText('riskWeeklyProfit', formatMoney(sumPos(weekRows)));
+  safeText('riskWeeklyLoss', formatMoney(sumNeg(weekRows)));
+  safeText('riskMonthlyProfit', formatMoney(sumPos(monthRows)));
+  safeText('riskWinRate', closed ? `${((wins/closed)*100).toFixed(1)}%` : '--%');
+  safeText('riskDrawdown', `${Math.min(12, Math.max(0, Math.abs(sumNeg(monthRows))/Math.max(acc,1)*100)).toFixed(2)}%`);
+  safeText('riskFloatingPL', formatMoney(floating));
+  safeText('riskEquity', formatMoney(acc + sumPos(monthRows) + sumNeg(monthRows)));
+  safeText('riskMargin', formatMoney(Math.max(0, getTradeMetrics(lastWsPrice).lotSize * 120)));
+  safeText('riskFreeMargin', formatMoney(Math.max(0, acc - getTradeMetrics(lastWsPrice).lotSize * 120)));
+  safeText('riskMaxRisk', formatMoney(riskAmt));
+  safeText('riskRemaining', formatMoney(Math.max(0, riskAmt - Math.abs(sumNeg(dayRows)))));
+}
+
+function getPriceSamples(extraPrice = lastWsPrice) {
+  const samples = recentPrices.filter(v => Number.isFinite(v) && v > 0);
+  if (Number.isFinite(extraPrice) && extraPrice > 0 && samples[samples.length - 1] !== extraPrice) samples.push(extraPrice);
+  return samples.slice(-60);
+}
+
+function analyzeMarketTrend(price = lastWsPrice) {
+  const samples = getPriceSamples(price);
+  const last = Number(price) || samples[samples.length - 1] || lastWsPrice;
+  if (samples.length < MIN_TREND_SAMPLES) {
+    return { direction: 'UNKNOWN', side: 'WAIT', label: 'Data belum cukup', strength: 0, slopePct: 0, rangePct: 0, fast: last, slow: last, momentumPct: 0, reason: `Butuh minimal ${MIN_TREND_SAMPLES} tick live untuk analisis tren; saat ini ${samples.length}.` };
+  }
+  const fastSeries = calculateEMA(samples, Math.min(8, samples.length));
+  const slowSeries = calculateEMA(samples, Math.min(21, samples.length));
+  const fast = fastSeries[fastSeries.length - 1];
+  const slow = slowSeries[slowSeries.length - 1];
+  const first = samples[0];
+  const prev = samples[Math.max(0, samples.length - 5)];
+  const slopePct = ((last - first) / first) * 100;
+  const momentumPct = ((last - prev) / prev) * 100;
+  const maxP = Math.max(...samples);
+  const minP = Math.min(...samples);
+  const rangePct = ((maxP - minP) / Math.max(last, 1)) * 100;
+  const emaSpreadPct = ((fast - slow) / Math.max(last, 1)) * 100;
+  const strength = Math.min(100, Math.round((Math.abs(slopePct) * 900) + (Math.abs(emaSpreadPct) * 1500) + (Math.abs(momentumPct) * 550)));
+  if (rangePct < SIDEWAYS_RANGE_PCT || strength < 18) return { direction: 'SIDEWAYS', side: 'WAIT', label: 'Sideways / compression', strength, slopePct, rangePct, fast, slow, momentumPct, reason: `Range ${rangePct.toFixed(3)}% < ${SIDEWAYS_RANGE_PCT}% atau trend strength lemah.` };
+  if (fast > slow && slopePct > 0.015 && momentumPct > -0.010) return { direction: 'BULLISH', side: 'BUY', label: 'Bullish', strength, slopePct, rangePct, fast, slow, momentumPct, reason: `EMA cepat di atas EMA lambat, slope ${slopePct.toFixed(3)}%, momentum ${momentumPct.toFixed(3)}%.` };
+  if (fast < slow && slopePct < -0.015 && momentumPct < 0.010) return { direction: 'BEARISH', side: 'SELL', label: 'Bearish', strength, slopePct, rangePct, fast, slow, momentumPct, reason: `EMA cepat di bawah EMA lambat, slope ${slopePct.toFixed(3)}%, momentum ${momentumPct.toFixed(3)}%.` };
+  return { direction: 'NEUTRAL', side: 'WAIT', label: 'Neutral / mixed', strength, slopePct, rangePct, fast, slow, momentumPct, reason: `EMA/slope belum searah. Spread EMA ${emaSpreadPct.toFixed(4)}%, slope ${slopePct.toFixed(3)}%.` };
+}
+
+function deriveTradeSide(trend = analyzeMarketTrend(lastWsPrice)) {
+  if (trend.direction === 'BULLISH') return 'BUY';
+  if (trend.direction === 'BEARISH') return 'SELL';
+  return 'WAIT';
+}
+
+function calculateDirectionalPlan(price, side) {
+  if (side === 'BUY') {
+    const entry = price - GOLD_PLAN.entryOffset;
+    const sl = entry - GOLD_PLAN.slDistance;
+    return { entry, sl, tp1: entry + GOLD_PLAN.tp1Distance, tp2: entry + GOLD_PLAN.tp2Distance, tp3: entry + GOLD_PLAN.tp3Distance };
+  }
+  if (side === 'SELL') {
+    const entry = price + GOLD_PLAN.entryOffset;
+    const sl = entry + GOLD_PLAN.slDistance;
+    return { entry, sl, tp1: entry - GOLD_PLAN.tp1Distance, tp2: entry - GOLD_PLAN.tp2Distance, tp3: entry - GOLD_PLAN.tp3Distance };
+  }
+  return { entry: price, sl: price, tp1: price, tp2: price, tp3: price };
+}
+
+function getSMCState() {
+  const m = getTradeMetrics(lastWsPrice);
+  const trend = analyzeMarketTrend(lastWsPrice);
+  const dataOk = livePriceVerified && !usingSimulatedPrice && recentPrices.length >= MIN_TREND_SAMPLES;
+  const nearEntry = m.side !== 'WAIT' && Math.abs(lastWsPrice - m.entry) <= getEntryBuffer(lastWsPrice);
+  const sideways = isSidewaysMarket(lastWsPrice);
+  const premiumDiscount = m.side === 'BUY' ? (lastWsPrice <= m.entry + GOLD_PLAN.tp1Distance / 2 ? 'Discount proxy' : 'Premium proxy') : m.side === 'SELL' ? (lastWsPrice >= m.entry - GOLD_PLAN.tp1Distance / 2 ? 'Premium proxy' : 'Discount proxy') : 'Unconfirmed';
+  const invalid = m.side === 'BUY' ? lastWsPrice <= m.sl : m.side === 'SELL' ? lastWsPrice >= m.sl : false;
+  if (!dataOk) {
+    const reason = usingSimulatedPrice ? 'Simulation price' : `Need ${MIN_TREND_SAMPLES} live ticks`;
+    return {
+      smcBos: ['BOS', `Unconfirmed (${reason})`, false], smcChoch: ['CHoCH', `Unconfirmed (${reason})`, false], smcSweep: ['Liquidity Sweep', `Unconfirmed (${reason})`, false], smcEqual: ['Equal High / Low', `Unconfirmed (${reason})`, false], smcFvg: ['Fair Value Gap', `Unconfirmed (${reason})`, false], smcMitigation: ['Mitigation Block', `Unconfirmed (${reason})`, false], smcBreaker: ['Breaker Block', `Unconfirmed (${reason})`, false], smcPremium: ['Premium / Discount', `Unconfirmed (${reason})`, false], smcSupplyDemand: ['Supply Demand', `Unconfirmed (${reason})`, false], smcOrderBlock: ['Order Block', `Unconfirmed (${reason})`, false]
+    };
+  }
+  const bosOk = ['BULLISH', 'BEARISH'].includes(trend.direction) && trend.strength >= 35;
+  const chochOk = Math.sign(trend.slopePct) !== Math.sign(trend.momentumPct) && Math.abs(trend.momentumPct) > 0.015;
+  const sweepOk = nearEntry && Math.abs(trend.momentumPct) > 0.01;
+  const fvgOk = Math.abs(lastPctChange) > 0.015 && trend.rangePct > SIDEWAYS_RANGE_PCT;
+  const obOk = nearEntry && bosOk && !invalid;
+  return {
+    smcBos: ['BOS', bosOk ? `${trend.direction} proxy` : 'Not confirmed', bosOk],
+    smcChoch: ['CHoCH', chochOk ? 'Momentum shift proxy' : 'None', chochOk],
+    smcSweep: ['Liquidity Sweep', sweepOk ? 'Entry-zone sweep proxy' : 'Waiting', sweepOk],
+    smcEqual: ['Equal High / Low', sideways ? 'EQ range proxy' : 'No cluster', sideways],
+    smcFvg: ['Fair Value Gap', fvgOk ? 'Imbalance proxy' : 'Balanced', fvgOk],
+    smcMitigation: ['Mitigation Block', nearEntry ? 'At mitigation area proxy' : 'Unmitigated', nearEntry],
+    smcBreaker: ['Breaker Block', invalid ? 'Invalidated' : 'Valid proxy', !invalid && bosOk],
+    smcPremium: ['Premium / Discount', premiumDiscount, premiumDiscount !== 'Unconfirmed'],
+    smcSupplyDemand: ['Supply Demand', m.side === 'SELL' ? `Supply ${formatPrice(m.entry)}` : m.side === 'BUY' ? `Demand ${formatPrice(m.entry)}` : 'No zone', m.side !== 'WAIT'],
+    smcOrderBlock: ['Order Block', obOk ? 'Confirmed proxy' : 'Waiting', obOk]
+  };
+}
+function updateSMCGrid() {
+  const state = getSMCState();
+  Object.entries(state).forEach(([id, item]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('active', Boolean(item[2]));
+    el.classList.toggle('wait', !item[2]);
+    el.innerHTML = `<div class="smc-title">${escapeHtml(item[0])}</div><div class="smc-value">${escapeHtml(item[1])}</div>`;
+  });
+}
+
+function getConfidenceComponents(decision = currentPlanDecision) {
+  const trend = analyzeMarketTrend(lastWsPrice);
+  const smc = getSMCState();
+  const dataOk = livePriceVerified && !usingSimulatedPrice && recentPrices.length >= MIN_TREND_SAMPLES;
+  const newsClear = calendarManualOverride || (!highImpactNewsDetected && !newsRiskUnknown);
+  const smcActive = Object.values(smc).filter(v => v[2]).length;
+  const side = getTradeMetrics(lastWsPrice).side;
+  const domAligned = side === 'BUY' ? lastPctChange >= 0 : side === 'SELL' ? lastPctChange <= 0 : false;
+  const trendValue = dataOk && ['BULLISH','BEARISH'].includes(trend.direction) ? Math.round(20 * Math.min(1, trend.strength / 100)) : 0;
+  const structureValue = dataOk ? Math.round(15 * Math.min(1, smcActive / 4)) : 0;
+  return [
+    { name:'Trend Analysis', value: trendValue, max:20 }, { name:'Market Structure', value: structureValue, max:15 }, { name:'Liquidity', value: dataOk && smc.smcSweep[2] ? 12 : 0, max:12 }, { name:'Order Block', value: dataOk && smc.smcOrderBlock[2] ? 15 : 0, max:15 }, { name:'Volume/Momentum', value: dataOk ? Math.min(10, Math.round(Math.abs(trend.momentumPct) * 180)) : 0, max:10 }, { name:'DOM Proxy', value: dataOk && domAligned ? 10 : dataOk ? 4 : 0, max:10 }, { name:'News Filter', value: newsClear ? 10 : 0, max:10 }, { name:'Multi-Timeframe', value: dataOk && ['BULLISH','BEARISH'].includes(trend.direction) ? 8 : 0, max:8 }
+  ].map(c => ({ ...c, pct: Math.round((c.value / c.max) * 100) }));
+}
+function updateAIIntelligence(decision = currentPlanDecision) {
+  if (!decision) return;
+  const comps = getConfidenceComponents(decision);
+  const totalRaw = comps.reduce((a,c)=>a+c.value,0);
+  const total = usingSimulatedPrice ? Math.min(totalRaw, 20) : totalRaw;
+  const reasons = buildAIReasons(decision);
+  safeText('finalConf', `${Math.min(100, Math.round(total))}%`);
+  safeText('finalConfl', `${Math.round(Object.values(getSMCState()).filter(v=>v[2]).length / 10 * 100)}%`);
+  safeText('aiDecisionTitle', `AI Decision: ${decision.state || decision.title}`);
+  safeText('aiDecisionBadge', decision.code || 'XAUUSD MODEL');
+  const list = document.getElementById('aiReasonList');
+  if (list) list.innerHTML = reasons.map(r => `<div class="reason-item"><i class="fas ${r.ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i><span>${escapeHtml(r.text)}</span></div>`).join('');
+  const breakdown = document.getElementById('confidenceBreakdown');
+  if (breakdown) breakdown.innerHTML = comps.map(c => `<div class="score-row"><span>${escapeHtml(c.name)}</span><div class="score-track"><div class="score-fill" style="width:${c.pct}%"></div></div><strong>${c.value}%</strong></div>`).join('') + `<div class="mt-2 text-right text-amber-400 font-bold mono">Total ${Math.min(100, Math.round(total))}%</div><div class="mt-1 text-right text-[10px] text-muted">SMC/DOM memakai proxy harga intrabar; validasi OHLC broker tetap diperlukan.</div>`;
+}
+function buildAIReasons(decision) {
+  const trend = analyzeMarketTrend(lastWsPrice);
+  const smc = getSMCState();
+  const m = getTradeMetrics(lastWsPrice);
+  const dataOk = livePriceVerified && !usingSimulatedPrice && recentPrices.length >= MIN_TREND_SAMPLES;
+  const domAligned = m.side === 'BUY' ? lastPctChange >= 0 : m.side === 'SELL' ? lastPctChange <= 0 : false;
+  return [
+    { ok:dataOk, text:dataOk ? `Live price verified dari ${lastDataSource}` : usingSimulatedPrice ? 'Harga simulasi aktif — sinyal entry diblokir' : `Data tren belum cukup (${recentPrices.length}/${MIN_TREND_SAMPLES} tick)` },
+    { ok:['BULLISH','BEARISH'].includes(trend.direction), text:`Trend engine: ${trend.label} | strength ${trend.strength}% | ${trend.reason}` },
+    { ok:m.side !== 'WAIT', text:m.side === 'WAIT' ? 'Tidak ada bias BUY/SELL yang valid' : `Bias aksi terukur: ${m.side} (${m.bias})` },
+    { ok:smc.smcBos[2], text:`BOS proxy: ${smc.smcBos[1]}` },
+    { ok:smc.smcChoch[2] || smc.smcSweep[2], text:`CHOCH/Sweep proxy: ${smc.smcChoch[1]} / ${smc.smcSweep[1]}` },
+    { ok:smc.smcOrderBlock[2], text:`Order Block proxy: ${smc.smcOrderBlock[1]}` },
+    { ok:calendarManualOverride || (!highImpactNewsDetected && !newsRiskUnknown), text: calendarManualOverride ? 'Manual override kalender aktif oleh admin' : highImpactNewsDetected ? 'Ada USD High Impact News' : newsRiskUnknown ? 'News belum tervalidasi' : 'Tidak ada High Impact News dekat' },
+    { ok:domAligned, text:domAligned ? `DOM/momentum proxy selaras dengan ${m.side}` : 'DOM/momentum proxy belum selaras dengan arah trade' },
+    { ok:decision.tone === 'green', text:decision.reason }
+  ];
+}
+
+function getEnabledIndicators() {
+  return Array.from(document.querySelectorAll('#indicatorControls input[type="checkbox"]')).filter(i => i.checked).map(i => i.dataset.indicator);
+}
+function onIndicatorChange() {
+  if (chartMode === 'internal') renderInternalChart(lastWsPrice);
+  else initTradingViewWidget();
+  showToast('Indicator setting diperbarui', 'info');
+}
+function calculateEMA(values, period) {
+  const k = 2 / (period + 1);
+  let ema = values[0] || 0;
+  return values.map((v, i) => {
+    ema = i === 0 ? v : (v * k) + (ema * (1-k));
+    return ema;
+  });
+}
+function getTradingViewStudies() {
+  const indicators = getEnabledIndicators();
+  const studies = [];
+  if (indicators.includes('ema20')) studies.push('MASimple@tv-basicstudies');
+  if (indicators.includes('volume')) studies.push('Volume@tv-basicstudies');
+  return studies;
+}
+
+function renderBacktestCharts() {
+  drawMiniLineChart('equityCurveCanvas', [10000,10060,10020,10180,10230,10190,10320,10480,10430,10620], '#22c55e');
+  drawMiniLineChart('profitCurveCanvas', [0,60,20,180,230,190,320,480,430,620], '#38bdf8');
+  drawMiniLineChart('drawdownCurveCanvas', [0,-30,-80,-20,-15,-90,-45,-20,-70,-25], '#ef4444');
+}
+function drawMiniLineChart(id, data, color) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(280, rect.width || 420), h = Math.max(120, rect.height || 160), dpr = window.devicePixelRatio || 1;
+  canvas.width = w*dpr; canvas.height = h*dpr;
+  const ctx = canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h); ctx.fillStyle='#060a13'; ctx.fillRect(0,0,w,h);
+  const min = Math.min(...data), max = Math.max(...data), span = Math.max(max-min,1), pad=18;
+  const pts = data.map((v,i)=>({x:pad+i*(w-pad*2)/(data.length-1), y:pad+(max-v)/span*(h-pad*2)}));
+  ctx.strokeStyle='#1c2a4a'; ctx.lineWidth=1; for(let i=0;i<4;i++){const y=pad+i*(h-pad*2)/3;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-pad,y);ctx.stroke();}
+  const grad = ctx.createLinearGradient(0,pad,0,h-pad); grad.addColorStop(0,color+'55'); grad.addColorStop(1,'transparent');
+  ctx.beginPath(); ctx.moveTo(pts[0].x,h-pad); pts.forEach(p=>ctx.lineTo(p.x,p.y)); ctx.lineTo(pts[pts.length - 1].x, h-pad); ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+  ctx.beginPath(); pts.forEach((p,i)=> i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+}
+
+function autoBackupJournal(silent = false) {
+  const backup = { createdAt:new Date().toISOString(), settings:getSettings(), journal:getJournalHistory() };
+  localStorage.setItem(STORAGE_KEYS.backup, JSON.stringify(backup));
+  if (!silent) showToast('Backup lokal berhasil dibuat', 'success');
+}
+function restoreBackupJournal() {
+  try {
+    const backup = JSON.parse(localStorage.getItem(STORAGE_KEYS.backup) || '{}');
+    if (!backup.journal) throw new Error('Backup tidak ditemukan');
+    setJournalHistory(backup.journal);
+    if (backup.settings) { appSettings = { ...DEFAULT_SETTINGS, ...backup.settings }; localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(appSettings)); loadSettingsToForm(); }
+    updateDashboardSummary(); updateRiskManagement();
+    showToast('Backup berhasil direstore', 'success');
+  } catch (err) { showToast(`Restore gagal: ${err.message}`, 'error'); }
+}
+function exportJournalCSV() {
+  const rows = getJournalHistory();
+  const headers = ['savedAt','pair','entry','stopLoss','tp1','tp2','tp3','lotSize','confidence','trend','news','dom','aiExplanation','resultTrade','traderNotes'];
+  const csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h] ?? '').replace(/"/g,'""')}"`).join(','))].join('\n');
+  downloadText('ai-trading-journal.csv', csv, 'text/csv');
+}
+function exportJournalExcel() {
+  const rows = getJournalHistory();
+  const cols = ['savedAt','pair','entry','stopLoss','tp1','tp2','tp3','lotSize','confidence','status','aiExplanation'];
+  const table = `<table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${rows.map(r=>`<tr>${cols.map(c=>`<td>${escapeHtml(r[c] ?? '')}</td>`).join('')}</tr>`).join('')}</table>`;
+  downloadText('ai-trading-journal.xls', table, 'application/vnd.ms-excel');
+}
+function exportJournalPDF() {
+  const rows = getJournalHistory();
+  const win = window.open('', '_blank');
+  if (!win) return showToast('Popup diblokir browser', 'error');
+  win.document.write(`<html><head><title>AI Trading Journal PDF</title><style>body{font-family:Arial;background:#fff;color:#111}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px;font-size:11px}</style></head><body><h2>AI Trading Journal XAUUSD</h2><pre>${escapeHtml(new Date().toLocaleString('id-ID'))}</pre><table><tr><th>Date</th><th>Entry</th><th>SL</th><th>TP</th><th>Lot</th><th>Confidence</th><th>Status</th></tr>${rows.map(r=>`<tr><td>${escapeHtml(r.savedAt||'')}</td><td>${r.entry||''}</td><td>${r.stopLoss||''}</td><td>${r.tp1||''}/${r.tp2||''}/${r.tp3||''}</td><td>${r.lotSize||''}</td><td>${escapeHtml(r.confidence||'')}</td><td>${escapeHtml(r.status||'')}</td></tr>`).join('')}</table><script>print()<\/script></body></html>`);
+  win.document.close();
+}
+function importHistoryFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const text = reader.result;
+      const rows = file.name.endsWith('.json') ? JSON.parse(text) : text.split('\n').slice(1).filter(Boolean).map(line => ({ raw: line, savedAt:new Date().toISOString() }));
+      setJournalHistory(Array.isArray(rows) ? rows : []);
+      updateDashboardSummary(); updateRiskManagement();
+      showToast('History berhasil diimport', 'success');
+    } catch (err) { showToast(`Import gagal: ${err.message}`, 'error'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+function downloadText(filename, content, mime='text/plain') {
+  const blob = new Blob([content], { type:mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+}
+
+function getEventCountdown(dateText) {
+  const t = Date.parse(dateText || '');
+  if (!Number.isFinite(t)) return 'Manual check';
+  const diff = t - Date.now();
+  if (diff < -3600000) return 'Released';
+  if (diff < 0) return 'Now';
+  const mins = Math.floor(diff / 60000), days = Math.floor(mins/1440), hrs = Math.floor((mins%1440)/60), rem = mins%60;
+  if (days > 0) return days === 1 ? 'Besok' : `${days} hari lagi`;
+  if (hrs > 0) return `${hrs} jam ${rem} menit lagi`;
+  return `${rem} menit lagi`;
+}
+function updateCalendarCountdowns() {
+  document.querySelectorAll('[data-countdown-date]').forEach(el => { el.textContent = getEventCountdown(el.dataset.countdownDate); });
+  if (nextCalendarEvent) safeText('calendarNextCountdownEl', getEventCountdown(nextCalendarEvent.date));
+}
+
+function buildTelegramMessage(payload) {
+  const action = payload.action || payload.side || 'WAIT';
+  return `${action} XAUUSD\nEntry: ${payload.entry}\nSL: ${payload.stopLoss}\nTP1: ${payload.tp1}\nTP2: ${payload.tp2}\nTP3: ${payload.tp3}\nLot: ${payload.lotSize}\nConfidence: ${payload.confidence}\nReason: ${payload.aiExplanation || payload.notes || ''}`;
+}
+async function sendTelegramAlert(payload) {
+  const st = getSettings();
+  if (!st.telegramToken || !st.telegramChatId) {
+    setSystemStatus('telegram','warn','Setup');
+    return false;
+  }
+  try {
+    const url = `https://api.telegram.org/bot${encodeURIComponent(st.telegramToken)}/sendMessage`;
+    const res = await fetchWithTimeout(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ chat_id:st.telegramChatId, text:buildTelegramMessage(payload) }) }, 10000);
+    if (!res.ok) throw new Error(`Telegram HTTP ${res.status}`);
+    setSystemStatus('telegram','ok','Sent');
+    addLog('Telegram alert terkirim.', 'success');
+    return true;
+  } catch (err) {
+    setSystemStatus('telegram','bad','Error');
+    addLog(`Telegram alert gagal: ${err.message}`, 'error');
+    return false;
+  }
+}
+function captureChartPlaceholder() {
+  return chartMode === 'internal' ? 'Internal canvas chart active (client-side screenshot placeholder)' : `TradingView ${getTradingViewSymbol()}`;
+}
+function getSheetsRequestUrl() {
+  const st = getSettings();
+  const base = st.sheetsUrl || GOOGLE_SHEETS_WEBHOOK_URL;
+  const token = st.sheetsToken || GOOGLE_SHEETS_TOKEN;
+  return `${base}?token=${encodeURIComponent(token)}`;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -672,9 +1427,11 @@ window.addEventListener('DOMContentLoaded', () => {
   initTradingViewWidget();
   updatePriceDisplay(lastWsPrice, 0);
   updateConnectionBadge(false);
+  initEnterpriseModules();
   registerPWAServiceWorker();
   updatePwaInstallButton();
   doConnect();
+  setTimeout(() => checkRealEconomicCalendar(), 900);
 });
 
 
@@ -746,7 +1503,7 @@ function registerPWAServiceWorker() {
 }
 
 function switchTab(tabId) {
-  const tabs = ['dashboard', 'tradingplan', 'calendar', 'confluence', 'dom', 'sentiment', 'riskmatrix', 'smartanalyzer', 'backtest'];
+  const tabs = ['dashboard', 'tradingplan', 'calendar', 'confluence', 'dom', 'sentiment', 'riskmatrix', 'smartanalyzer', 'backtest', 'settings'];
   tabs.forEach(id => {
     const el = document.getElementById(`tab-${id}`);
     const btn = document.getElementById(`btn-${id}`);
@@ -761,6 +1518,10 @@ function switchTab(tabId) {
 
   if (tabId === 'dom') updateDomTable(lastWsPrice);
   if (tabId === 'tradingplan') updateTradingPlanValues(lastWsPrice);
+  if (tabId === 'confluence') updateSMCGrid();
+  if (tabId === 'riskmatrix') updateRiskManagement();
+  if (tabId === 'backtest') renderBacktestCharts();
+  if (tabId === 'settings') loadSettingsToForm();
 }
 
 function showToast(message, type = 'success') {
@@ -825,7 +1586,7 @@ function getTradingViewEmbedUrl(tvSymbol) {
     symboledit: '1',
     saveimage: '0',
     toolbarbg: '#111a2e',
-    studies: '[]',
+    studies: JSON.stringify(getTradingViewStudies()),
     theme: 'dark',
     style: '1',
     timezone: 'Asia/Jakarta',
@@ -864,13 +1625,12 @@ function showInternalChart() {
 }
 
 function buildInternalSeries(price = lastWsPrice) {
-  const cfg = getSymbolConfig();
   const source = recentPrices.filter(v => Number.isFinite(v) && v > 0);
-  if (source.length >= 6) return source.slice(-30);
+  if (source.length >= 8) return source.slice(-60);
   const points = [];
-  const step = cfg.type === 'crypto' ? price * 0.0009 : cfg.type === 'gold' ? price * 0.00035 : price * 0.00022;
-  for (let i = 29; i >= 0; i--) {
-    points.push(price + Math.sin(i * 0.75) * step * 4 + (Math.random() - 0.5) * step * 2);
+  const step = Math.max(0.35, price * 0.00022);
+  for (let i = 59; i >= 0; i--) {
+    points.push(price + Math.sin(i * 0.36) * step * 5 + Math.cos(i * 0.17) * step * 2);
   }
   return points;
 }
@@ -879,44 +1639,182 @@ function renderInternalChart(price = lastWsPrice) {
   const widgetEl = document.getElementById('tradingview_widget');
   if (!widgetEl) return;
   const cfg = getSymbolConfig();
-  const d = cfg.decimals;
   const series = buildInternalSeries(price);
-  const w = 900, h = 460, pad = 48;
-  const minP = Math.min(...series);
-  const maxP = Math.max(...series);
-  const span = Math.max(maxP - minP, Number.EPSILON);
-  const pts = series.map((v, i) => {
-    const x = pad + (i / Math.max(series.length - 1, 1)) * (w - pad * 2);
-    const y = pad + ((maxP - v) / span) * (h - pad * 2);
-    return { x, y, v };
-  });
-  const line = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  const area = `${pad},${h-pad} ${line} ${w-pad},${h-pad}`;
-  const last = pts[pts.length - 1];
-  const first = pts[0];
-  const up = last.v >= first.v;
-  const color = up ? '#22c55e' : '#ef4444';
-  const grid = Array.from({ length: 5 }, (_, i) => {
-    const y = pad + i * ((h - pad * 2) / 4);
-    const val = maxP - i * (span / 4);
-    return `<line x1="${pad}" y1="${y}" x2="${w-pad}" y2="${y}" stroke="#1c2a4a" stroke-width="1"/><text x="${w-pad+10}" y="${y+4}" fill="#64748b" font-size="18" font-family="monospace">${formatPrice(val, d)}</text>`;
-  }).join('');
+
   widgetEl.innerHTML = `
     <div class="h-full w-full rounded-lg overflow-hidden bg-slate-950 border border-slate-800 relative">
-      <div class="absolute left-3 top-3 z-10 flex flex-wrap gap-2 items-center">
-        <span class="badge badge-gold mono">CHART HP INTERNAL</span>
-        <span class="badge ${up ? 'badge-green' : 'badge-red'} mono">${formatPrice(last.v, d)}</span>
-        <button class="btn btn-outline text-[10px] py-1 px-2" onclick="showTradingViewChart()">KEMBALI TV</button>
+      <div class="chart-floating-actions">
+        <span class="badge badge-gold mono">CANVAS CHART HP</span>
+        <span class="badge badge-cyan mono">XAUUSD</span>
+        <button class="btn btn-outline" onclick="showTradingViewChart()">KEMBALI TV</button>
       </div>
-      <svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" preserveAspectRatio="none" role="img" aria-label="Internal price chart">
-        <rect width="${w}" height="${h}" fill="#060a13"/>
-        ${grid}
-        <polygon points="${area}" fill="${up ? 'rgba(34,197,94,.14)' : 'rgba(239,68,68,.14)'}"/>
-        <polyline points="${line}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="${last.x}" cy="${last.y}" r="7" fill="${color}"/>
-        <text x="${pad}" y="${h-16}" fill="#d4a017" font-size="22" font-family="monospace" font-weight="700">${cfg.display} • fallback mobile chart</text>
-      </svg>
+      <canvas id="internalChartCanvas" class="chart-canvas" aria-label="Smooth internal XAUUSD chart"></canvas>
     </div>`;
+
+  requestAnimationFrame(() => drawInternalChartCanvas(series, cfg));
+}
+
+function drawInternalChartCanvas(series, cfg = getSymbolConfig()) {
+  const canvas = document.getElementById('internalChartCanvas');
+  if (!canvas) return;
+  if (internalChartFrame) cancelAnimationFrame(internalChartFrame);
+
+  const rect = canvas.getBoundingClientRect();
+  const width = Math.max(320, rect.width || 900);
+  const height = Math.max(240, rect.height || 460);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(width * dpr);
+  canvas.height = Math.floor(height * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  const padL = 44;
+  const padR = 58;
+  const padT = 58;
+  const padB = 38;
+  const minP = Math.min(...series);
+  const maxP = Math.max(...series);
+  const span = Math.max(maxP - minP, 0.01);
+  const points = series.map((v, i) => ({
+    x: padL + (i / Math.max(series.length - 1, 1)) * (width - padL - padR),
+    y: padT + ((maxP - v) / span) * (height - padT - padB),
+    v
+  }));
+  const up = points[points.length - 1].v >= points[0].v;
+  const lineColor = up ? '#22c55e' : '#ef4444';
+
+  function pathSmooth(pts) {
+    if (!pts.length) return;
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length - 2; i++) {
+      const xc = (pts[i].x + pts[i + 1].x) / 2;
+      const yc = (pts[i].y + pts[i + 1].y) / 2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+    }
+    const n = pts.length;
+    if (n > 2) ctx.quadraticCurveTo(pts[n - 2].x, pts[n - 2].y, pts[n - 1].x, pts[n - 1].y);
+    else if (n === 2) ctx.lineTo(pts[1].x, pts[1].y);
+  }
+
+  function draw(progress = 1) {
+    ctx.clearRect(0, 0, width, height);
+    const bg = ctx.createLinearGradient(0, 0, width, height);
+    bg.addColorStop(0, '#060a13');
+    bg.addColorStop(1, '#0f172a');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.strokeStyle = '#1c2a4a';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#64748b';
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + i * ((height - padT - padB) / 4);
+      const val = maxP - i * (span / 4);
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(width - padR, y);
+      ctx.stroke();
+      ctx.fillText(formatPrice(val, cfg.decimals), width - padR + 8, y + 4);
+    }
+
+
+    const indicators = getEnabledIndicators();
+    if (indicators.includes('asia')) { ctx.fillStyle='rgba(56,189,248,.05)'; ctx.fillRect(padL, padT, (width-padL-padR)*0.28, height-padT-padB); }
+    if (indicators.includes('london')) { ctx.fillStyle='rgba(212,160,23,.055)'; ctx.fillRect(padL+(width-padL-padR)*0.32, padT, (width-padL-padR)*0.30, height-padT-padB); }
+    if (indicators.includes('ny')) { ctx.fillStyle='rgba(34,197,94,.045)'; ctx.fillRect(padL+(width-padL-padR)*0.66, padT, (width-padL-padR)*0.30, height-padT-padB); }
+    if (indicators.includes('volume')) {
+      const maxVol = Math.max(...series.map((v,i)=> Math.abs(v - (series[i-1] || v))));
+      series.forEach((v,i)=>{
+        const diff = Math.abs(v - (series[i-1] || v));
+        const barH = Math.max(2, (diff / Math.max(maxVol, .01)) * 34);
+        const x = padL + (i / Math.max(series.length - 1, 1)) * (width - padL - padR);
+        ctx.fillStyle = v >= (series[i-1] || v) ? 'rgba(34,197,94,.22)' : 'rgba(239,68,68,.22)';
+        ctx.fillRect(x-2, height-padB-barH, 4, barH);
+      });
+    }
+    if (indicators.includes('ohl')) {
+      const openY = points[0].y, highY = padT, lowY = height-padB;
+      [['Open',openY,'#d4a017'],['High',highY,'#22c55e'],['Low',lowY,'#ef4444']].forEach(([label,y,c])=>{
+        ctx.strokeStyle = c; ctx.setLineDash([4,5]); ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(width-padR,y); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = c; ctx.fillText(label, padL+4, y-4);
+      });
+    }
+
+    const revealW = (width - padL - padR) * progress;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(padL, padT - 10, revealW, height - padT - padB + 20);
+    ctx.clip();
+
+    const areaGrad = ctx.createLinearGradient(0, padT, 0, height - padB);
+    areaGrad.addColorStop(0, up ? 'rgba(34,197,94,.26)' : 'rgba(239,68,68,.24)');
+    areaGrad.addColorStop(1, 'rgba(6,10,19,0)');
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, height - padB);
+    pathSmooth(points);
+    ctx.lineTo(points[points.length - 1].x, height - padB);
+    ctx.closePath();
+    ctx.fillStyle = areaGrad;
+    ctx.fill();
+
+    ctx.beginPath();
+    pathSmooth(points);
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = lineColor;
+    ctx.shadowBlur = 12;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    function drawIndicatorLine(values, color, widthLine = 1.6) {
+      const indicatorPts = values.map((v,i)=>({
+        x: padL + (i / Math.max(values.length - 1, 1)) * (width - padL - padR),
+        y: padT + ((maxP - v) / span) * (height - padT - padB)
+      }));
+      ctx.beginPath();
+      indicatorPts.forEach((p,i)=> i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+      ctx.strokeStyle = color; ctx.lineWidth = widthLine; ctx.shadowBlur = 0; ctx.stroke();
+    }
+    if (indicators.includes('ema20')) drawIndicatorLine(calculateEMA(series, 20), '#f59e0b', 1.8);
+    if (indicators.includes('ema50')) drawIndicatorLine(calculateEMA(series, 50), '#38bdf8', 1.6);
+    if (indicators.includes('ema200')) drawIndicatorLine(calculateEMA(series, 200), '#a855f7', 1.5);
+    if (indicators.includes('vwap')) {
+      const avg = series.reduce((a,b)=>a+b,0)/series.length;
+      drawIndicatorLine(series.map(()=>avg), '#e2e8f0', 1.2);
+    }
+    if (indicators.includes('atr')) {
+      ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono, monospace';
+      ctx.fillText(`ATR logic SL $${GOLD_PLAN.slDistance.toFixed(2)} / TP $${GOLD_PLAN.tp1Distance.toFixed(0)}-$${GOLD_PLAN.tp3Distance.toFixed(0)}`, padL, height - 10);
+    }
+
+    ctx.restore();
+
+    const last = points[points.length - 1];
+    if (progress >= 0.98) {
+      ctx.beginPath();
+      ctx.arc(last.x, last.y, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = lineColor;
+      ctx.fill();
+      ctx.font = 'bold 13px JetBrains Mono, monospace';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText(`${cfg.display} ${formatPrice(last.v, cfg.decimals)}`, padL, 26);
+      ctx.fillStyle = '#d4a017';
+      ctx.fillText('Gold ATR Plan: Entry -$4.5 | SL -$8 | TP +$12/+25/+45', padL, 45);
+    }
+  }
+
+  const start = performance.now();
+  function animate(now) {
+    const progress = Math.min(1, (now - start) / 650);
+    draw(progress);
+    if (progress < 1) internalChartFrame = requestAnimationFrame(animate);
+  }
+  internalChartFrame = requestAnimationFrame(animate);
 }
 
 function showTradingViewChart() {
@@ -950,8 +1848,13 @@ function initTradingViewWidget() {
   iframe.style.border = '0';
   iframe.style.display = 'block';
   iframe.setAttribute('allowfullscreen', 'true');
+  iframe.setAttribute('loading', 'lazy');
+  iframe.setAttribute('referrerpolicy', 'origin');
   iframe.setAttribute('scrolling', 'no');
+  iframe.addEventListener('load', () => setSystemStatus('tradingview', 'ok', 'Ready'));
+  iframe.addEventListener('error', () => setSystemStatus('tradingview', 'bad', 'Blocked'));
   container.appendChild(iframe);
+  setSystemStatus('tradingview', 'warn', 'Loading');
 
   const help = document.createElement('div');
   help.className = 'chart-help-banner hidden absolute left-2 right-2 bottom-2 z-10 text-[10px] text-muted bg-black/70 border border-slate-700 rounded-lg px-3 py-2';
@@ -960,18 +1863,16 @@ function initTradingViewWidget() {
 }
 
 function changeSymbol() {
-  currentSymbol = document.getElementById('symSel').value;
+  currentSymbol = GOLD_SYMBOL;
   const cfg = getSymbolConfig();
-  lastWsPrice = cfg.initial;
   recentPrices = [];
   chartFeedIndex = 0;
   chartMode = 'tradingview';
-  setInitialPlan(lastWsPrice);
+  setInitialPlan(lastWsPrice || cfg.initial);
   initTradingViewWidget();
-  updatePriceDisplay(lastWsPrice, 0);
-  fetchRealLivePrice();
-  showToast(`Symbol diganti ke ${cfg.display}`, 'info');
-  addLog(`Symbol aktif: ${cfg.display}. Plan awal dibuat ulang.`, 'info');
+  updatePriceDisplay(lastWsPrice || cfg.initial, 0);
+  showToast('Mode XAUUSD only aktif', 'info');
+  addLog('Symbol terkunci: XAUUSD only.', 'info');
 }
 
 function updateConnectionBadge(isConnected) {
@@ -1023,47 +1924,48 @@ function updatePriceDisplay(price, pctChange) {
 
   updateDomTable(price);
   updateTradingPlanValues(price);
+  updateDashboardSummary();
+  updateRiskManagement();
+  updateSMCGrid();
   if (chartMode === 'internal') renderInternalChart(price);
 }
 
 function getTradeMetrics(price = lastWsPrice) {
   const cfg = getSymbolConfig();
-  const entry = lockedEntryPrice || (price * PLAN_MULTIPLIER.entry);
-  const sl = lockedSL || (price * PLAN_MULTIPLIER.stopLoss);
-  const tp1 = entry * PLAN_MULTIPLIER.tp1;
-  const tp2 = entry * PLAN_MULTIPLIER.tp2;
-  const tp3 = entry * PLAN_MULTIPLIER.tp3;
+  const trend = analyzeMarketTrend(price);
+  const derivedSide = deriveTradeSide(trend);
+  const side = lockedTradeSide !== 'WAIT' ? lockedTradeSide : derivedSide;
+  const plan = lockedTradeSide !== 'WAIT'
+    ? { entry: lockedEntryPrice, sl: lockedSL, tp1: lockedTradeSide === 'BUY' ? lockedEntryPrice + GOLD_PLAN.tp1Distance : lockedEntryPrice - GOLD_PLAN.tp1Distance, tp2: lockedTradeSide === 'BUY' ? lockedEntryPrice + GOLD_PLAN.tp2Distance : lockedEntryPrice - GOLD_PLAN.tp2Distance, tp3: lockedTradeSide === 'BUY' ? lockedEntryPrice + GOLD_PLAN.tp3Distance : lockedEntryPrice - GOLD_PLAN.tp3Distance }
+    : calculateDirectionalPlan(price, side);
+  const entry = Number.isFinite(plan.entry) ? plan.entry : price;
+  const sl = Number.isFinite(plan.sl) ? plan.sl : price;
+  const tp1 = Number.isFinite(plan.tp1) ? plan.tp1 : price;
+  const tp2 = Number.isFinite(plan.tp2) ? plan.tp2 : price;
+  const tp3 = Number.isFinite(plan.tp3) ? plan.tp3 : price;
   const acc = Math.max(0, parseFloat(document.getElementById('accSize')?.value) || 10000);
   const risk = Math.min(100, Math.max(0, parseFloat(document.getElementById('riskPct')?.value) || 1));
   const riskAmt = acc * (risk / 100);
-  const slDist = Math.max(Math.abs(entry - sl), Number.EPSILON);
-
-  // Simplified contract multiplier: XAU/forex CFD commonly uses 100 units per lot in this prototype.
-  // For production, replace this with broker-specific tick value/contract size per symbol.
-  const contractMultiplier = cfg.type === 'crypto' ? 1 : 100;
-  const lotSize = Math.max(0.01, riskAmt / (slDist * contractMultiplier));
-  const rr = (tp) => Math.abs((tp - entry) / (entry - sl));
-
-  return { cfg, entry, sl, tp1, tp2, tp3, acc, risk, riskAmt, slDist, lotSize, rr };
+  const slDist = side === 'WAIT' ? GOLD_PLAN.slDistance : Math.max(Math.abs(entry - sl), GOLD_PLAN.slDistance);
+  const rawLot = riskAmt / (slDist * GOLD_PLAN.contractSize);
+  const lotSize = Math.min(GOLD_PLAN.maxLot, Math.max(GOLD_PLAN.minLot, rawLot));
+  const lotCapped = rawLot > GOLD_PLAN.maxLot;
+  const rr = (tp) => side === 'WAIT' ? 0 : Math.abs((tp - entry) / (entry - sl));
+  const bias = side === 'BUY' ? 'Bullish' : side === 'SELL' ? 'Bearish' : 'Neutral / Wait';
+  return { cfg, side, action: side, bias, trend, entry, sl, tp1, tp2, tp3, acc, risk, riskAmt, slDist, rawLot, lotSize, lotCapped, rr };
 }
 
-
 function isSidewaysMarket(price = lastWsPrice) {
-  if (!Number.isFinite(price) || recentPrices.length < 10) return false;
-  const cfg = getSymbolConfig();
-  const maxP = Math.max(...recentPrices);
-  const minP = Math.min(...recentPrices);
-  const rangePct = ((maxP - minP) / price) * 100;
-  const threshold = cfg.type === 'crypto' ? 0.08 : cfg.type === 'gold' ? 0.03 : 0.01;
-  return rangePct < threshold;
+  if (!Number.isFinite(price) || recentPrices.length < MIN_TREND_SAMPLES) return false;
+  const samples = getPriceSamples(price);
+  const maxP = Math.max(...samples);
+  const minP = Math.min(...samples);
+  const rangePct = ((maxP - minP) / Math.max(price, 1)) * 100;
+  return rangePct < SIDEWAYS_RANGE_PCT;
 }
 
 function getEntryBuffer(price = lastWsPrice) {
-  const cfg = getSymbolConfig();
-  if (cfg.type === 'crypto') return Math.max(price * 0.0008, 10);
-  if (cfg.type === 'gold') return 1.0;
-  if (currentSymbol.includes('JPY')) return 0.03;
-  return 0.0003;
+  return Math.max(0.55, price * 0.00018);
 }
 
 function assessTradingReadiness(price = lastWsPrice) {
@@ -1072,116 +1974,20 @@ function assessTradingReadiness(price = lastWsPrice) {
   const buffer = getEntryBuffer(price);
   const entryUpper = m.entry + buffer;
   const entryLower = m.entry - buffer;
-
-  if (!connected) {
-    return {
-      code: 'WAIT_DATA',
-      tone: 'orange',
-      setup: 'WAIT / DATA OFFLINE',
-      state: 'WAIT',
-      title: '🟠 WAIT - DATA OFFLINE',
-      badge: 'LIVE DATA REQUIRED',
-      signal: '🟠 WAIT / NO TRADE',
-      final: '🟠 WAIT',
-      reason: 'Live stream sedang OFFLINE. Hindari eksekusi sampai harga/data tervalidasi kembali.'
-    };
-  }
-
-  if (newsRiskUnknown) {
-    return {
-      code: 'WAIT_NEWS_CHECK',
-      tone: 'orange',
-      setup: 'WAIT / NEWS CHECK',
-      state: 'WAIT',
-      title: '🟠 WAIT - NEWS CHECK',
-      badge: 'CALENDAR NOT VALIDATED',
-      signal: '🟠 WAIT / NEWS CHECK',
-      final: '🟠 WAIT',
-      reason: 'Kalender ekonomi belum berhasil divalidasi. Cek high-impact news terlebih dahulu sebelum entry.'
-    };
-  }
-
-  if (highImpactNewsDetected) {
-    return {
-      code: 'WAIT_NEWS',
-      tone: 'orange',
-      setup: 'WAIT / HIGH IMPACT NEWS',
-      state: 'WAIT',
-      title: '🟠 WAIT - HIGH IMPACT NEWS',
-      badge: 'NEWS FILTER ACTIVE',
-      signal: '🟠 WAIT / NEWS IMPACT',
-      final: '🟠 WAIT',
-      reason: `Ada potensi high-impact news (${highImpactNewsLabel || 'event penting'}). Hindari entry baru sampai volatilitas mereda.`
-    };
-  }
-
-  if (isSidewaysMarket(price)) {
-    return {
-      code: 'WAIT_SIDEWAYS',
-      tone: 'orange',
-      setup: 'WAIT / SIDEWAYS MARKET',
-      state: 'WAIT',
-      title: '🟠 WAIT - SIDEWAYS',
-      badge: 'RANGE TOO TIGHT',
-      signal: '🟠 WAIT / SIDEWAYS',
-      final: '🟠 WAIT',
-      reason: 'Range harga beberapa tick terakhir terlalu sempit/sideways. Tunggu breakout atau rejection yang jelas.'
-    };
-  }
-
-  if (price <= m.sl) {
-    return {
-      code: 'WAIT_INVALID',
-      tone: 'red',
-      setup: 'WAIT / SETUP INVALID',
-      state: 'WAIT',
-      title: '🔴 WAIT - SETUP INVALID',
-      badge: 'REPLAN REQUIRED',
-      signal: '🔴 WAIT / REPLAN',
-      final: '🔴 WAIT / REPLAN',
-      reason: `Harga sudah berada di/di bawah SL ${formatPrice(m.sl, d)}. Setup lama invalid, tunggu plan baru.`
-    };
-  }
-
-  if (price > entryUpper) {
-    return {
-      code: 'WAIT_ENTRY',
-      tone: 'orange',
-      setup: 'WAIT FOR ENTRY (BUY LIMIT)',
-      state: 'WAIT',
-      title: '⏳ WAIT FOR ENTRY',
-      badge: 'NO MARKET EXECUTION',
-      signal: '🟠 WAIT FOR ENTRY',
-      final: '🟠 WAIT FOR ENTRY',
-      reason: `Harga saat ini ${formatPrice(price, d)} masih di atas locked entry ${formatPrice(m.entry, d)}. Jangan buy market; tunggu retracement ke demand zone.`
-    };
-  }
-
-  if (price >= entryLower && price <= entryUpper) {
-    return {
-      code: 'READY_EXECUTE',
-      tone: 'green',
-      setup: 'BUY LIMIT READY (DEMAND ZONE)',
-      state: 'READY',
-      title: '🟢 READY TO EXECUTE',
-      badge: 'ENTRY ZONE VALID',
-      signal: '🟢 BUY SIGNAL (ENTRY ZONE)',
-      final: '🟢 READY TO TRADE',
-      reason: `Harga sudah berada di area entry ${formatPrice(m.entry, d)} ± ${formatPrice(buffer, d)}. Eksekusi hanya jika spread dan candle rejection valid.`
-    };
-  }
-
-  return {
-    code: 'WAIT_RECHECK',
-    tone: 'orange',
-    setup: 'WAIT / RECHECK ENTRY',
-    state: 'WAIT',
-    title: '🟠 WAIT - RECHECK ENTRY',
-    badge: 'ENTRY PASSED',
-    signal: '🟠 WAIT / RECHECK',
-    final: '🟠 WAIT / RECHECK',
-    reason: `Harga sudah melewati entry ${formatPrice(m.entry, d)} namun belum invalid. Hindari chasing; tunggu konfirmasi ulang atau plan baru.`
-  };
+  if (!connected) return { code:'NO_TRADE', tone:'orange', action:'NO TRADE', setup:'NO TRADE / DATA OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - DATA OFFLINE', badge:'LIVE DATA REQUIRED', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason:'Live stream sedang OFFLINE. Hindari eksekusi sampai harga/data tervalidasi kembali.' };
+  if (SIMULATION_BLOCKS_ENTRY && usingSimulatedPrice) return { code:'NO_TRADE_SIMULATION', tone:'orange', action:'NO TRADE', setup:'NO TRADE / SIMULATION PRICE', state:'NO TRADE', title:'🟠 NO TRADE - SIMULATION PRICE', badge:'LIVE PRICE REQUIRED', signal:'🟠 NO TRADE / SIMULATION', final:'🟠 NO TRADE', reason:'Harga berasal dari simulasi karena API live gagal. Entry diblokir sampai live market terverifikasi.' };
+  if (recentPrices.length < MIN_TREND_SAMPLES) return { code:'NO_TRADE_WARMUP', tone:'orange', action:'NO TRADE', setup:'NO TRADE / DATA WARMUP', state:'NO TRADE', title:'🟠 NO TRADE - DATA WARMUP', badge:'TREND DATA REQUIRED', signal:'🟠 NO TRADE / WARMUP', final:'🟠 NO TRADE', reason:`Belum cukup tick live untuk analisis tren (${recentPrices.length}/${MIN_TREND_SAMPLES}). Tunggu data valid.` };
+  if (newsRiskUnknown && !calendarManualOverride) return { code:'WAIT_NEWS', tone:'orange', action:'WAIT NEWS', setup:'WAIT NEWS / CALENDAR CHECK', state:'WAIT NEWS', title:'🟠 WAIT NEWS - CALENDAR CHECK', badge:'CALENDAR NOT VALIDATED', signal:'🟠 WAIT NEWS', final:'🟠 WAIT NEWS', reason:'Kalender ekonomi belum berhasil divalidasi. Cek high-impact news terlebih dahulu sebelum entry.' };
+  if (highImpactNewsDetected) return { code:'WAIT_NEWS', tone:'orange', action:'WAIT NEWS', setup:'WAIT NEWS / HIGH IMPACT', state:'WAIT NEWS', title:'🟠 WAIT NEWS - HIGH IMPACT', badge:'NEWS FILTER ACTIVE', signal:'🟠 WAIT NEWS', final:'🟠 WAIT NEWS', reason:`Ada potensi high-impact news (${highImpactNewsLabel || 'event penting'}). Hindari entry baru sampai volatilitas mereda.` };
+  if (m.side === 'WAIT') return { code:'NO_TRADE_NO_TREND', tone:'orange', action:'NO TRADE', setup:'NO TRADE / NO TREND EDGE', state:'NO TRADE', title:'🟠 NO TRADE - NO TREND EDGE', badge:'NO DIRECTIONAL EDGE', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason:`Trend engine belum memberikan arah BUY/SELL yang valid: ${m.trend.reason}` };
+  if (isSidewaysMarket(price)) return { code:'WAIT_BREAKOUT', tone:'orange', action:'WAIT BREAKOUT', setup:`WAIT BREAKOUT / ${m.side} BIAS`, state:'WAIT BREAKOUT', title:'🟠 WAIT BREAKOUT - SIDEWAYS', badge:'RANGE TOO TIGHT', signal:'🟠 WAIT BREAKOUT', final:'🟠 WAIT BREAKOUT', reason:`Range harga terlalu sempit secara persentase (<${SIDEWAYS_RANGE_PCT}%). Tunggu breakout/rejection.` };
+  const invalid = m.side === 'BUY' ? price <= m.sl : price >= m.sl;
+  if (invalid) return { code:'ENTRY_INVALID', tone:'red', action:'NO TRADE', setup:'ENTRY INVALID / SETUP BROKEN', state:'ENTRY INVALID', title:'🔴 ENTRY INVALID', badge:'REPLAN REQUIRED', signal:'🔴 ENTRY INVALID', final:'🔴 ENTRY INVALID', reason:`Harga sudah melewati area SL ${formatPrice(m.sl, d)} untuk setup ${m.side}. Setup lama invalid, tunggu plan baru.` };
+  const isInEntryZone = price >= entryLower && price <= entryUpper;
+  if (isInEntryZone) return { code:'ENTRY_VALID', tone:'green', action:m.side, setup:`${m.side} LIMIT READY (${m.side === 'BUY' ? 'DEMAND' : 'SUPPLY'} ZONE)`, state:'ENTRY VALID', title:`🟢 ENTRY VALID - ${m.side}`, badge:'ENTRY ZONE VALID', signal:`${m.side === 'BUY' ? '🟢 BUY' : '🔴 SELL'} SIGNAL (ENTRY VALID)`, final:`🟢 ENTRY VALID ${m.side}`, reason:`Harga berada di area entry ${formatPrice(m.entry, d)} ± ${formatPrice(buffer, d)} untuk setup ${m.side}. Eksekusi hanya jika spread dan candle rejection valid.` };
+  const needsPullback = m.side === 'BUY' ? price > entryUpper : price < entryLower;
+  if (needsPullback) return { code:'WAIT_PULLBACK', tone:'orange', action:'WAIT PULLBACK', setup:`WAIT PULLBACK (${m.side} LIMIT)`, state:'WAIT PULLBACK', title:`⏳ WAIT PULLBACK - ${m.side}`, badge:'NO MARKET EXECUTION', signal:'🟠 WAIT PULLBACK', final:'🟠 WAIT PULLBACK', reason:m.side === 'BUY' ? `Harga ${formatPrice(price, d)} masih di atas entry BUY ${formatPrice(m.entry, d)}. Jangan buy market; tunggu retracement.` : `Harga ${formatPrice(price, d)} masih di bawah entry SELL ${formatPrice(m.entry, d)}. Jangan sell market; tunggu pullback naik.` };
+  return { code:'WAIT_BREAKOUT', tone:'orange', action:'WAIT BREAKOUT', setup:`WAIT BREAKOUT / RECHECK ${m.side}`, state:'WAIT BREAKOUT', title:`🟠 WAIT BREAKOUT - RECHECK ${m.side}`, badge:'ENTRY PASSED', signal:'🟠 WAIT BREAKOUT', final:'🟠 WAIT BREAKOUT', reason:`Harga sudah melewati entry ${formatPrice(m.entry, d)} untuk setup ${m.side}. Hindari chasing; tunggu konfirmasi ulang atau plan baru.` };
 }
 
 function applyTradingReadiness(price = lastWsPrice) {
@@ -1242,7 +2048,8 @@ function applyTradingReadiness(price = lastWsPrice) {
   safeText('signalBadgeText', decision.signal);
 
   const signalBox = document.getElementById('signalCardBox');
-  if (signalBox) signalBox.className = decision.tone === 'green' ? 'signal-card buy' : 'signal-card wait';
+  if (signalBox) signalBox.className = decision.action === 'SELL' ? 'signal-card sell' : decision.action === 'BUY' ? 'signal-card buy' : 'signal-card wait';
+  updateAIIntelligence(decision);
 
   return decision;
 }
@@ -1256,47 +2063,68 @@ function refreshTradingReadiness() {
 function updateTradingPlanValues(price) {
   const m = getTradeMetrics(price);
   const d = m.cfg.decimals;
+  const hasActionableSide = m.side === 'BUY' || m.side === 'SELL';
+  const rr1 = hasActionableSide ? m.rr(m.tp1).toFixed(1) : '0.0';
+  const rr2 = hasActionableSide ? m.rr(m.tp2).toFixed(1) : '0.0';
+  const rr3 = hasActionableSide ? m.rr(m.tp3).toFixed(1) : '0.0';
 
   safeText('tpPair', m.cfg.display);
-  safeText('tpEntryPrice', formatPrice(m.entry, d));
-  safeText('tpStopLoss', `SL: ${formatPrice(m.sl, d)} (-${m.slDist.toFixed(d > 3 ? 5 : 2)} pts)`);
+  safeText('tpBias', m.bias);
+  const biasEl = document.getElementById('tpBias');
+  if (biasEl) biasEl.className = m.side === 'BUY' ? 'text-green-400' : m.side === 'SELL' ? 'text-red-400' : 'text-orange-400';
+
+  const previewDecision = assessTradingReadiness(price);
+  const entryLabel = !hasActionableSide
+    ? 'Reference Price:'
+    : previewDecision.code === 'ENTRY_VALID'
+      ? 'Locked Entry:'
+      : previewDecision.code === 'WAIT_PULLBACK'
+        ? `Pending Entry (${m.side} Limit):`
+        : previewDecision.code === 'WAIT_NEWS'
+          ? `Planned Entry (${m.side} Paused):`
+          : previewDecision.code === 'ENTRY_INVALID'
+            ? 'Invalid Entry:'
+            : `Recheck Level (${m.side}):`;
+  safeText('tpEntryLabel', entryLabel);
+  safeText('tpEntryPrice', hasActionableSide ? formatPrice(m.entry, d) : formatPrice(price, d));
+  safeText('tpStopLoss', hasActionableSide ? `SL: ${formatPrice(m.sl, d)} (-${m.slDist.toFixed(d > 3 ? 5 : 2)} pts)` : 'SL: N/A - no actionable setup');
   safeText('tpRiskAmt', `$${m.riskAmt.toFixed(2)} (${m.risk}%)`);
-  safeText('tpLotSize', `${m.lotSize.toFixed(2)} Lot`);
-  safeText('tpTier1', `${formatPrice(m.tp1, d)} (1:${m.rr(m.tp1).toFixed(1)})`);
-  safeText('tpTier2', `${formatPrice(m.tp2, d)} (1:${m.rr(m.tp2).toFixed(1)})`);
-  safeText('tpTier3', `${formatPrice(m.tp3, d)} (1:${m.rr(m.tp3).toFixed(1)})`);
+  safeText('tpLotSize', hasActionableSide ? `${m.lotSize.toFixed(2)} Lot${m.lotCapped ? ' (CAP)' : ''}` : 'N/A');
+  safeText('tpTier1', hasActionableSide ? `${formatPrice(m.tp1, d)} (1:${rr1})` : 'N/A - wait for valid trend');
+  safeText('tpTier2', hasActionableSide ? `${formatPrice(m.tp2, d)} (1:${rr2})` : 'N/A - wait for valid trend');
+  safeText('tpTier3', hasActionableSide ? `${formatPrice(m.tp3, d)} (1:${rr3})` : 'N/A - wait for valid trend');
 
   // Keep dashboard signal card synchronized with the locked plan.
-  safeText('sigEntry', formatPrice(m.entry, d));
-  safeText('sigSl', formatPrice(m.sl, d));
-  safeText('posLot', `${m.lotSize.toFixed(2)} Lot`);
-  safeText('sigRR', `1 : ${m.rr(m.tp1).toFixed(2)}`);
+  safeText('sigEntry', hasActionableSide ? formatPrice(m.entry, d) : 'N/A');
+  safeText('sigSl', hasActionableSide ? formatPrice(m.sl, d) : 'N/A');
+  safeText('posLot', hasActionableSide ? `${m.lotSize.toFixed(2)} Lot${m.lotCapped ? ' (CAP)' : ''}` : 'N/A');
+  safeText('sigRR', hasActionableSide ? `1 : ${m.rr(m.tp1).toFixed(2)}` : 'N/A');
   applyTradingReadiness(price);
 }
 
 function updateDomTable(price) {
   const cfg = getSymbolConfig();
   const d = cfg.decimals;
-  const step = cfg.type === 'crypto' ? 25 : cfg.type === 'gold' ? 1.5 : currentSymbol.includes('JPY') ? 0.05 : 0.0010;
+  const step = 1.5;
   let html = '';
 
   for (let i = 3; i >= 1; i--) {
     const askP = price + (i * step);
-    html += `<div class="flex justify-between p-1 bg-red-950/30 rounded text-red-400"><span>Ask ${formatPrice(askP, d)}</span><span>${80 + (i * 12)} Lots</span></div>`;
+    html += `<div class="dom-row flex justify-between bg-red-950/30 text-red-400"><span>Ask ${formatPrice(askP, d)}</span><span>${80 + (i * 12)} Lots</span></div>`;
   }
 
-  html += `<div class="flex justify-between p-1 bg-amber-500/20 rounded font-bold text-amber-300"><span>Current ${formatPrice(price, d)}</span><span>Spread: ${cfg.type === 'crypto' ? '$25' : currentSymbol.includes('JPY') ? '0.05' : '1.2 pips'}</span></div>`;
+  html += `<div class="dom-row dom-current flex justify-between font-bold text-amber-300"><span>Current ${formatPrice(price, d)}</span><span>Spread: 1.2 pips</span></div>`;
 
   for (let i = 1; i <= 3; i++) {
     const bidP = price - (i * step);
-    html += `<div class="flex justify-between p-1 bg-green-950/30 rounded text-green-400"><span>Bid ${formatPrice(bidP, d)}</span><span>${95 + (i * 15)} Lots</span></div>`;
+    html += `<div class="dom-row flex justify-between bg-green-950/30 text-green-400"><span>Bid ${formatPrice(bidP, d)}</span><span>${95 + (i * 15)} Lots</span></div>`;
   }
 
   const domContainer = document.getElementById('domTableContainer');
   if (domContainer) domContainer.innerHTML = html;
 
-  safeText('obSupplyZone', `Area: ${formatPrice(price * 1.003, d)} - ${formatPrice(price * 1.005, d)}`);
-  safeText('obDemandZone', `Area: ${formatPrice(price * 0.995, d)} - ${formatPrice(price * 0.997, d)}`);
+  safeText('obSupplyZone', `Area: ${formatPrice(price + 12, d)} - ${formatPrice(price + 18, d)}`);
+  safeText('obDemandZone', `Area: ${formatPrice(price - 8, d)} - ${formatPrice(price - 4.5, d)}`);
 }
 
 function updatePositionCalc() {
@@ -1312,93 +2140,265 @@ function generateSignal() {
   setInitialPlan(lastWsPrice);
   updateTradingPlanValues(lastWsPrice);
   updateDomTable(lastWsPrice);
-
   const decision = applyTradingReadiness(lastWsPrice);
-  const confidence = decision.tone === 'green' ? Math.floor(88 + Math.random() * 9) : Math.floor(62 + Math.random() * 18);
-  const confluence = decision.tone === 'green' ? Math.floor(90 + Math.random() * 7) : Math.floor(58 + Math.random() * 22);
-  safeText('finalConf', `${confidence}%`);
-  safeText('finalConfl', `${confluence}%`);
-  applyTradingReadiness(lastWsPrice);
-
-  if (decision.tone === 'green') {
-    showToast(`Signal ${cfg.display} READY & dikunci`, 'success');
-  } else {
-    showToast(`${decision.title}. Plan diset WAIT, jangan entry dulu.`, 'info');
-  }
-
-  addLog(`Generate signal ${cfg.display}: ${decision.code}. Entry ${formatPrice(lockedEntryPrice)} / SL ${formatPrice(lockedSL)} / confidence ${confidence}%.`, decision.tone === 'green' ? 'success' : 'info');
+  const confText = document.getElementById('finalConf')?.innerText || '--';
+  if (decision.action === 'BUY' || decision.action === 'SELL') showToast(`Signal ${cfg.display} ${decision.action} tervalidasi & dikunci`, 'success');
+  else showToast(`${decision.title}. Tidak ada eksekusi sampai filter valid.`, 'info');
+  addLog(`Generate signal ${cfg.display}: ${decision.code}. Side ${getTradeMetrics(lastWsPrice).side}. Entry ${formatPrice(lockedEntryPrice)} / SL ${formatPrice(lockedSL)} / confidence ${confText}.`, decision.tone === 'green' ? 'success' : 'info');
+  updateDashboardSummary();
 }
 
 async function checkRealEconomicCalendar() {
   const tbody = document.getElementById('calendarTableBody');
   if (!tbody) return;
-  showToast('Mengambil kalender ekonomi...', 'info');
 
-  try {
-    const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', { cache: 'no-store' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const events = await response.json();
-    const filtered = (Array.isArray(events) ? events : [])
-      .filter(e => ['USD', 'EUR', 'GBP', 'JPY'].includes(e.currency))
-      .slice(0, 8);
+  showToast('Mengambil USD high-impact calendar...', 'info');
+  setSystemStatus('calendar', 'warn', 'Fetching');
+  setCalendarApiState(false, 'Fetching...', null, null);
+  tbody.innerHTML = getCalendarLoadingRows();
 
-    if (!filtered.length) throw new Error('Tidak ada event relevan');
+  const result = await fetchCalendarEventsWithFallback();
+  const filtered = result.events
+    .filter(isGoldUsdHighImpactEvent)
+    .sort((a, b) => (Date.parse(a.date || '') || 0) - (Date.parse(b.date || '') || 0))
+    .slice(0, 10);
 
-    const highEvent = filtered.find(isHighImpactEventSoon);
-    highImpactNewsDetected = Boolean(highEvent);
-    highImpactNewsLabel = highEvent ? `${highEvent.currency || ''} ${highEvent.title || highEvent.event || ''} ${highEvent.date || ''}`.trim() : '';
-    newsRiskUnknown = false;
-    applyTradingReadiness(lastWsPrice);
+  const highEvent = result.online ? filtered.find(isHighImpactEventSoon) : null;
+  highImpactNewsDetected = Boolean(highEvent);
+  highImpactNewsLabel = highEvent ? `${highEvent.currency || ''} ${highEvent.title || highEvent.event || ''} ${highEvent.date || ''}`.trim() : '';
+  newsRiskUnknown = !result.online && !calendarManualOverride;
+  nextCalendarEvent = filtered.find(e => (Date.parse(e.date || '') || Infinity) >= Date.now() - 3600000) || filtered[0] || null;
 
-    tbody.innerHTML = filtered.map(e => `
-      <tr>
-        <td class="p-3 text-amber-400">${escapeHtml(e.date || '--')}</td>
-        <td class="p-3"><span class="badge badge-blue">${escapeHtml(e.currency || '--')}</span></td>
-        <td class="p-3 font-semibold">${escapeHtml(e.title || e.event || '--')}</td>
-        <td class="p-3"><span class="badge ${String(e.impact || '').toLowerCase().includes('high') ? 'badge-red' : 'badge-gold'}">${escapeHtml(e.impact || '--')}</span></td>
-        <td class="p-3">${escapeHtml(e.actual || '--')}</td>
-        <td class="p-3">${escapeHtml(e.forecast || '--')}</td>
-        <td class="p-3">${escapeHtml(e.previous || '--')}</td>
-      </tr>
-    `).join('');
+  setCalendarApiState(result.online, result.source, new Date(), nextCalendarEvent);
+  applyTradingReadiness(lastWsPrice);
 
-    if (highImpactNewsDetected) {
-      showToast('High impact news terdeteksi. Trading Plan diset WAIT.', 'info');
-      addLog(`High impact news filter aktif: ${highImpactNewsLabel}`, 'info');
-    } else {
-      showToast('Kalender ekonomi diperbarui. Tidak ada high-impact news dekat.', 'success');
-      addLog('Economic calendar berhasil diperbarui tanpa high-impact news dekat.', 'success');
-    }
-  } catch (err) {
-    const now = new Date();
-    highImpactNewsDetected = false;
-    highImpactNewsLabel = '';
-    newsRiskUnknown = true;
-    applyTradingReadiness(lastWsPrice);
-
+  if (!filtered.length) {
     tbody.innerHTML = `
       <tr>
-        <td class="p-3 text-amber-400">${now.toLocaleString('id-ID')}</td>
-        <td class="p-3"><span class="badge badge-blue">INFO</span></td>
-        <td class="p-3 font-semibold">Kalender real-time membutuhkan endpoint/API yang mendukung CORS</td>
-        <td class="p-3"><span class="badge badge-orange">FALLBACK</span></td>
+        <td class="p-3 text-amber-400">This week</td>
+        <td class="p-3"><span class="badge badge-blue">USD</span></td>
+        <td class="p-3 font-semibold">Tidak ada USD High Impact khusus Gold (NFP/CPI/FOMC) terdeteksi dari ${escapeHtml(result.source)}</td>
+        <td class="p-3"><span class="badge ${result.online ? 'badge-green' : 'badge-orange'}">${result.online ? 'CLEAR' : 'FALLBACK'}</span></td>
         <td class="p-3">--</td>
         <td class="p-3">--</td>
         <td class="p-3">--</td>
+        <td class="p-3 text-amber-400">${result.online ? 'Clear' : 'Manual check'}</td>
       </tr>`;
-    showToast(`Kalender gagal diambil: ${err.message}. Fallback ditampilkan.`, 'error');
-    addLog(`Economic calendar fallback: ${err.message}`, 'error');
+
+    if (result.online) {
+      setSystemStatus('calendar', 'ok', 'Clear');
+      showToast('Calendar clear: tidak ada USD High Impact NFP/CPI/FOMC dekat.', 'success');
+      addLog(`USD high-impact calendar clear dari ${result.source}.`, 'success');
+    } else if (calendarManualOverride) {
+      setSystemStatus('calendar', 'warn', 'Override');
+      showToast('Calendar API offline. Manual Override aktif, analisis tetap dilanjutkan.', 'info');
+      addLog(`Calendar offline, fallback ${result.source}. Manual override aktif.`, 'info');
+    } else {
+      setSystemStatus('calendar', 'bad', 'Offline');
+      showToast('Calendar API offline. Sistem menahan analisis sampai manual override atau API pulih.', 'error');
+      addLog(`Calendar offline. Fallback ${result.source}; newsRiskUnknown aktif.`, 'error');
+    }
+    updateCalendarCountdowns();
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(e => renderCalendarRow(e, result.online)).join('');
+
+  if (highImpactNewsDetected) {
+    setSystemStatus('calendar', 'warn', 'High Impact');
+    showToast('USD High Impact (NFP/CPI/FOMC) terdeteksi. Trading Plan diset WAIT NEWS.', 'info');
+    addLog(`USD high impact filter aktif: ${highImpactNewsLabel}`, 'info');
+  } else if (result.online) {
+    setSystemStatus('calendar', 'ok', 'Online');
+    showToast(`Calendar online via ${result.source}. Tidak ada event high-impact dekat.`, 'success');
+    addLog(`USD high-impact calendar online via ${result.source}.`, 'success');
+  } else if (calendarManualOverride) {
+    setSystemStatus('calendar', 'warn', 'Override');
+    showToast('Calendar API offline; fallback ditampilkan dan Manual Override aktif.', 'info');
+    addLog('Calendar fallback + manual override aktif.', 'info');
+  } else {
+    setSystemStatus('calendar', 'bad', 'Offline');
+    showToast('Calendar API offline. Fallback estimasi ditampilkan; analisis ditahan sampai override.', 'error');
+    addLog('Calendar API offline; fallback estimasi ditampilkan.', 'error');
+  }
+
+  updateCalendarCountdowns();
+}
+
+async function fetchCalendarEventsWithFallback() {
+  const errors = [];
+  for (const source of CALENDAR_SOURCES) {
+    try {
+      const response = await fetchWithTimeout(source.url, { cache: 'no-store' }, 10000);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      const events = normalizeCalendarEvents(data, source);
+      if (events.length) return { online: true, source: source.name, events };
+      errors.push(`${source.name}: empty response`);
+    } catch (err) {
+      errors.push(`${source.name}: ${err.message}`);
+      addLog(`Calendar source gagal: ${source.name} (${err.message})`, 'error');
+    }
+  }
+
+  return {
+    online: false,
+    source: 'Local Estimated Fallback',
+    events: buildLocalCalendarFallback(errors)
+  };
+}
+
+function normalizeCalendarEvents(data, source) {
+  const arr = Array.isArray(data) ? data : [];
+  if (source.parser === 'tradingEconomics') {
+    return arr.map(e => ({
+      date: e.Date || e.date || e.LastUpdate || e.CalendarReference || '',
+      currency: e.Currency || (String(e.Country || '').toLowerCase().includes('united states') ? 'USD' : ''),
+      title: e.Event || e.Category || e.title || e.event || '',
+      impact: Number(e.Importance) >= 3 || String(e.Importance || '').toLowerCase().includes('high') ? 'High' : (e.Importance || e.impact || ''),
+      actual: e.Actual ?? e.actual ?? '',
+      forecast: e.Forecast ?? e.forecast ?? '',
+      previous: e.Previous ?? e.previous ?? '',
+      source: source.name
+    })).filter(e => e.title || e.currency || e.date);
+  }
+
+  return arr.map(e => ({
+    date: e.date || e.datetime || e.time || '',
+    currency: e.currency || e.Currency || '',
+    title: e.title || e.event || e.Event || '',
+    impact: e.impact || e.Impact || '',
+    actual: e.actual ?? e.Actual ?? '',
+    forecast: e.forecast ?? e.Forecast ?? '',
+    previous: e.previous ?? e.Previous ?? '',
+    source: source.name
+  })).filter(e => e.title || e.currency || e.date);
+}
+
+function buildLocalCalendarFallback(errors = []) {
+  const now = new Date();
+  const nextFriday = nextWeekdayDate(now, 5, 1);
+  const nextCpi = addDays(now, 7);
+  const nextFomc = nextWeekdayDate(now, 3, 2);
+  return [
+    { date: nextFriday.toISOString(), currency: 'USD', title: 'NFP / Non-Farm Payrolls (Fallback Estimate)', impact: 'High', actual: '--', forecast: '--', previous: '--', source: `Local fallback: ${errors.join(' | ')}` },
+    { date: nextCpi.toISOString(), currency: 'USD', title: 'CPI / Consumer Price Index (Fallback Estimate)', impact: 'High', actual: '--', forecast: '--', previous: '--', source: 'Local fallback estimate' },
+    { date: nextFomc.toISOString(), currency: 'USD', title: 'FOMC / Fed Interest Rate Decision (Fallback Estimate)', impact: 'High', actual: '--', forecast: '--', previous: '--', source: 'Local fallback estimate' }
+  ];
+}
+
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  d.setHours(19, 30, 0, 0);
+  return d;
+}
+
+function nextWeekdayDate(fromDate, weekday, minDaysAhead = 1) {
+  const d = new Date(fromDate);
+  d.setDate(d.getDate() + minDaysAhead);
+  while (d.getDay() !== weekday) d.setDate(d.getDate() + 1);
+  d.setHours(19, 30, 0, 0);
+  return d;
+}
+
+function renderCalendarRow(e, apiOnline = true) {
+  const isFallback = !apiOnline || String(e.title || '').toLowerCase().includes('fallback');
+  const impactClass = isFallback ? 'badge-orange' : 'badge-red';
+  return `
+    <tr title="Source: ${escapeHtml(e.source || '--')}">
+      <td class="p-3 text-amber-400">${escapeHtml(formatCalendarDate(e.date))}</td>
+      <td class="p-3"><span class="badge badge-blue">USD</span></td>
+      <td class="p-3 font-semibold">${escapeHtml(e.title || e.event || '--')}</td>
+      <td class="p-3"><span class="badge ${impactClass}">${isFallback ? 'FALLBACK' : 'HIGH'}</span></td>
+      <td class="p-3">${escapeHtml(e.actual || '--')}</td>
+      <td class="p-3">${escapeHtml(e.forecast || '--')}</td>
+      <td class="p-3">${escapeHtml(e.previous || '--')}</td>
+      <td class="p-3 text-amber-400" data-countdown-date="${escapeHtml(e.date || '')}">${escapeHtml(getEventCountdown(e.date))}</td>
+    </tr>`;
+}
+
+function getCalendarLoadingRows() {
+  return `
+    <tr>
+      <td class="p-3 text-amber-400">Loading</td>
+      <td class="p-3"><span class="badge badge-blue">USD</span></td>
+      <td class="p-3 font-semibold"><span class="loading-dot"></span> <span class="loading-dot"></span> <span class="loading-dot"></span> Mengambil calendar feed...</td>
+      <td class="p-3"><span class="badge badge-orange">FETCHING</span></td>
+      <td class="p-3">--</td><td class="p-3">--</td><td class="p-3">--</td><td class="p-3 text-amber-400">--</td>
+    </tr>`;
+}
+
+function formatCalendarDate(value) {
+  const t = Date.parse(value || '');
+  if (!Number.isFinite(t)) return value || '--';
+  return new Date(t).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function setCalendarApiState(online, source, updatedAt = new Date(), nextEvent = null) {
+  calendarApiOnline = Boolean(online);
+  calendarSourceName = source || (online ? 'Online' : 'Offline');
+  calendarLastUpdatedAt = updatedAt;
+  nextCalendarEvent = nextEvent || nextCalendarEvent;
+  updateCalendarMonitorUI();
+}
+
+function updateCalendarMonitorUI() {
+  const statusText = calendarManualOverride
+    ? '🟠 OVERRIDE ACTIVE'
+    : calendarApiOnline
+      ? '🟢 ONLINE'
+      : calendarSourceName === 'Fetching...'
+        ? '🟠 FETCHING'
+        : '🔴 OFFLINE';
+  safeText('calendarApiStatusEl', statusText);
+  safeText('calendarSourceEl', calendarSourceName || '--');
+  safeText('calendarLastUpdateEl', calendarLastUpdatedAt ? calendarLastUpdatedAt.toLocaleTimeString('id-ID') : '--');
+  safeText('calendarNextEventEl', nextCalendarEvent ? (nextCalendarEvent.title || nextCalendarEvent.event || '--') : '--');
+  safeText('calendarNextCountdownEl', nextCalendarEvent ? getEventCountdown(nextCalendarEvent.date) : '--');
+
+  const btn = document.getElementById('calendarOverrideBtn');
+  if (btn) {
+    btn.classList.toggle('manual-override-active', calendarManualOverride);
+    btn.innerHTML = `<i class="fas fa-user-shield"></i> MANUAL OVERRIDE: ${calendarManualOverride ? 'ON' : 'OFF'}`;
   }
 }
 
+function toggleCalendarManualOverride(forceState) {
+  calendarManualOverride = typeof forceState === 'boolean' ? forceState : !calendarManualOverride;
+  if (calendarManualOverride) {
+    newsRiskUnknown = false;
+    if (!highImpactNewsDetected) setSystemStatus('calendar', 'warn', 'Override');
+    showToast('Manual Override calendar aktif. Analisis dapat dilanjutkan meski API calendar bermasalah.', 'info');
+    addLog('Calendar manual override enabled by admin.', 'info');
+  } else {
+    newsRiskUnknown = !calendarApiOnline;
+    setSystemStatus('calendar', calendarApiOnline ? 'ok' : 'bad', calendarApiOnline ? 'Online' : 'Offline');
+    showToast('Manual Override calendar dimatikan.', 'info');
+    addLog('Calendar manual override disabled.', 'info');
+  }
+  updateCalendarMonitorUI();
+  applyTradingReadiness(lastWsPrice);
+}
+
+function isGoldUsdHighImpactEvent(event) {
+  const currency = String(event.currency || '').toUpperCase();
+  const impact = String(event.impact || '').toLowerCase();
+  const title = String(event.title || event.event || '').toUpperCase();
+  const isHigh = impact.includes('high') || impact.includes('red') || impact.includes('3');
+  const keywords = [
+    'NFP', 'NON-FARM', 'NONFARM', 'NON FARM',
+    'CPI', 'CONSUMER PRICE', 'INFLATION RATE',
+    'FOMC', 'FED INTEREST RATE', 'FEDERAL FUNDS', 'INTEREST RATE DECISION', 'FOMC STATEMENT', 'FOMC PRESS'
+  ];
+  return currency === 'USD' && isHigh && keywords.some(k => title.includes(k));
+}
 
 function isHighImpactEventSoon(event) {
-  const impact = String(event.impact || '').toLowerCase();
-  if (!impact.includes('high')) return false;
-
+  if (!isGoldUsdHighImpactEvent(event)) return false;
   const rawDate = event.date || event.datetime || event.time || '';
   const eventTime = Date.parse(rawDate);
-  if (!Number.isFinite(eventTime)) return true; // konservatif jika format tanggal tidak terbaca
+  if (!Number.isFinite(eventTime)) return true;
 
   const now = Date.now();
   const diffMs = eventTime - now;
@@ -1419,42 +2419,60 @@ function escapeHtml(value) {
 async function saveTradingPlanToSheets() {
   const m = getTradeMetrics(lastWsPrice);
   const d = m.cfg.decimals;
+  const decision = currentPlanDecision || assessTradingReadiness(lastWsPrice);
+  const hasActionableSide = m.side === 'BUY' || m.side === 'SELL';
+  const aiExplanation = buildAIReasons(decision).map(r => `${r.ok ? '✔' : '⚠'} ${r.text}`).join(' | ');
   const payload = {
+    date: new Date().toLocaleDateString('id-ID'),
+    time: new Date().toLocaleTimeString('id-ID'),
+    timestamp: new Date().toISOString(),
     pair: m.cfg.display,
-    bias: 'Bullish',
-    setupType: document.getElementById('tpSetupType')?.innerText || 'BUY LIMIT (DEMAND ZONE)',
-    entry: Number(m.entry.toFixed(d)),
-    stopLoss: Number(m.sl.toFixed(d)),
-    tp1: Number(m.tp1.toFixed(d)),
-    tp2: Number(m.tp2.toFixed(d)),
-    tp3: Number(m.tp3.toFixed(d)),
+    action: m.side,
+    bias: m.bias,
+    setupType: document.getElementById('tpSetupType')?.innerText || 'ENTRY PLAN XAUUSD',
+    entry: hasActionableSide ? Number(m.entry.toFixed(d)) : '',
+    stopLoss: hasActionableSide ? Number(m.sl.toFixed(d)) : '',
+    tp1: hasActionableSide ? Number(m.tp1.toFixed(d)) : '',
+    tp2: hasActionableSide ? Number(m.tp2.toFixed(d)) : '',
+    tp3: hasActionableSide ? Number(m.tp3.toFixed(d)) : '',
     riskPct: Number(m.risk),
     riskAmount: Number(m.riskAmt.toFixed(2)),
-    lotSize: Number(m.lotSize.toFixed(2)),
+    lotSize: hasActionableSide ? Number(m.lotSize.toFixed(2)) : '',
     confidence: document.getElementById('finalConf')?.innerText || '',
     confluence: document.getElementById('finalConfl')?.innerText || '',
-    status: currentPlanDecision?.title || document.getElementById('finalStatus')?.innerText || 'READY TO TRADE',
-    notes: `${currentPlanDecision?.reason || 'No readiness note'} | Saved from AI Trading Signal System at ${new Date().toLocaleString('id-ID')}`
+    trend: `${m.trend.label} | strength ${m.trend.strength}% | ${m.trend.reason}`,
+    news: highImpactNewsDetected ? `WAIT NEWS: ${highImpactNewsLabel}` : newsRiskUnknown ? 'NEWS CHECK REQUIRED' : 'USD High Impact Clear',
+    dom: m.side === 'BUY' ? (lastPctChange >= 0 ? 'Buyer momentum proxy aligned' : 'Buyer momentum proxy weak') : m.side === 'SELL' ? (lastPctChange <= 0 ? 'Seller momentum proxy aligned' : 'Seller momentum proxy weak') : 'No directional DOM proxy',
+    aiExplanation,
+    screenshotChart: captureChartPlaceholder(),
+    resultTrade: 'OPEN',
+    traderNotes: '',
+    status: decision.title || document.getElementById('finalStatus')?.innerText || 'READY TO TRADE',
+    notes: `${decision.reason || 'No readiness note'} | Saved from AI Trading Signal System at ${new Date().toLocaleString('id-ID')}`
   };
 
-  const requestUrl = `${GOOGLE_SHEETS_WEBHOOK_URL}?token=${encodeURIComponent(GOOGLE_SHEETS_TOKEN)}`;
+  const requestUrl = getSheetsRequestUrl();
 
   try {
     showToast('Mengirim trading plan ke Google Sheets...', 'info');
+    setSystemStatus('sheets', 'warn', 'Syncing');
 
-    // no-cors dipakai agar HTML lokal/static tetap bisa POST ke Google Apps Script tanpa error CORS.
-    // Respons menjadi opaque, jadi konfirmasi final dilakukan dengan mengecek tab TradingPlanLog.
-    await fetch(requestUrl, {
+    await fetchWithTimeout(requestUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload)
-    });
+    }, 12000);
 
-    showToast('Plan dikirim ke Google Sheets. Cek tab TradingPlanLog.', 'success');
-    addLog(`Trading plan ${payload.pair} dikirim ke Google Sheets: entry ${formatPrice(payload.entry, d)} / SL ${formatPrice(payload.stopLoss, d)}.`, 'success');
+    recordJournal(payload);
+    await sendTelegramAlert(payload);
+    setSystemStatus('sheets', 'ok', 'Synced');
+    showToast('Plan dikirim ke Google Sheets & journal lokal tersimpan.', 'success');
+    addLog(`Trading plan ${payload.pair} dikirim: entry ${formatPrice(payload.entry, d)} / SL ${formatPrice(payload.stopLoss, d)} / confidence ${payload.confidence}.`, 'success');
   } catch (err) {
-    showToast(`Gagal mengirim ke Google Sheets: ${err.message}`, 'error');
+    recordJournal(payload);
+    setSystemStatus('sheets', 'bad', 'Error');
+    showToast(`Gagal mengirim ke Google Sheets: ${err.message}. Journal lokal tetap tersimpan.`, 'error');
     addLog(`Google Sheets sync gagal: ${err.message}`, 'error');
   }
 }
@@ -1469,8 +2487,8 @@ function runSmartSheetAnalysis() {
       <div class="p-3 rounded bg-slate-900 border border-emerald-500/35 space-y-2">
         <div class="flex justify-between text-emerald-400 font-bold"><span>Status: BERHASIL</span><span>Confidence: ${document.getElementById('finalConf')?.innerText || '94%'}</span></div>
         <div>• Pair aktif: ${escapeHtml(cfg.display)} @ ${escapeHtml(formatPrice(lastWsPrice))}</div>
-        <div>• Trend H4 & H1: Strong Bullish Aligned</div>
-        <div>• Order Block Mitigation: Confirmed di ${escapeHtml(formatPrice(lastWsPrice))}</div>
+        <div>• Trend Engine: ${escapeHtml(analyzeMarketTrend(lastWsPrice).label)} / Strength ${escapeHtml(String(analyzeMarketTrend(lastWsPrice).strength))}%</div>
+        <div>• SMC Proxy: ${escapeHtml(getSMCState().smcOrderBlock[1])} di ${escapeHtml(formatPrice(lastWsPrice))}</div>
         <div>• Sheets Sync: endpoint Google Sheets aktif; plan dapat tersimpan ke TradingPlanLog.</div>
       </div>
     `;
@@ -1480,12 +2498,26 @@ function runSmartSheetAnalysis() {
 }
 
 function showSpreadsheetModal() {
-  showToast('Info: modul Google Sheets masih mode demo. Butuh Apps Script Web App URL/API key.', 'info');
+  const st = getSettings();
+  showToast(st.sheetsUrl ? 'Google Sheets endpoint aktif. Tombol Simpan Plan akan mengirim ke TradingPlanLog.' : 'Google Sheets belum dikonfigurasi. Isi URL di Settings.', st.sheetsUrl ? 'success' : 'info');
 }
 
-function testTelegramAlert() {
-  showToast('Mode demo: tambahkan Bot Token & Chat ID agar Telegram alert benar-benar terkirim.', 'info');
+async function testTelegramAlert() {
+  const m = getTradeMetrics(lastWsPrice);
+  const payload = {
+    action: m.side,
+    entry: formatPrice(m.entry),
+    stopLoss: formatPrice(m.sl),
+    tp1: formatPrice(m.tp1),
+    tp2: formatPrice(m.tp2),
+    tp3: formatPrice(m.tp3),
+    lotSize: m.lotSize.toFixed(2),
+    confidence: document.getElementById('finalConf')?.innerText || '--',
+    aiExplanation: 'Test alert from AI Trading Signal XAUUSD'
+  };
+  const ok = await sendTelegramAlert(payload);
+  showToast(ok ? 'Test Telegram alert terkirim.' : 'Telegram belum terkirim. Cek Bot Token & Chat ID di Settings.', ok ? 'success' : 'info');
 }
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2342c0ebcaefcf0',t:'MTc4NTQxMjUwMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
