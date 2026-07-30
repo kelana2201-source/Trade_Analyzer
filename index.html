@@ -54,6 +54,145 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(
 .tab-btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);transition:all .2s}
 .tab-btn.active{background:var(--gold);color:#000;border-color:var(--gold)}
 .hidden{display:none!important}
+
+
+
+.chart-actions{justify-content:flex-end;min-width:0}.chart-actions .badge{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chart-actions .btn{min-height:28px;padding:5px 8px}
+
+/* ================= MOBILE RESPONSIVE PATCH v5.6.1 ================= */
+html{overflow-x:hidden;-webkit-text-size-adjust:100%}
+body{overflow-x:hidden;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.app-header,.tab-nav,.card{max-width:100%}
+.header-brand{min-width:0}.header-brand>div:last-child{min-width:0}.header-brand h1{line-height:1.15}.header-brand p{line-height:1.45}
+.header-actions{justify-content:flex-end}.tab-btn i{width:16px;text-align:center;flex:0 0 16px}.tab-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:1.2}
+.card-title{line-height:1.35}.card-title>span{min-width:0}.card-title .badge{white-space:normal;text-align:center}.btn{min-height:36px}.badge{line-height:1.25}
+.chart-toolbar,.chart-price-row{min-width:0}.chart-price-row{flex-wrap:wrap}.overflow-x-auto{-webkit-overflow-scrolling:touch}.overflow-x-auto table{min-width:720px}
+
+@media (max-width: 640px){
+  body.p-4{padding:12px!important;padding-bottom:calc(84px + env(safe-area-inset-bottom))!important}
+  .app-header{display:grid!important;grid-template-columns:auto 1fr;align-items:center!important;gap:10px 12px!important;margin-bottom:12px!important}
+  .header-brand{grid-column:1 / -1;width:100%;gap:10px!important;align-items:center!important}
+  .brand-icon{width:44px!important;height:44px!important;border-radius:12px!important;flex:0 0 44px}
+  .brand-icon i{font-size:18px!important}
+  .header-brand h1{font-size:18px!important;letter-spacing:-.4px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;line-height:1.12}
+  .header-brand h1 span{font-size:11px!important;margin-top:2px;line-height:1.2;white-space:nowrap}
+  .header-brand p{font-size:11.5px!important;color:#94a3b8!important;margin-top:4px;max-width:100%}
+  .header-actions{grid-column:1 / -1;width:100%;justify-content:flex-start!important;gap:8px!important}
+  .header-actions .badge,.header-actions .btn{min-height:36px;border-radius:9px;font-size:12px;padding:7px 10px}
+  #installPwaBtn:not(.hidden){width:100%;justify-content:center}
+
+  .tab-nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px!important;margin-bottom:14px!important;align-items:stretch!important}
+  .tab-btn{width:100%;min-height:48px;padding:10px 11px!important;border-radius:12px!important;justify-content:flex-start!important;text-align:left;font-size:11.5px!important;white-space:normal;word-break:normal;box-shadow:0 0 0 1px rgba(56,189,248,.03) inset}
+  #btn-dashboard,#btn-tradingplan,#btn-smartanalyzer,#btn-backtest{grid-column:1 / -1}
+  #btn-tradingplan{min-height:52px;font-size:12.5px!important;font-weight:700}
+
+  .card{border-radius:14px!important;padding:12px!important;margin-bottom:12px!important}
+  .card-title{font-size:10px!important;letter-spacing:1.1px!important;margin-bottom:10px!important;display:flex!important;flex-wrap:wrap!important;gap:8px!important;justify-content:flex-start!important;align-items:flex-start!important}
+  .card-title>span:first-child{flex:1 1 100%}.card-title>div{width:100%;display:flex;gap:8px;flex-wrap:wrap}.card-title .btn{flex:1 1 0;min-width:120px}.card-title .badge{font-size:10px;padding:5px 8px;border-radius:8px}
+  .btn{border-radius:10px!important;font-size:11.5px!important;padding:9px 11px!important}.badge{font-size:10.5px;padding:5px 8px;border-radius:8px}.toast-container{left:12px;right:12px;top:12px}.toast{max-width:none;width:100%;font-size:12px;padding:10px 12px}
+
+  .market-control-grid{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;width:100%}
+  .market-control-grid>div:first-child{grid-column:1 / -1}.market-control-grid label{display:block;margin-bottom:4px}.market-control-grid select,.market-control-grid input{width:100%!important;min-height:42px;font-size:12px}.market-control-grid .btn{grid-column:1 / -1;width:100%;margin-left:0!important;min-height:44px}
+
+  .chart-toolbar{display:flex!important;flex-direction:column;align-items:flex-start!important;gap:8px!important;padding-left:4px!important;padding-right:4px!important}.chart-price-row{gap:7px!important;width:100%}#chSym{font-size:12px!important}#chPrice{font-size:17px!important}.chart-actions{width:100%;justify-content:space-between!important}.chart-actions .badge{flex:1;max-width:none;font-size:9.5px!important;padding:5px 7px}.chart-actions .btn{font-size:10px!important;min-height:32px;padding:6px 8px!important}#chartWrap{height:340px!important;border-radius:12px!important}
+
+  .grid{min-width:0}.grid>*,.card>*{min-width:0}.signal-card{padding:12px!important;border-radius:12px!important}.signal-card .flex.justify-between{gap:8px;align-items:flex-start}.signal-card .grid{grid-template-columns:1fr!important}.signal-card .badge{max-width:100%;white-space:normal;text-align:left}
+
+  #finalStatus{font-size:16px!important;line-height:1.25}.card [id="aiAutoLockRec"]{line-height:1.45}.card .grid.grid-cols-1{gap:10px!important}
+
+  #tab-tradingplan #tradingPlanCard{border-width:1.5px!important}#tab-tradingplan .card-title>div{width:100%;display:grid!important;grid-template-columns:1fr;gap:8px!important}#tpLockBadge{width:100%;justify-content:center}#tab-tradingplan .card-title button{width:100%;justify-content:center;min-height:44px}#tpExecutionStatusBox{padding:11px!important;border-radius:12px!important}#tpExecutionStatusTitle{font-size:13px!important;line-height:1.3}#tpExecutionStatusBadge{width:100%;justify-content:center;margin-top:4px}#tpExecutionStatusReason{line-height:1.45}#tab-tradingplan .grid.grid-cols-1>div{padding:12px!important;border-radius:12px!important}#tpSetupType{font-size:14px!important;line-height:1.35}#tpStopLoss{font-size:14px!important;line-height:1.35}#tab-tradingplan .flex.justify-between{gap:10px;align-items:flex-start}#tab-tradingplan .flex.justify-between strong{text-align:right;word-break:break-word}#tab-tradingplan #tpEntryPrice{white-space:nowrap}
+
+  #tab-calendar .overflow-x-auto{border:1px solid rgba(28,42,74,.8);border-radius:12px}#tab-calendar table{font-size:11px!important}#tab-calendar th,#tab-calendar td{padding:10px!important;white-space:nowrap}
+  #tab-dom .flex.justify-between,#tab-riskmatrix .flex.justify-between{gap:8px}.log-line{font-size:9.5px;line-height:1.5}
+  #tab-backtest .grid.grid-cols-2{grid-template-columns:1fr 1fr!important;gap:10px!important}#tab-backtest .text-xl{font-size:16px!important}
+}
+
+@media (max-width: 380px){
+  .header-brand h1{font-size:16px!important}.header-brand p{font-size:10.8px!important}.tab-nav{grid-template-columns:1fr}.tab-btn{grid-column:1 / -1!important;min-height:44px}#chartWrap{height:300px!important}.market-control-grid{grid-template-columns:1fr}.market-control-grid>*{grid-column:1 / -1!important}#tab-backtest .grid.grid-cols-2{grid-template-columns:1fr!important}
+}
+
+
+/* ================= MOBILE MENU CARD GRID + CHART FIX v5.6.2 ================= */
+@media (max-width: 640px){
+  .tab-nav{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:9px!important;
+    align-items:stretch!important;
+    margin-bottom:14px!important;
+  }
+  .tab-btn,
+  #btn-dashboard,#btn-tradingplan,#btn-calendar,#btn-confluence,#btn-dom,#btn-sentiment,#btn-riskmatrix,#btn-smartanalyzer,#btn-backtest{
+    grid-column:auto!important;
+    width:100%!important;
+    min-height:78px!important;
+    aspect-ratio:1 / .82;
+    padding:8px 6px!important;
+    border-radius:14px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:7px!important;
+    text-align:center!important;
+    white-space:normal!important;
+    word-break:normal!important;
+    overflow-wrap:anywhere;
+    font-size:10.4px!important;
+    font-weight:700!important;
+    line-height:1.16!important;
+    letter-spacing:-.15px;
+    background:linear-gradient(145deg,rgba(17,26,46,.95),rgba(10,18,34,.95));
+    box-shadow:0 8px 18px rgba(0,0,0,.18), inset 0 0 0 1px rgba(56,189,248,.05);
+  }
+  .tab-btn i{
+    margin:0!important;
+    width:auto!important;
+    flex:0 0 auto!important;
+    font-size:17px!important;
+    line-height:1!important;
+    color:#8ea0bd;
+  }
+  .tab-btn.active{
+    color:#05070d!important;
+    background:linear-gradient(145deg,#e2ad16,#c9900d)!important;
+    border-color:#e8b430!important;
+    box-shadow:0 10px 22px rgba(212,160,23,.18), inset 0 0 0 1px rgba(255,255,255,.18);
+  }
+  .tab-btn.active i{color:#05070d!important}
+  .chart-actions{
+    width:100%;
+    display:grid!important;
+    grid-template-columns:1fr 1fr;
+    gap:7px!important;
+  }
+  .chart-actions .badge,
+  .chart-actions .btn{
+    width:100%;
+    min-width:0;
+    justify-content:center!important;
+    text-align:center;
+    font-size:9.8px!important;
+    min-height:34px!important;
+    padding:6px 7px!important;
+  }
+  .chart-actions #tvFeedBadge{grid-column:1 / -1}
+  .tv-iframe{min-height:100%;background:#0b1220}
+  .chart-help-banner{display:block!important}
+}
+@media (max-width: 380px){
+  .tab-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important}
+  .tab-btn,
+  #btn-dashboard,#btn-tradingplan,#btn-calendar,#btn-confluence,#btn-dom,#btn-sentiment,#btn-riskmatrix,#btn-smartanalyzer,#btn-backtest{
+    grid-column:auto!important;
+    min-height:70px!important;
+    padding:7px 4px!important;
+    font-size:9.4px!important;
+    border-radius:12px!important;
+  }
+  .tab-btn i{font-size:15px!important}
+}
+
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--bg-deep)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -64,15 +203,15 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- HEADER -->
-<header class="flex items-center justify-between mb-4 flex-wrap gap-2">
-  <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-600 to-yellow-800 flex items-center justify-center"><i class="fas fa-brain text-black text-lg"></i></div>
+<header class="app-header flex items-center justify-between mb-4 flex-wrap gap-2">
+  <div class="header-brand flex items-center gap-3">
+    <div class="brand-icon w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-600 to-yellow-800 flex items-center justify-center"><i class="fas fa-brain text-black text-lg"></i></div>
     <div>
       <h1 class="text-lg font-bold tracking-tight" style="color:var(--gold)">AI TRADING SIGNAL SYSTEM <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono">v5.6 SMART AUTO-FLUSH</span></h1>
       <p class="text-xs" style="color:var(--text-muted)">Smart Technical Engine + Real-Time DOM & Order Block + AI Auto-Renewal Plan</p>
     </div>
   </div>
-  <div class="flex items-center gap-2 flex-wrap">
+  <div class="header-actions flex items-center gap-2 flex-wrap">
     <button class="btn btn-outline text-xs hidden" id="installPwaBtn" onclick="installPWA()"><i class="fas fa-download"></i> INSTALL APP</button>
     <span class="badge badge-cyan mono" id="connBadge"><i class="fas fa-circle text-[8px]" id="connDot"></i> OFFLINE</span>
     <span class="badge badge-gold mono" id="clockEl">--:--:--</span>
@@ -80,7 +219,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(
 </header>
 
 <!-- NAVIGATION TABS -->
-<div class="flex items-center gap-2 mb-4 flex-wrap">
+<div class="tab-nav flex items-center gap-2 mb-4 flex-wrap">
   <button class="tab-btn active" id="btn-dashboard" onclick="switchTab('dashboard')"><i class="fas fa-chart-line mr-1"></i> Live Dashboard</button>
   <button class="tab-btn" id="btn-tradingplan" onclick="switchTab('tradingplan')"><i class="fas fa-clipboard-list mr-1"></i> Trading Plan & Execution</button>
   <button class="tab-btn" id="btn-calendar" onclick="switchTab('calendar')"><i class="fas fa-calendar-alt mr-1"></i> Economic Calendar</button>
@@ -134,13 +273,13 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(
         <button class="btn btn-outline text-xs" onclick="doDisconnect()"><i class="fas fa-xmark mr-1"></i> STOP</button>
       </div>
     </div>
-    <div class="flex items-center gap-4 mt-2 flex-wrap">
+    <div class="market-control-grid flex items-end gap-4 mt-2 flex-wrap">
       <div><label class="text-[10px] text-muted">Symbol / Pair</label>
         <select class="input-field" id="symSel" style="width:160px" onchange="changeSymbol()">
-          <option value="OANDA:XAU_USD">XAUUSD (Gold)</option>
-          <option value="OANDA:EUR_USD">EURUSD</option>
-          <option value="OANDA:GBP_USD">GBPUSD</option>
-          <option value="OANDA:USD_JPY">USDJPY</option>
+          <option value="OANDA:XAUUSD">XAUUSD (Gold)</option>
+          <option value="OANDA:EURUSD">EURUSD</option>
+          <option value="OANDA:GBPUSD">GBPUSD</option>
+          <option value="OANDA:USDJPY">USDJPY</option>
           <option value="BINANCE:BTCUSDT">BTCUSDT</option>
         </select>
       </div>
@@ -157,13 +296,18 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
     <div class="lg:col-span-8 flex flex-col gap-4">
       <div class="card" style="padding:8px">
-        <div class="flex items-center justify-between mb-2 px-2">
-          <div class="flex items-center gap-3">
+        <div class="chart-toolbar flex items-center justify-between mb-2 px-2">
+          <div class="chart-price-row flex items-center gap-3">
             <span class="text-sm font-bold text-amber-400" id="chSym">XAUUSD</span>
             <span class="text-lg font-bold mono" id="chPrice">2,355.80</span>
             <span class="badge mono text-[10px] badge-green" id="chChg">+0.45%</span>
           </div>
-          <span class="badge badge-green mono text-[10px]">TRADINGVIEW PRO</span>
+          <div class="chart-actions flex items-center gap-2 flex-wrap">
+            <span class="badge badge-green mono text-[10px]" id="tvFeedBadge">TV: FX_IDC:XAUUSD</span>
+            <button class="btn btn-outline text-[10px] py-1 px-2" onclick="cycleChartFeed()"><i class="fas fa-rotate"></i> GANTI FEED</button>
+            <button class="btn btn-outline text-[10px] py-1 px-2" onclick="openTradingViewChart()"><i class="fas fa-up-right-from-square"></i> BUKA FULL</button>
+            <button class="btn btn-outline text-[10px] py-1 px-2" onclick="showInternalChart()"><i class="fas fa-chart-line"></i> CHART HP</button>
+          </div>
         </div>
         <div id="chartWrap" style="width:100%;height:460px;position:relative;border-radius:8px;overflow:hidden">
           <div id="tradingview_widget" style="height:100%"></div>
@@ -385,11 +529,19 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg-deep);color:var(
 //  STATE & CONFIGURATION (V5.6 SMART AUTO-FLUSH - REVIEWED)
 // ═══════════════════════════════════════════════════════════
 const SYMBOL_CONFIG = {
-  'OANDA:XAU_USD': { display: 'XAUUSD', initial: 4087.60, decimals: 2, tv: 'OANDA:XAU_USD', type: 'gold' },
-  'OANDA:EUR_USD': { display: 'EURUSD', initial: 1.08500, decimals: 5, tv: 'OANDA:EUR_USD', type: 'forex' },
-  'OANDA:GBP_USD': { display: 'GBPUSD', initial: 1.28200, decimals: 5, tv: 'OANDA:GBP_USD', type: 'forex' },
-  'OANDA:USD_JPY': { display: 'USDJPY', initial: 154.500, decimals: 3, tv: 'OANDA:USD_JPY', type: 'forex' },
+  'OANDA:XAUUSD': { display: 'XAUUSD', initial: 4087.60, decimals: 2, tv: 'OANDA:XAUUSD', type: 'gold' },
+  'OANDA:EURUSD': { display: 'EURUSD', initial: 1.08500, decimals: 5, tv: 'OANDA:EURUSD', type: 'forex' },
+  'OANDA:GBPUSD': { display: 'GBPUSD', initial: 1.28200, decimals: 5, tv: 'OANDA:GBPUSD', type: 'forex' },
+  'OANDA:USDJPY': { display: 'USDJPY', initial: 154.500, decimals: 3, tv: 'OANDA:USDJPY', type: 'forex' },
   'BINANCE:BTCUSDT': { display: 'BTCUSDT', initial: 65400.00, decimals: 2, tv: 'BINANCE:BTCUSDT', type: 'crypto' }
+};
+
+const CHART_FEED_FALLBACKS = {
+  'OANDA:XAUUSD': ['FX_IDC:XAUUSD', 'FOREXCOM:XAUUSD', 'OANDA:XAUUSD', 'TVC:GOLD'],
+  'OANDA:EURUSD': ['FX:EURUSD', 'OANDA:EURUSD', 'FX_IDC:EURUSD'],
+  'OANDA:GBPUSD': ['FX:GBPUSD', 'OANDA:GBPUSD', 'FX_IDC:GBPUSD'],
+  'OANDA:USDJPY': ['FX:USDJPY', 'OANDA:USDJPY', 'FX_IDC:USDJPY'],
+  'BINANCE:BTCUSDT': ['BINANCE:BTCUSDT', 'COINBASE:BTCUSD', 'BITSTAMP:BTCUSD']
 };
 
 const PLAN_MULTIPLIER = {
@@ -404,8 +556,10 @@ const GOOGLE_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwq6q
 const GOOGLE_SHEETS_TOKEN = 'xau_ai_journal_2026_aman';
 
 
-let currentSymbol = 'OANDA:XAU_USD';
+let currentSymbol = 'OANDA:XAUUSD';
 let currentRes = '15';
+let chartFeedIndex = 0;
+let chartMode = 'tradingview';
 let lastWsPrice = SYMBOL_CONFIG[currentSymbol].initial;
 let connected = false;
 let livePriceInterval = null;
@@ -421,7 +575,7 @@ let currentPlanDecision = null;
 let deferredPwaPrompt = null;
 
 function getSymbolConfig() {
-  return SYMBOL_CONFIG[currentSymbol] || SYMBOL_CONFIG['OANDA:XAU_USD'];
+  return SYMBOL_CONFIG[currentSymbol] || SYMBOL_CONFIG['OANDA:XAUUSD'];
 }
 
 function formatPrice(value, decimals = getSymbolConfig().decimals) {
@@ -642,54 +796,167 @@ function showToast(message, type = 'success') {
   }, 3500);
 }
 
+
+function getChartFeedList() {
+  const cfg = getSymbolConfig();
+  return CHART_FEED_FALLBACKS[currentSymbol] || [cfg.tv];
+}
+
+function getTradingViewSymbol() {
+  const feeds = getChartFeedList();
+  return feeds[chartFeedIndex % feeds.length] || getSymbolConfig().tv;
+}
+
+function updateChartFeedBadge(tvSymbol = getTradingViewSymbol()) {
+  const badge = document.getElementById('tvFeedBadge');
+  if (!badge) return;
+  badge.innerText = chartMode === 'internal' ? 'MODE: CHART HP' : `TV: ${tvSymbol}`;
+  badge.title = chartMode === 'internal' ? 'Internal mobile chart fallback' : `TradingView symbol: ${tvSymbol}`;
+}
+
+function getTradingViewEmbedUrl(tvSymbol) {
+  const isMobile = window.matchMedia('(max-width: 640px)').matches;
+  const params = new URLSearchParams({
+    frameElementId: 'tv_chart_container',
+    symbol: tvSymbol,
+    interval: currentRes,
+    hidesidetoolbar: '1',
+    hidetoptoolbar: isMobile ? '1' : '0',
+    symboledit: '1',
+    saveimage: '0',
+    toolbarbg: '#111a2e',
+    studies: '[]',
+    theme: 'dark',
+    style: '1',
+    timezone: 'Asia/Jakarta',
+    withdateranges: isMobile ? '0' : '1',
+    hideideas: '1',
+    locale: 'id',
+    showpopupbutton: '1',
+    popup_width: '1000',
+    popup_height: '650'
+  });
+  return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
+}
+
+function cycleChartFeed() {
+  const feeds = getChartFeedList();
+  chartFeedIndex = (chartFeedIndex + 1) % feeds.length;
+  chartMode = 'tradingview';
+  const tvSymbol = getTradingViewSymbol();
+  initTradingViewWidget();
+  showToast(`Feed chart diganti ke ${tvSymbol}`, 'info');
+  addLog(`TradingView feed diganti ke ${tvSymbol}.`, 'info');
+}
+
+function openTradingViewChart() {
+  const tvSymbol = getTradingViewSymbol();
+  const url = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSymbol)}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+  addLog(`Open TradingView full chart: ${tvSymbol}`, 'info');
+}
+
+function showInternalChart() {
+  chartMode = 'internal';
+  renderInternalChart(lastWsPrice);
+  updateChartFeedBadge();
+  showToast('Chart HP internal aktif. Ini fallback jika TradingView diblokir/tidak tampil di HP.', 'info');
+}
+
+function buildInternalSeries(price = lastWsPrice) {
+  const cfg = getSymbolConfig();
+  const source = recentPrices.filter(v => Number.isFinite(v) && v > 0);
+  if (source.length >= 6) return source.slice(-30);
+  const points = [];
+  const step = cfg.type === 'crypto' ? price * 0.0009 : cfg.type === 'gold' ? price * 0.00035 : price * 0.00022;
+  for (let i = 29; i >= 0; i--) {
+    points.push(price + Math.sin(i * 0.75) * step * 4 + (Math.random() - 0.5) * step * 2);
+  }
+  return points;
+}
+
+function renderInternalChart(price = lastWsPrice) {
+  const widgetEl = document.getElementById('tradingview_widget');
+  if (!widgetEl) return;
+  const cfg = getSymbolConfig();
+  const d = cfg.decimals;
+  const series = buildInternalSeries(price);
+  const w = 900, h = 460, pad = 48;
+  const minP = Math.min(...series);
+  const maxP = Math.max(...series);
+  const span = Math.max(maxP - minP, Number.EPSILON);
+  const pts = series.map((v, i) => {
+    const x = pad + (i / Math.max(series.length - 1, 1)) * (w - pad * 2);
+    const y = pad + ((maxP - v) / span) * (h - pad * 2);
+    return { x, y, v };
+  });
+  const line = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const area = `${pad},${h-pad} ${line} ${w-pad},${h-pad}`;
+  const last = pts[pts.length - 1];
+  const first = pts[0];
+  const up = last.v >= first.v;
+  const color = up ? '#22c55e' : '#ef4444';
+  const grid = Array.from({ length: 5 }, (_, i) => {
+    const y = pad + i * ((h - pad * 2) / 4);
+    const val = maxP - i * (span / 4);
+    return `<line x1="${pad}" y1="${y}" x2="${w-pad}" y2="${y}" stroke="#1c2a4a" stroke-width="1"/><text x="${w-pad+10}" y="${y+4}" fill="#64748b" font-size="18" font-family="monospace">${formatPrice(val, d)}</text>`;
+  }).join('');
+  widgetEl.innerHTML = `
+    <div class="h-full w-full rounded-lg overflow-hidden bg-slate-950 border border-slate-800 relative">
+      <div class="absolute left-3 top-3 z-10 flex flex-wrap gap-2 items-center">
+        <span class="badge badge-gold mono">CHART HP INTERNAL</span>
+        <span class="badge ${up ? 'badge-green' : 'badge-red'} mono">${formatPrice(last.v, d)}</span>
+        <button class="btn btn-outline text-[10px] py-1 px-2" onclick="showTradingViewChart()">KEMBALI TV</button>
+      </div>
+      <svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" preserveAspectRatio="none" role="img" aria-label="Internal price chart">
+        <rect width="${w}" height="${h}" fill="#060a13"/>
+        ${grid}
+        <polygon points="${area}" fill="${up ? 'rgba(34,197,94,.14)' : 'rgba(239,68,68,.14)'}"/>
+        <polyline points="${line}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="${last.x}" cy="${last.y}" r="7" fill="${color}"/>
+        <text x="${pad}" y="${h-16}" fill="#d4a017" font-size="22" font-family="monospace" font-weight="700">${cfg.display} • fallback mobile chart</text>
+      </svg>
+    </div>`;
+}
+
+function showTradingViewChart() {
+  chartMode = 'tradingview';
+  initTradingViewWidget();
+}
+
 function initTradingViewWidget() {
   const widgetEl = document.getElementById('tradingview_widget');
   if (!widgetEl) return;
   widgetEl.innerHTML = '';
 
+  const cfg = getSymbolConfig();
+  const tvSymbol = getTradingViewSymbol();
+  safeText('chSym', cfg.display);
+  updateChartFeedBadge(tvSymbol);
+
   const container = document.createElement('div');
   container.id = 'tv_chart_container';
   container.style.height = '100%';
+  container.style.width = '100%';
+  container.style.position = 'relative';
   widgetEl.appendChild(container);
 
-  const cfg = getSymbolConfig();
-  safeText('chSym', cfg.display);
+  const iframe = document.createElement('iframe');
+  iframe.className = 'tv-iframe';
+  iframe.title = `TradingView chart ${tvSymbol}`;
+  iframe.src = getTradingViewEmbedUrl(tvSymbol);
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.border = '0';
+  iframe.style.display = 'block';
+  iframe.setAttribute('allowfullscreen', 'true');
+  iframe.setAttribute('scrolling', 'no');
+  container.appendChild(iframe);
 
-  if (!window.TradingView || typeof window.TradingView.widget !== 'function') {
-    container.innerHTML = `
-      <div class="h-full flex items-center justify-center text-center text-muted p-6 bg-slate-950 rounded-lg">
-        <div>
-          <div class="text-amber-400 font-bold mb-2">TradingView widget belum termuat</div>
-          <div class="text-xs">Periksa koneksi internet/ad-blocker, lalu refresh halaman.</div>
-        </div>
-      </div>`;
-    if (!tradingViewLoadWarned) {
-      showToast('TradingView belum termuat. Chart fallback ditampilkan.', 'info');
-      tradingViewLoadWarned = true;
-    }
-    return;
-  }
-
-  new window.TradingView.widget({
-    autosize: true,
-    symbol: cfg.tv,
-    interval: currentRes,
-    timezone: 'Asia/Jakarta',
-    theme: 'dark',
-    style: '1',
-    locale: 'id',
-    toolbar_bg: '#111a2e',
-    enable_publishing: false,
-    hide_top_toolbar: false,
-    hide_legend: false,
-    save_image: true,
-    container_id: 'tv_chart_container',
-    overrides: {
-      'paneProperties.background': '#060a13',
-      'paneProperties.vertGridProperties.color': '#1c2a4a',
-      'paneProperties.horzGridProperties.color': '#1c2a4a'
-    }
-  });
+  const help = document.createElement('div');
+  help.className = 'chart-help-banner hidden absolute left-2 right-2 bottom-2 z-10 text-[10px] text-muted bg-black/70 border border-slate-700 rounded-lg px-3 py-2';
+  help.innerHTML = 'Jika chart TradingView tidak tampil di HP/Brave, klik <b>GANTI FEED</b>, <b>BUKA FULL</b>, atau <b>CHART HP</b>.';
+  container.appendChild(help);
 }
 
 function changeSymbol() {
@@ -697,6 +964,8 @@ function changeSymbol() {
   const cfg = getSymbolConfig();
   lastWsPrice = cfg.initial;
   recentPrices = [];
+  chartFeedIndex = 0;
+  chartMode = 'tradingview';
   setInitialPlan(lastWsPrice);
   initTradingViewWidget();
   updatePriceDisplay(lastWsPrice, 0);
@@ -754,6 +1023,7 @@ function updatePriceDisplay(price, pctChange) {
 
   updateDomTable(price);
   updateTradingPlanValues(price);
+  if (chartMode === 'internal') renderInternalChart(price);
 }
 
 function getTradeMetrics(price = lastWsPrice) {
