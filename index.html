@@ -268,8 +268,6 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
   #tab-tradingplan .tp-action-row{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}
   #tradingPlanCard .tp-action-row .btn,
   #tab-tradingplan .tp-action-row .btn{width:100%;min-height:42px;justify-content:center}
-  #tradingPlanCard .tp-action-row .btn:nth-child(3),
-  #tab-tradingplan .tp-action-row .btn:nth-child(3){grid-column:1 / -1}
   /* On mobile, monitor sits high; system health can collapse under it */
   #tradingPlanCard{order:-1}
 }
@@ -481,8 +479,6 @@ body.theme-light .hm-cell{background:#f8fafc}
 
 <!-- MOBILE QUICK ACTIONS -->
 <section class="mobile-top-actions" aria-label="Mobile quick trading actions">
-  <button class="btn btn-green" onclick="doConnect()"><i class="fas fa-plug"></i> START LIVE</button>
-  <button class="btn btn-outline" onclick="doDisconnect()"><i class="fas fa-stop"></i> STOP</button>
   <button class="btn btn-gold primary-wide" data-generate-signal="1" onclick="quickGenerateSignal()"><i class="fas fa-bolt"></i> GENERATE SIGNAL & OPEN PLAN</button>
   <div class="mobile-quick-mini">
     <button class="btn btn-outline" onclick="switchTab('tradingplan')"><i class="fas fa-clipboard-list"></i> MONITOR</button>
@@ -546,7 +542,6 @@ body.theme-light .hm-cell{background:#f8fafc}
   </div>
 
   <div class="tp-action-row mt-3">
-    <button class="btn btn-green text-xs" onclick="doConnect()"><i class="fas fa-plug"></i> START LIVE</button>
     <button class="btn btn-gold text-xs" data-generate-signal="1" onclick="quickGenerateSignal()"><i class="fas fa-bolt"></i> GENERATE SIGNAL</button>
     <button class="btn btn-outline text-xs" onclick="checkRealEconomicCalendar()"><i class="fas fa-calendar-check"></i> CHECK NEWS</button>
   </div>
@@ -754,10 +749,7 @@ body.theme-light .hm-cell{background:#f8fafc}
   <div class="card" style="border-color:var(--cyan)">
     <div class="card-title justify-between">
       <span><i class="fas fa-database" style="color:var(--cyan)"></i> DATA MARKET REALTIME & SPOT SYNC</span>
-      <div class="flex items-center gap-2">
-        <button class="btn btn-green text-xs" onclick="doConnect()"><i class="fas fa-plug mr-1"></i> START LIVE STREAM</button>
-        <button class="btn btn-outline text-xs" onclick="doDisconnect()"><i class="fas fa-xmark mr-1"></i> STOP</button>
-      </div>
+      <span class="badge badge-cyan mono text-[10px]"><i class="fas fa-circle-info"></i> Kontrol Live: tombol START LIVE/STOP ada di atas</span>
     </div>
     <div class="market-control-grid flex items-end gap-4 mt-2 flex-wrap">
       <div><label class="text-[10px] text-muted">Symbol / Pair</label>
@@ -1206,6 +1198,28 @@ const MIN_TREND_SAMPLES = 12;
 const SIDEWAYS_RANGE_PCT = 0.035; // percentage of price, not fixed dollars
 // CLEAN-125: simulasi harga dinonaktifkan permanen — offline = tidak ada sinyal.
 
+// Forex/gold spot market tutup dari Jumat ~21:00 UTC sampai Minggu ~21:00 UTC (buka lagi bareng sesi Sydney).
+// Dipakai bersama oleh assessTradingReadiness() (blokir entry) dan Session Monitor (status OPEN/CLOSED per sesi).
+function isForexMarketOpen(now = new Date()) {
+  const day = now.getUTCDay(); // 0=Minggu, 5=Jumat, 6=Sabtu
+  const hour = now.getUTCHours();
+  if (day === 6) return false; // Sabtu: tutup penuh
+  if (day === 0 && hour < 21) return false; // Minggu sebelum jam 21:00 UTC: masih tutup
+  if (day === 5 && hour >= 21) return false; // Jumat setelah jam 21:00 UTC: sudah tutup
+  return true;
+}
+function getMarketReopenInfo(now = new Date()) {
+  // Estimasi kapan buka lagi: Minggu jam 21:00 UTC (Sydney open).
+  const reopen = new Date(now);
+  const day = now.getUTCDay();
+  let daysToAdd = (7 - day) % 7; // menuju Minggu berikutnya
+  if (day === 0 && now.getUTCHours() < 21) daysToAdd = 0; // sudah hari Minggu, tinggal tunggu jam 21:00
+  reopen.setUTCDate(now.getUTCDate() + daysToAdd);
+  reopen.setUTCHours(21, 0, 0, 0);
+  if (reopen.getTime() <= now.getTime()) reopen.setUTCDate(reopen.getUTCDate() + 7);
+  return reopen;
+}
+
 const CALENDAR_SOURCES = [
   {
     name: 'ForexFactory CDN',
@@ -1228,7 +1242,8 @@ const STORAGE_KEYS = {
   settings: 'aiTradingEnterpriseSettings.v1',
   journal: 'aiTradingJournalHistory.v1',
   backup: 'aiTradingJournalBackup.v1',
-  stats: 'aiTradingDailyStats.v1'
+  stats: 'aiTradingDailyStats.v1',
+  lockedPlan: 'aiTradingLockedPlanState.v1'
 };
 const DEFAULT_SETTINGS = {
   sheetsUrl: GOOGLE_SHEETS_WEBHOOK_URL,
@@ -1375,6 +1390,51 @@ function setInitialPlan(price = lastWsPrice) {
     detailEl.innerHTML = 'Plan baru dikunci. Klik "CEK VALIDASI SETUP" kapan saja untuk melihat apakah setup masih menuju TP atau sebaiknya ditutup manual.';
     detailEl.className = 'text-[11px] text-muted mt-1';
   }
+  saveLockedPlanState();
+}
+
+// Simpan state plan/trade yang sedang aktif supaya tidak hilang saat app di-refresh/ditutup-buka lagi (umum terjadi di HP).
+function saveLockedPlanState() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.lockedPlan, JSON.stringify({
+      lockedTradeSide, lockedEntryPrice, lockedSL, lockedOrderType,
+      currentOpenTradeId, bestFavorProgress,
+      savedAt: new Date().toISOString()
+    }));
+  } catch (e) { /* storage penuh/diblokir, abaikan diam-diam */ }
+}
+
+// Dipanggil sekali saat startup. Mengembalikan true kalau berhasil memulihkan plan yang masih aktif.
+function restoreLockedPlanState() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.lockedPlan) || 'null'); } catch (e) { return false; }
+  if (!saved || (saved.lockedTradeSide !== 'BUY' && saved.lockedTradeSide !== 'SELL')) return false;
+  if (!Number.isFinite(saved.lockedEntryPrice) || !Number.isFinite(saved.lockedSL)) return false;
+
+  // Kalau ada trade yang tadinya OPEN, pastikan masih benar-benar OPEN di journal (belum kena TP/SL/tutup manual sebelumnya).
+  let openTradeId = null;
+  if (saved.currentOpenTradeId) {
+    const rows = getJournalHistory();
+    const row = rows.find(r => r.tradeId === saved.currentOpenTradeId);
+    if (row && row.resultTrade === 'OPEN') openTradeId = saved.currentOpenTradeId;
+  }
+
+  lockedTradeSide = saved.lockedTradeSide;
+  lockedEntryPrice = saved.lockedEntryPrice;
+  lockedSL = saved.lockedSL;
+  lockedOrderType = saved.lockedOrderType || 'NO TRADE';
+  currentOpenTradeId = openTradeId;
+  bestFavorProgress = Number.isFinite(saved.bestFavorProgress) ? saved.bestFavorProgress : 0;
+
+  const detailEl = document.getElementById('tpValidityDetail');
+  if (detailEl) {
+    detailEl.innerHTML = openTradeId
+      ? 'Plan aktif dipulihkan dari sesi sebelumnya (masih dipantau otomatis). Klik "CEK VALIDASI SETUP" untuk analisis terbaru.'
+      : 'Plan aktif dipulihkan dari sesi sebelumnya. Klik "CEK VALIDASI SETUP" untuk analisis terbaru.';
+    detailEl.className = 'text-[11px] text-muted mt-1';
+  }
+  addLog(`Plan ${lockedTradeSide} @ ${formatPrice(lockedEntryPrice)} dipulihkan dari sesi sebelumnya.${openTradeId ? ' Trade OPEN tetap dipantau.' : ''}`, 'success');
+  return true;
 }
 
 function tickClock() {
@@ -2500,7 +2560,9 @@ function getSheetsRequestUrl() {
 
 window.addEventListener('DOMContentLoaded', () => {
   tickClock();
-  setInitialPlan(lastWsPrice);
+  if (!restoreLockedPlanState()) {
+    setInitialPlan(lastWsPrice);
+  }
   initTradingViewWidget();
   updatePriceDisplay(lastWsPrice, 0);
   updateConnectionBadge(false);
@@ -3250,6 +3312,7 @@ function closeSetupManual() {
   updateSetupValidityBadge(price);
   applyTradingReadiness(price);
   updateTradingPlanValues(price);
+  saveLockedPlanState();
 }
 
 
@@ -3343,6 +3406,10 @@ function getEntryBuffer(price = lastWsPrice) {
 function assessTradingReadiness(price = lastWsPrice) {
   const m = getTradeMetrics(price);
   const d = m.cfg.decimals;
+  if (!isForexMarketOpen()) {
+    const reopen = getMarketReopenInfo();
+    return { code:'MARKET_CLOSED', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / MARKET LIBUR', state:'MARKET CLOSED', title:'🟠 MARKET LIBUR (WEEKEND)', badge:'MARKET CLOSED', signal:'🟠 MARKET LIBUR', final:'🟠 MARKET LIBUR', reason:`Pasar forex/logam sedang tutup (weekend). Buka lagi sekitar ${reopen.toLocaleString('id-ID', { weekday:'long', hour:'2-digit', minute:'2-digit', timeZoneName:'short' })}. Entry tidak digenerate sampai market buka.` };
+  }
   const buffer = getEntryBuffer(price);
   const entryUpper = m.entry + buffer;
   const entryLower = m.entry - buffer;
@@ -4062,6 +4129,7 @@ function autoRecordLockedTrade() {
   const payload = buildTradingPlanPayload();
   recordJournal(payload);
   currentOpenTradeId = payload.tradeId;
+  saveLockedPlanState();
   addLog(`Trade otomatis tercatat di journal: ${payload.action} @ ${payload.entry} (SL ${payload.stopLoss} / TP1 ${payload.tp1}).`, 'success');
   syncPlanToSheetsSilent(payload);
 }
@@ -4085,6 +4153,7 @@ function checkOpenTradeOutcome(price = lastWsPrice) {
   if (remaining <= 0.0001) {
     updateJournalRow(currentOpenTradeId, { resultTrade: 'WIN (FULL TP)' });
     currentOpenTradeId = null;
+    saveLockedPlanState();
     return;
   }
 
@@ -4133,9 +4202,11 @@ function checkOpenTradeOutcome(price = lastWsPrice) {
     addLog(`Trade ditutup penuh: ${label} | Total PnL ${formatMoney(newPnl)}.`, newPnl >= 0 ? 'success' : 'error');
     showToast(`${label} | Total PnL ${formatMoney(newPnl)}.`, newPnl >= 0 ? 'success' : 'error');
     currentOpenTradeId = null;
+    saveLockedPlanState();
   } else {
     addLog(`Partial ${tier}: ${label}. Sisa ${Number((totalLot - newClosedLot).toFixed(2))} lot masih OPEN.`, 'success');
     showToast(`${label}. Sisa lot masih dipantau.`, 'info');
+    saveLockedPlanState();
   }
 
   const st = getSettings();
@@ -4375,6 +4446,18 @@ async function testTelegramAlert() {
   }
   function renderSessionMonitor() {
     const grid = $('sessionGrid'); if (!grid) return;
+    if (typeof isForexMarketOpen === 'function' && !isForexMarketOpen()) {
+      const reopen = (typeof getMarketReopenInfo === 'function') ? getMarketReopenInfo() : null;
+      const msLeft = reopen ? Math.max(0, reopen.getTime() - Date.now()) : 0;
+      grid.innerHTML = SESSIONS.map(function (s) {
+        return '<div class="session-card">' +
+          '<div class="session-name">' + s.name + ' <span class="badge badge-orange mono text-[9px]">CLOSED</span></div>' +
+          '<div class="session-countdown">🔜 Market libur — buka ' + msToHMS(msLeft) + '</div>' +
+          '<div class="session-strength"><i style="width:0%"></i></div>' +
+          '</div>';
+      }).join('');
+      return;
+    }
     grid.innerHTML = SESSIONS.map(function (s) {
       const st = sessionStatus(s.start, s.end);
       const strength = st.inside ? 90 : 25;
@@ -4547,8 +4630,8 @@ async function testTelegramAlert() {
     } else { notifFlags.nearEntry = false; }
     // weekend / market tutup
     const now = new Date();
-    const weekend = now.getUTCDay() === 0 || now.getUTCDay() === 6;
-    if (weekend && !notifFlags.weekend) { notifFlags.weekend = true; if (typeof showToast === 'function') showToast('Market forex/logam sedang TUTUP (weekend). Harga mungkin stagnan.', 'info'); }
+    const weekend = (typeof isForexMarketOpen === 'function') ? !isForexMarketOpen(now) : (now.getUTCDay() === 0 || now.getUTCDay() === 6);
+    if (weekend && !notifFlags.weekend) { notifFlags.weekend = true; if (typeof showToast === 'function') showToast('Market forex/logam sedang TUTUP (weekend). Harga mungkin stagnan/beku sampai buka lagi.', 'info'); }
     if (!weekend) notifFlags.weekend = false;
     // bias berubah
     const curSide = m ? m.side : '';
