@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
-<!-- BUILD-CLEAN-122: neutral defaults, proxy badges, price sync, CF removed, radar/conn status -->
+<!-- BUILD-CLEAN-125: neutral defaults, proxy badges, price sync, CF removed, radar/conn status -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -292,7 +292,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
   <div class="header-brand flex items-center gap-3">
     <div class="brand-icon w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-600 to-yellow-800 flex items-center justify-center"><i class="fas fa-brain text-black text-lg"></i></div>
     <div>
-      <h1 class="text-lg font-bold tracking-tight" style="color:var(--gold)">AI TRADING SIGNAL SYSTEM <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono">v5.6.6 CLEAN-122</span></h1>
+      <h1 class="text-lg font-bold tracking-tight" style="color:var(--gold)">AI TRADING SIGNAL SYSTEM <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono">v5.6.9 CLEAN-125</span></h1>
       <p class="text-xs" style="color:var(--text-muted)">Smart Technical Engine + Real-Time DOM & Order Block + AI Auto-Renewal Plan</p>
     </div>
   </div>
@@ -498,7 +498,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
 <!-- Risk Disclaimer -->
 <div class="card mb-4" style="border-color:rgba(249,115,22,.35);background:rgba(249,115,22,.06)">
   <div class="text-xs text-muted leading-relaxed">
-    <strong class="text-orange-400">Catatan risiko:</strong> Mode real-data only (CLEAN-122). Tidak ada harga/DOM/kalender/backtest demo. Jika API live gagal (CORS/network), sistem offline dan menolak entry. Validasi selalu di broker Anda sebelum eksekusi live.
+    <strong class="text-orange-400">Catatan risiko:</strong> Mode real-data only (CLEAN-125). Tidak ada harga/DOM/kalender/backtest demo. Jika API live gagal (CORS/network), sistem offline dan menolak entry. Validasi selalu di broker Anda sebelum eksekusi live.
   </div>
 </div>
 
@@ -601,7 +601,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
       <div class="card">
         <div class="card-title"><i class="fas fa-terminal"></i> SYSTEM LOG</div>
         <div id="logBox" class="overflow-y-auto" style="max-height:140px;font-family:'JetBrains Mono',monospace;font-size:10px">
-          <div class="log-line text-dim">[SYSTEM] Unified AI Engine v5.6.6 CLEAN-122. Neutral defaults + proxy labels active.</div>
+          <div class="log-line text-dim">[SYSTEM] Unified AI Engine v5.6.9 CLEAN-125. Neutral defaults + proxy labels active.</div>
         </div>
       </div>
     </div>
@@ -656,7 +656,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
 <div id="tab-confluence" class="hidden space-y-4">
   <div class="card">
     <div class="card-title"><i class="fas fa-layer-group"></i> MULTI-TIMEFRAME CONFLUENCE MATRIX (M15, H1, H4, D1)</div>
-    <div class="mb-2"><span class="badge badge-cyan mono text-[10px]">DERIVED FROM LIVE TICKS — butuh OHLC broker untuk TF sejati</span></div>
+    <div class="mb-2"><span class="badge badge-cyan mono text-[10px]">OHLC via proxy bila tersedia · fallback tick windows</span></div>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs mono mt-3">
       <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">M15 Trend</div><div class="text-orange-400 font-bold text-sm" id="tfM15">PROXY</div></div>
       <div class="p-3 rounded bg-slate-900 border border-slate-800"><div class="text-muted">H1 Trend</div><div class="text-orange-400 font-bold text-sm" id="tfH1">PROXY</div></div>
@@ -823,7 +823,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
         <h3>Theme, Backup & API</h3>
         <div class="field-stack">
           <label>Theme</label><select class="input-field" id="settingTheme"><option value="institutional-dark">Institutional Dark</option><option value="gold-premium">Gold Premium</option></select>
-          <label>API Mode</label><select class="input-field" id="settingApiMode"><option value="auto">Live Only (no simulation)</option><option value="simulation" disabled>Simulation Removed (CLEAN-122)</option></select>
+          <label>API Mode</label><select class="input-field" id="settingApiMode"><option value="auto">Live Only (no simulation)</option><option value="simulation" disabled>Simulation Removed (CLEAN-125)</option></select>
           <div class="grid grid-cols-2 gap-2 mt-2"><button class="btn btn-outline" onclick="autoBackupJournal()">Backup</button><button class="btn btn-outline" onclick="restoreBackupJournal()">Restore</button></div>
         </div>
       </div>
@@ -858,8 +858,21 @@ const GOLD_PLAN = {
   autoRenewConfirmations: 2,
   breakoutStrength: 65,
   breakoutMomentumPct: 0.035,
-  breakEvenTrigger: 8.00
+  breakEvenTrigger: 8.00,
+  atrPeriod: 14,
+  atrSlMult: 1.0,
+  atrTp1Mult: 1.5,
+  atrTp2Mult: 3.0,
+  atrTp3Mult: 5.5,
+  atrEntryMult: 0.45,
+  atrFloor: 4.0,
+  atrCeil: 40.0
 };
+
+const UI_DEBOUNCE_MS = 220;
+const CALENDAR_CACHE_KEY = 'aiTradingCalendarCache.v1';
+const CALENDAR_CACHE_TTL_MS = 10 * 60 * 1000;
+const OHLC_CACHE = { M15: [], H1: [], H4: [], D1: [], updatedAt: 0 };
 
 
 
@@ -902,7 +915,8 @@ const DEFAULT_SETTINGS = {
   apiMode: 'auto',
   notifyBrowser: true,
   notifySound: true,
-  notifyTelegramOnLock: true
+  notifyTelegramOnLock: true,
+  proxyBaseUrl: 'https://xau-proxy.kelana2201.workers.dev'
 };
 
 
@@ -946,6 +960,17 @@ let breakEvenSuggested = false;
 let lastNotifiedLockCode = null;
 let lastDecisionCode = null;
 let notifyPermissionAsked = false;
+let priceUiTimer = null;
+let pendingPriceUi = null;
+let lastAtrValue = null;
+let ohlcRefreshTimer = null;
+let priceSocket = null;
+let priceSocketRetryTimer = null;
+let priceSocketRetries = 0;
+let wsModeActive = false;
+const WS_INTERVAL_MS = 1000;
+const WS_MAX_RETRIES = 8;
+
 
 
 function getSymbolConfig() {
@@ -1014,6 +1039,145 @@ function tickClock() {
 }
 setInterval(tickClock, 1000);
 
+
+function getWsUrl() {
+  const base = getProxyBase();
+  if (!base) return null;
+  try {
+    const u = new URL(base);
+    u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+    u.pathname = '/ws';
+    u.search = '?interval=' + WS_INTERVAL_MS;
+    return u.toString();
+  } catch (e) {
+    return null;
+  }
+}
+
+function applyLiveTick(newPrice, sourceLabel, latencyMs) {
+  if (!Number.isFinite(newPrice) || newPrice <= 0) return;
+  const startedAt = performance.now();
+  usingSimulatedPrice = false;
+  livePriceVerified = true;
+  const pctChange = lastWsPrice ? ((newPrice - lastWsPrice) / lastWsPrice) * 100 : 0;
+  handleGoldAutoRenew(newPrice);
+  lastLatencyMs = Number.isFinite(latencyMs) ? latencyMs : Math.round(performance.now() - startedAt);
+  lastApiResponseMs = lastLatencyMs;
+  lastDataSource = sourceLabel || 'ws';
+  lastWsPrice = newPrice;
+  updatePriceDisplay(newPrice, pctChange);
+  updateMarketTelemetry(lastDataSource, lastLatencyMs, lastApiResponseMs);
+  applyTradingReadiness(newPrice);
+}
+
+function closePriceSocket() {
+  wsModeActive = false;
+  if (priceSocketRetryTimer) {
+    clearTimeout(priceSocketRetryTimer);
+    priceSocketRetryTimer = null;
+  }
+  if (priceSocket) {
+    try {
+      priceSocket.onopen = null;
+      priceSocket.onmessage = null;
+      priceSocket.onerror = null;
+      priceSocket.onclose = null;
+      priceSocket.close();
+    } catch (e) {}
+    priceSocket = null;
+  }
+}
+
+function schedulePriceSocketReconnect() {
+  if (!connected) return;
+  if (priceSocketRetries >= WS_MAX_RETRIES) {
+    addLog('WebSocket gagal berulang — fallback polling HTTP 3s.', 'error');
+    wsModeActive = false;
+    if (livePriceInterval) clearInterval(livePriceInterval);
+    livePriceInterval = setInterval(function () {
+      if (connected) fetchRealLivePrice();
+    }, 3000);
+    fetchRealLivePrice();
+    return;
+  }
+  const delay = Math.min(10000, 800 * Math.pow(1.6, priceSocketRetries));
+  priceSocketRetries += 1;
+  addLog('WebSocket reconnect #' + priceSocketRetries + ' dalam ' + Math.round(delay) + 'ms', 'info');
+  priceSocketRetryTimer = setTimeout(function () {
+    if (connected) connectPriceSocket();
+  }, delay);
+}
+
+function connectPriceSocket() {
+  const wsUrl = getWsUrl();
+  if (!wsUrl) {
+    addLog('Proxy Base URL kosong — WebSocket tidak bisa. Pakai polling.', 'error');
+    return false;
+  }
+  if (typeof WebSocket === 'undefined') {
+    addLog('Browser tidak mendukung WebSocket — polling HTTP.', 'error');
+    return false;
+  }
+  closePriceSocket();
+  try {
+    addLog('Menghubungkan WebSocket: ' + wsUrl, 'info');
+    const sock = new WebSocket(wsUrl);
+    priceSocket = sock;
+    wsModeActive = true;
+
+    sock.onopen = function () {
+      priceSocketRetries = 0;
+      wsModeActive = true;
+      addLog('WebSocket live tick aktif (' + WS_INTERVAL_MS + 'ms).', 'success');
+      showToast('WebSocket real-time aktif', 'success');
+      // stop HTTP poll while WS is healthy
+      if (livePriceInterval) {
+        clearInterval(livePriceInterval);
+        livePriceInterval = null;
+      }
+      try { sock.send(JSON.stringify({ type: 'ping' })); } catch (e) {}
+    };
+
+    sock.onmessage = function (ev) {
+      let msg;
+      try { msg = JSON.parse(ev.data); } catch (e) { return; }
+      if (!msg || !msg.type) return;
+      if (msg.type === 'hello') {
+        addLog('WS hello — interval ' + (msg.intervalMs || WS_INTERVAL_MS) + 'ms', 'info');
+        return;
+      }
+      if (msg.type === 'pong') return;
+      if (msg.type === 'tick' && Number.isFinite(Number(msg.price))) {
+        applyLiveTick(Number(msg.price), 'ws:' + (msg.source || 'proxy'), Number(msg.latencyMs));
+        return;
+      }
+      if (msg.type === 'error') {
+        addLog('WS upstream: ' + (msg.message || 'error'), 'error');
+        if (Number.isFinite(Number(msg.lastPrice)) && Number(msg.lastPrice) > 0) {
+          // keep last known; do not mark simulated
+        }
+      }
+    };
+
+    sock.onerror = function () {
+      addLog('WebSocket error event', 'error');
+    };
+
+    sock.onclose = function () {
+      priceSocket = null;
+      if (!connected) return;
+      wsModeActive = false;
+      addLog('WebSocket tertutup — mencoba reconnect / fallback.', 'error');
+      schedulePriceSocketReconnect();
+    };
+    return true;
+  } catch (err) {
+    addLog('WebSocket gagal dibuka: ' + err.message, 'error');
+    wsModeActive = false;
+    return false;
+  }
+}
+
 async function fetchRealLivePrice() {
   const cfg = getSymbolConfig();
   const startedAt = performance.now();
@@ -1021,21 +1185,27 @@ async function fetchRealLivePrice() {
   let sourceLabel = 'offline';
 
   try {
-    const settings = getSettings();
-    // CLEAN-122: always attempt live; simulation mode disabled
-    {
-      const response = await fetchWithTimeout('https://api.gold-api.com/price/XAU', { cache: 'no-store' }, 8000);
-      lastApiResponseMs = Math.round(performance.now() - startedAt);
-      if (!response.ok) throw new Error(`Gold API HTTP ${response.status}`);
-      const data = await response.json();
-      if (data && Number.isFinite(Number(data.price))) {
-        newPrice = Number(data.price);
-        sourceLabel = 'gold-api';
-      }
+    const proxied = proxyUrl('/price/XAU');
+    const endpoints = proxied ? [proxied, 'https://api.gold-api.com/price/XAU'] : ['https://api.gold-api.com/price/XAU'];
+    let lastErr = null;
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetchWithTimeout(endpoint, { cache: 'no-store' }, 8000);
+        lastApiResponseMs = Math.round(performance.now() - startedAt);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        const px = Number(data.price ?? data.Price ?? data.ask);
+        if (Number.isFinite(px) && px > 0) {
+          newPrice = px;
+          sourceLabel = proxied && endpoint === proxied ? ('proxy:' + (data.source || 'worker')) : 'gold-api';
+          break;
+        }
+      } catch (err) { lastErr = err; }
     }
+    if (!Number.isFinite(newPrice) && lastErr) throw lastErr;
   } catch (err) {
     lastApiResponseMs = Math.round(performance.now() - startedAt);
-    addLog(`Live feed XAUUSD tidak tersedia (${err.message}). Tidak ada fallback simulasi.`, 'error');
+    addLog('Live feed XAUUSD tidak tersedia (' + err.message + '). Set Proxy Base URL di Settings jika CORS memblokir.', 'error');
   }
 
   if (!Number.isFinite(newPrice) || newPrice <= 0) {
@@ -1065,7 +1235,7 @@ async function fetchRealLivePrice() {
 }
 
 function simulatePrice(_base, _cfg = getSymbolConfig()) {
-  // DISABLED (CLEAN-122 real-only). Never invent prices.
+  // DISABLED (CLEAN-125 real-only). Never invent prices.
   return null;
 }
 
@@ -1073,7 +1243,8 @@ function handleGoldAutoRenew(price) {
   if (!Number.isFinite(price) || !lockedEntryPrice || lockedTradeSide === 'WAIT') return;
   const distanceFromEntry = Math.abs(price - lockedEntryPrice);
 
-  if (distanceFromEntry > GOLD_PLAN.autoRenewDistance) {
+  const renewDist = getDynamicPlanDistances(price).autoRenewDistance;
+  if (distanceFromEntry > renewDist) {
     autoRenewAwayCount += 1;
   } else {
     autoRenewAwayCount = 0;
@@ -1095,6 +1266,10 @@ function getSettings() {
   } catch (err) {
     appSettings = { ...DEFAULT_SETTINGS };
   }
+  // Always prefer working proxy if user has not set one
+  if (!appSettings.proxyBaseUrl || !String(appSettings.proxyBaseUrl).trim()) {
+    appSettings.proxyBaseUrl = DEFAULT_SETTINGS.proxyBaseUrl || 'https://xau-proxy.kelana2201.workers.dev';
+  }
   return appSettings;
 }
 
@@ -1109,6 +1284,7 @@ function loadSettingsToForm() {
   safeSetValue('settingTimezone', st.timezone);
   safeSetValue('settingTheme', st.theme);
   safeSetValue('settingApiMode', st.apiMode);
+  safeSetValue('settingProxyBaseUrl', st.proxyBaseUrl || '');
   const nb = document.getElementById('settingNotifyBrowser');
   if (nb) nb.checked = st.notifyBrowser !== false;
   const ns = document.getElementById('settingNotifySound');
@@ -1137,7 +1313,8 @@ function saveSettings() {
     apiMode: document.getElementById('settingApiMode')?.value || 'auto',
     notifyBrowser: document.getElementById('settingNotifyBrowser')?.checked !== false,
     notifySound: document.getElementById('settingNotifySound')?.checked !== false,
-    notifyTelegramOnLock: document.getElementById('settingNotifyTelegramOnLock')?.checked !== false
+    notifyTelegramOnLock: document.getElementById('settingNotifyTelegramOnLock')?.checked !== false,
+    proxyBaseUrl: document.getElementById('settingProxyBaseUrl')?.value?.trim() || ''
   };
   appSettings = { ...DEFAULT_SETTINGS, ...st };
   localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(appSettings));
@@ -1213,20 +1390,30 @@ function updateSessionUI() {
 async function updateDxyMonitoring() {
   const startedAt = performance.now();
   try {
-    const response = await fetchWithTimeout('https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?range=1d&interval=5m', { cache: 'no-store' }, 8000);
+    const proxiedDxy = proxyUrl('/dxy');
+    const response = await fetchWithTimeout(proxiedDxy || 'https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?range=1d&interval=5m', { cache: 'no-store' }, 8000);
     if (!response.ok) throw new Error(`DXY HTTP ${response.status}`);
     const data = await response.json();
-    const closes = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(v => Number.isFinite(v)) || [];
-    if (closes.length < 2) throw new Error('DXY empty');
-    const first = closes[0];
-    const last = closes[closes.length - 1];
-    const changePct = ((last - first) / first) * 100;
-    dxyState = {
-      value: last,
-      changePct,
-      bias: changePct > 0.08 ? 'USD_STRONG' : changePct < -0.08 ? 'USD_WEAK' : 'NEUTRAL',
-      source: `Yahoo ${Math.round(performance.now() - startedAt)}ms`
-    };
+    if (proxiedDxy && Number.isFinite(Number(data.value))) {
+      dxyState = {
+        value: Number(data.value),
+        changePct: Number(data.changePct) || 0,
+        bias: data.bias || 'NEUTRAL',
+        source: `proxy ${Math.round(performance.now() - startedAt)}ms`
+      };
+    } else {
+      const closes = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(v => Number.isFinite(v)) || [];
+      if (closes.length < 2) throw new Error('DXY empty');
+      const first = closes[0];
+      const last = closes[closes.length - 1];
+      const changePct = ((last - first) / first) * 100;
+      dxyState = {
+        value: last,
+        changePct,
+        bias: changePct > 0.08 ? 'USD_STRONG' : changePct < -0.08 ? 'USD_WEAK' : 'NEUTRAL',
+        source: `Yahoo ${Math.round(performance.now() - startedAt)}ms`
+      };
+    }
   } catch (err) {
     dxyState = { value: null, changePct: 0, bias: 'UNKNOWN', source: `offline: ${err.message}` };
   }
@@ -1256,6 +1443,9 @@ function initEnterpriseModules() {
   updateSessionUI();
   updateDxyMonitoring();
   setInterval(updateDxyMonitoring, 180000);
+  refreshOhlcFromProxy();
+  if (ohlcRefreshTimer) clearInterval(ohlcRefreshTimer);
+  ohlcRefreshTimer = setInterval(function () { refreshOhlcFromProxy(); }, 5 * 60 * 1000);
   updateNewsHardBlockUI();
   setInterval(() => {
     safeText('pingEl', `${Math.floor(18 + Math.random() * 28)} ms`);
@@ -1341,6 +1531,120 @@ function getPriceSamples(extraPrice = lastWsPrice) {
   return samples.slice(-60);
 }
 
+
+function getProxyBase() {
+  const st = getSettings();
+  return (st.proxyBaseUrl || '').trim().replace(/\/+$/, '');
+}
+function proxyUrl(pathQuery) {
+  const base = getProxyBase();
+  if (!base) return null;
+  return base + (pathQuery.startsWith('/') ? pathQuery : '/' + pathQuery);
+}
+function computeAtrFromTicks(period = GOLD_PLAN.atrPeriod) {
+  const samples = getPriceSamples(lastWsPrice);
+  if (samples.length < period + 1) return null;
+  const ranges = [];
+  for (let i = 1; i < samples.length; i++) ranges.push(Math.abs(samples[i] - samples[i - 1]));
+  const slice = ranges.slice(-period);
+  if (!slice.length) return null;
+  let atr = slice[0];
+  const k = 1 / period;
+  for (let i = 1; i < slice.length; i++) atr = atr * (1 - k) + slice[i] * k;
+  atr = atr * 2.8;
+  return Math.min(GOLD_PLAN.atrCeil, Math.max(GOLD_PLAN.atrFloor, atr));
+}
+function computeAtrFromOhlc(candles, period = GOLD_PLAN.atrPeriod) {
+  if (!Array.isArray(candles) || candles.length < period + 1) return null;
+  const trs = [];
+  for (let i = 1; i < candles.length; i++) {
+    const c = candles[i], p = candles[i - 1];
+    const tr = Math.max(c.h - c.l, Math.abs(c.h - p.c), Math.abs(c.l - p.c));
+    if (Number.isFinite(tr)) trs.push(tr);
+  }
+  const slice = trs.slice(-period);
+  if (!slice.length) return null;
+  const atr = slice.reduce((a, b) => a + b, 0) / slice.length;
+  return Math.min(GOLD_PLAN.atrCeil, Math.max(GOLD_PLAN.atrFloor, atr));
+}
+function getActiveAtr() {
+  const ohlcAtr = computeAtrFromOhlc(OHLC_CACHE.M15.length ? OHLC_CACHE.M15 : OHLC_CACHE.H1);
+  const atr = ohlcAtr || computeAtrFromTicks() || GOLD_PLAN.slDistance;
+  lastAtrValue = atr;
+  return atr;
+}
+function getDynamicPlanDistances(price = lastWsPrice) {
+  const atr = getActiveAtr();
+  return {
+    atr,
+    entryOffset: Math.min(GOLD_PLAN.atrCeil * 0.5, Math.max(2.5, atr * GOLD_PLAN.atrEntryMult)),
+    slDistance: Math.min(GOLD_PLAN.atrCeil, Math.max(GOLD_PLAN.atrFloor, atr * GOLD_PLAN.atrSlMult)),
+    tp1Distance: Math.max(GOLD_PLAN.atrFloor * 1.2, atr * GOLD_PLAN.atrTp1Mult),
+    tp2Distance: Math.max(GOLD_PLAN.atrFloor * 2, atr * GOLD_PLAN.atrTp2Mult),
+    tp3Distance: Math.max(GOLD_PLAN.atrFloor * 3, atr * GOLD_PLAN.atrTp3Mult),
+    breakEvenTrigger: Math.max(4, atr * 0.9),
+    autoRenewDistance: Math.max(8, atr * 1.4)
+  };
+}
+function analyzeTrendFromCloses(closes, label) {
+  if (!closes || closes.length < 8) return { direction: 'UNKNOWN', side: 'WAIT', label: label + ' warmup', strength: 0, reason: 'Butuh data ' + label };
+  const fast = calculateEMA(closes, Math.min(8, closes.length));
+  const slow = calculateEMA(closes, Math.min(21, closes.length));
+  const f = fast[fast.length - 1], s = slow[slow.length - 1];
+  const last = closes[closes.length - 1], first = closes[0];
+  const prev = closes[Math.max(0, closes.length - 5)];
+  const slopePct = ((last - first) / first) * 100;
+  const momentumPct = ((last - prev) / prev) * 100;
+  const maxP = Math.max(...closes), minP = Math.min(...closes);
+  const rangePct = ((maxP - minP) / Math.max(last, 1)) * 100;
+  const strength = Math.min(100, Math.round(Math.abs(slopePct) * 80 + Math.abs((f - s) / last * 100) * 120 + Math.abs(momentumPct) * 40));
+  if (rangePct < 0.08 || strength < 15) return { direction: 'SIDEWAYS', side: 'WAIT', label: label + ' sideways', strength, slopePct, rangePct, reason: label + ' range ketat' };
+  if (f > s && slopePct > 0.02) return { direction: 'BULLISH', side: 'BUY', label: label + ' bullish', strength, slopePct, rangePct, reason: label + ' EMA up' };
+  if (f < s && slopePct < -0.02) return { direction: 'BEARISH', side: 'SELL', label: label + ' bearish', strength, slopePct, rangePct, reason: label + ' EMA down' };
+  return { direction: 'NEUTRAL', side: 'WAIT', label: label + ' neutral', strength, slopePct, rangePct, reason: label + ' mixed' };
+}
+function getMultiTfTrends() {
+  const fromOhlc = (key, label) => analyzeTrendFromCloses((OHLC_CACHE[key] || []).map(c => c.c).filter(Number.isFinite), label);
+  const ticks = getPriceSamples(lastWsPrice);
+  const tickTf = (n, label) => analyzeTrendFromCloses(ticks.slice(-n), label);
+  return {
+    M15: OHLC_CACHE.M15.length >= 8 ? fromOhlc('M15', 'M15') : tickTf(16, 'M15~'),
+    H1: OHLC_CACHE.H1.length >= 8 ? fromOhlc('H1', 'H1') : tickTf(24, 'H1~'),
+    H4: OHLC_CACHE.H4.length >= 8 ? fromOhlc('H4', 'H4') : tickTf(40, 'H4~'),
+    D1: OHLC_CACHE.D1.length >= 8 ? fromOhlc('D1', 'D1') : tickTf(60, 'D1~')
+  };
+}
+function updateMultiTfUi() {
+  const tfs = getMultiTfTrends();
+  const map = { tfM15: tfs.M15, tfH1: tfs.H1, tfH4: tfs.H4, tfD1: tfs.D1 };
+  Object.entries(map).forEach(([id, t]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = t.label || t.direction;
+    el.className = t.direction === 'BULLISH' ? 'text-emerald-400 font-bold text-sm' : t.direction === 'BEARISH' ? 'text-red-400 font-bold text-sm' : 'text-orange-400 font-bold text-sm';
+  });
+}
+async function refreshOhlcFromProxy() {
+  if (!getProxyBase()) return false;
+  try {
+    const specs = [{ key: 'M15', tf: 15 }, { key: 'H1', tf: 60 }, { key: 'H4', tf: 240 }, { key: 'D1', tf: 1440 }];
+    await Promise.all(specs.map(async (s) => {
+      const res = await fetchWithTimeout(proxyUrl('/ohlc?tf=' + s.tf + '&limit=120'), { cache: 'no-store' }, 12000);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data.candles) && data.candles.length) OHLC_CACHE[s.key] = data.candles;
+    }));
+    OHLC_CACHE.updatedAt = Date.now();
+    updateMultiTfUi();
+    updateSMCGrid();
+    addLog('OHLC multi-TF diperbarui via proxy.', 'success');
+    return true;
+  } catch (err) {
+    addLog('OHLC proxy gagal: ' + err.message, 'error');
+    return false;
+  }
+}
+
 function analyzeMarketTrend(price = lastWsPrice) {
   const samples = getPriceSamples(price);
   const last = Number(price) || samples[samples.length - 1] || lastWsPrice;
@@ -1367,13 +1671,18 @@ function analyzeMarketTrend(price = lastWsPrice) {
 }
 
 function deriveTradeSide(trend = analyzeMarketTrend(lastWsPrice)) {
-  if (trend.direction === 'BULLISH') {
-    if (dxyState.bias === 'USD_STRONG' && trend.strength < 75) return 'WAIT';
-    return 'BUY';
+  const tfs = getMultiTfTrends();
+  const higherBull = [tfs.H1, tfs.H4].filter(function (t) { return t.direction === 'BULLISH'; }).length;
+  const higherBear = [tfs.H1, tfs.H4].filter(function (t) { return t.direction === 'BEARISH'; }).length;
+  if (trend.direction === 'BULLISH' || higherBull >= 2) {
+    if (higherBear >= 2) return 'WAIT';
+    if (dxyState.bias === 'USD_STRONG' && (trend.strength || 0) < 70) return 'WAIT';
+    if (trend.direction === 'BULLISH' || higherBull >= 2) return 'BUY';
   }
-  if (trend.direction === 'BEARISH') {
-    if (dxyState.bias === 'USD_WEAK' && trend.strength < 75) return 'WAIT';
-    return 'SELL';
+  if (trend.direction === 'BEARISH' || higherBear >= 2) {
+    if (higherBull >= 2) return 'WAIT';
+    if (dxyState.bias === 'USD_WEAK' && (trend.strength || 0) < 70) return 'WAIT';
+    if (trend.direction === 'BEARISH' || higherBear >= 2) return 'SELL';
   }
   return 'WAIT';
 }
@@ -1400,19 +1709,20 @@ function getOrderNarrative(orderType) {
 
 function calculateDirectionalPlan(price, side, trend = analyzeMarketTrend(price)) {
   const breakout = isBreakoutPlan(trend);
+  const d = getDynamicPlanDistances(price);
   if (side === 'BUY') {
-    const entry = breakout ? price + GOLD_PLAN.entryOffset : price - GOLD_PLAN.entryOffset;
-    const sl = entry - GOLD_PLAN.slDistance;
+    const entry = breakout ? price + d.entryOffset : price - d.entryOffset;
+    const sl = entry - d.slDistance;
     const orderType = getOrderType(side, entry, price);
-    return { entry, sl, tp1: entry + GOLD_PLAN.tp1Distance, tp2: entry + GOLD_PLAN.tp2Distance, tp3: entry + GOLD_PLAN.tp3Distance, orderType, orderMode: breakout ? 'BREAKOUT' : 'RETRACEMENT', narrative: getOrderNarrative(orderType) };
+    return { entry, sl, tp1: entry + d.tp1Distance, tp2: entry + d.tp2Distance, tp3: entry + d.tp3Distance, orderType, orderMode: breakout ? 'BREAKOUT' : 'RETRACEMENT', narrative: getOrderNarrative(orderType), atr: d.atr };
   }
   if (side === 'SELL') {
-    const entry = breakout ? price - GOLD_PLAN.entryOffset : price + GOLD_PLAN.entryOffset;
-    const sl = entry + GOLD_PLAN.slDistance;
+    const entry = breakout ? price - d.entryOffset : price + d.entryOffset;
+    const sl = entry + d.slDistance;
     const orderType = getOrderType(side, entry, price);
-    return { entry, sl, tp1: entry - GOLD_PLAN.tp1Distance, tp2: entry - GOLD_PLAN.tp2Distance, tp3: entry - GOLD_PLAN.tp3Distance, orderType, orderMode: breakout ? 'BREAKOUT' : 'RETRACEMENT', narrative: getOrderNarrative(orderType) };
+    return { entry, sl, tp1: entry - d.tp1Distance, tp2: entry - d.tp2Distance, tp3: entry - d.tp3Distance, orderType, orderMode: breakout ? 'BREAKOUT' : 'RETRACEMENT', narrative: getOrderNarrative(orderType), atr: d.atr };
   }
-  return { entry: price, sl: price, tp1: price, tp2: price, tp3: price, orderType: 'NO TRADE', orderMode: 'NONE', narrative: 'Tidak ada order aktif.' };
+  return { entry: price, sl: price, tp1: price, tp2: price, tp3: price, orderType: 'NO TRADE', orderMode: 'NONE', narrative: 'Tidak ada order aktif.', atr: d.atr };
 }
 
 function getSMCState() {
@@ -1456,21 +1766,7 @@ function updateSMCGrid() {
     el.classList.toggle('wait', !item[2]);
     el.innerHTML = `<div class="smc-title">${escapeHtml(item[0])}</div><div class="smc-value">${escapeHtml(item[1])}</div>`;
   });
-  // Multi-TF cards are tick-proxy only (same trend engine, not true M15/H1/H4/D1 OHLC)
-  const trend = analyzeMarketTrend(lastWsPrice);
-  const label = (!livePriceVerified || usingSimulatedPrice)
-    ? 'PROXY / SIM'
-    : (trend.direction === 'UNKNOWN' ? 'WARMUP' : `${trend.label}`);
-  ['tfM15', 'tfH1', 'tfH4', 'tfD1'].forEach((id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = label;
-    el.className = (trend.direction === 'BULLISH' && livePriceVerified)
-      ? 'text-emerald-400 font-bold text-sm'
-      : (trend.direction === 'BEARISH' && livePriceVerified)
-        ? 'text-red-400 font-bold text-sm'
-        : 'text-orange-400 font-bold text-sm';
-  });
+  updateMultiTfUi();
 }
 
 function getConfidenceComponents(decision = currentPlanDecision) {
@@ -1844,23 +2140,14 @@ async function installPWA() {
 }
 
 function registerPWAServiceWorker() {
-  if (!('serviceWorker' in navigator)) {
-    addLog('Browser tidak mendukung service worker/PWA.', 'info');
-    return;
+  try {
+    if (!('serviceWorker' in navigator)) return;
+    // file:// and sandboxed Android WebView cannot use SW
+    if (location.protocol === 'file:' || location.protocol === 'content:') return;
+    navigator.serviceWorker.register('./sw.js').catch(function () {});
+  } catch (e) {
+    /* ignore SW in restricted contexts */
   }
-
-  if (location.protocol === 'file:') {
-    addLog('PWA siap, tetapi service worker hanya aktif saat dibuka via HTTPS atau localhost.', 'info');
-    return;
-  }
-
-  navigator.serviceWorker.register('./service-worker.js')
-    .then((registration) => {
-      addLog(`PWA service worker aktif. Scope: ${registration.scope}`, 'success');
-    })
-    .catch((err) => {
-      addLog(`PWA service worker gagal: ${err.message}`, 'error');
-    });
 }
 
 
@@ -2309,26 +2596,37 @@ function updateConnectionBadge(isConnected) {
 function doConnect() {
   connected = true;
   updateConnectionBadge(true);
+  priceSocketRetries = 0;
   if ('Notification' in window && Notification.permission === 'default') {
     requestBrowserNotifyPermission();
   }
-  fetchRealLivePrice();
 
-  if (livePriceInterval) clearInterval(livePriceInterval);
-  livePriceInterval = setInterval(() => {
-    if (connected) fetchRealLivePrice();
-  }, 3000);
-
-  showToast('Live stream aktif', 'success');
-  addLog('Live stream dimulai.', 'success');
+  // Prefer WebSocket real-time via proxy; fallback HTTP poll
+  const wsOk = connectPriceSocket();
+  if (!wsOk) {
+    fetchRealLivePrice();
+    if (livePriceInterval) clearInterval(livePriceInterval);
+    livePriceInterval = setInterval(function () {
+      if (connected && !wsModeActive) fetchRealLivePrice();
+    }, 3000);
+    showToast('Live polling HTTP aktif', 'success');
+    addLog('Live stream dimulai (HTTP poll 3s).', 'success');
+  } else {
+    // also one REST snapshot immediately while WS handshakes
+    fetchRealLivePrice();
+    showToast('Menghubungkan WebSocket…', 'info');
+    addLog('Live stream dimulai (WebSocket preferred).', 'success');
+  }
 }
 
 function doDisconnect() {
   connected = false;
-  if (livePriceInterval) clearInterval(livePriceInterval);
-  livePriceInterval = null;
   updateConnectionBadge(false);
-  applyTradingReadiness(lastWsPrice);
+  closePriceSocket();
+  if (livePriceInterval) {
+    clearInterval(livePriceInterval);
+    livePriceInterval = null;
+  }
   showToast('Live stream dihentikan', 'info');
   addLog('Live stream dihentikan.', 'info');
 }
@@ -2351,16 +2649,17 @@ function checkBreakEvenSuggestion(price = lastWsPrice) {
     return;
   }
   const floatingDistance = m.side === 'BUY' ? price - m.entry : m.entry - price;
-  if (floatingDistance >= GOLD_PLAN.breakEvenTrigger) {
+  const beTrig = getDynamicPlanDistances(price).breakEvenTrigger;
+  if (floatingDistance >= beTrig) {
     el.innerText = `MOVE SL TO BE @ ${formatPrice(m.entry, m.cfg.decimals)}`;
     el.className = 'be-ready';
     if (!breakEvenSuggested) {
       breakEvenSuggested = true;
-      showToast(`Auto Break-Even: floating profit +$${floatingDistance.toFixed(2)}. Disarankan geser SL ke entry ${formatPrice(m.entry)}.`, 'success');
-      addLog(`Break-Even suggested for ${m.side}: SL -> ${formatPrice(m.entry)} after +$${floatingDistance.toFixed(2)} floating move.`, 'success');
+      showToast(`Auto Break-Even: floating +$${floatingDistance.toFixed(2)}. Geser SL ke entry ${formatPrice(m.entry)}.`, 'success');
+      addLog(`Break-Even suggested for ${m.side}: SL -> ${formatPrice(m.entry)}.`, 'success');
     }
   } else {
-    el.innerText = `Waiting +$${GOLD_PLAN.breakEvenTrigger.toFixed(2)} (${floatingDistance.toFixed(2)})`;
+    el.innerText = `Waiting +$${beTrig.toFixed(2)} (${floatingDistance.toFixed(2)})`;
     el.className = 'be-wait';
   }
 }
@@ -2370,24 +2669,29 @@ function updatePriceDisplay(price, pctChange) {
   lastPctChange = Number.isFinite(pctChange) ? pctChange : 0;
   if (Number.isFinite(price) && price > 0) {
     recentPrices.push(price);
-    if (recentPrices.length > 24) recentPrices.shift();
+    if (recentPrices.length > 48) recentPrices.shift();
   }
   safeText('chPrice', formatPrice(price, cfg.decimals));
-
   const chgEl = document.getElementById('chChg');
   if (chgEl) {
     const sign = pctChange >= 0 ? '+' : '';
-    chgEl.innerText = `${sign}${pctChange.toFixed(2)}%`;
-    chgEl.className = `badge mono text-[10px] ${pctChange >= 0 ? 'badge-green' : 'badge-red'}`;
+    chgEl.innerText = sign + pctChange.toFixed(2) + '%';
+    chgEl.className = 'badge mono text-[10px] ' + (pctChange >= 0 ? 'badge-green' : 'badge-red');
   }
-
-  updateDomTable(price);
-  updateTradingPlanValues(price);
-  checkBreakEvenSuggestion(price);
-  updateDashboardSummary();
-  updateRiskManagement();
-  updateSMCGrid();
-  if (chartMode === 'internal') renderInternalChart(price);
+  pendingPriceUi = price;
+  if (priceUiTimer) return;
+  priceUiTimer = setTimeout(function () {
+    priceUiTimer = null;
+    const p = pendingPriceUi;
+    updateDomTable(p);
+    updateTradingPlanValues(p);
+    checkBreakEvenSuggestion(p);
+    updateDashboardSummary();
+    updateRiskManagement();
+    updateSMCGrid();
+    updateMultiTfUi();
+    if (chartMode === 'internal') renderInternalChart(p);
+  }, UI_DEBOUNCE_MS);
 }
 
 function getTradeMetrics(price = lastWsPrice) {
@@ -2395,16 +2699,18 @@ function getTradeMetrics(price = lastWsPrice) {
   const trend = analyzeMarketTrend(price);
   const derivedSide = deriveTradeSide(trend);
   const side = lockedTradeSide !== 'WAIT' ? lockedTradeSide : derivedSide;
+  const dyn = getDynamicPlanDistances(price);
   const plan = lockedTradeSide !== 'WAIT'
     ? {
         entry: lockedEntryPrice,
         sl: lockedSL,
-        tp1: lockedTradeSide === 'BUY' ? lockedEntryPrice + GOLD_PLAN.tp1Distance : lockedEntryPrice - GOLD_PLAN.tp1Distance,
-        tp2: lockedTradeSide === 'BUY' ? lockedEntryPrice + GOLD_PLAN.tp2Distance : lockedEntryPrice - GOLD_PLAN.tp2Distance,
-        tp3: lockedTradeSide === 'BUY' ? lockedEntryPrice + GOLD_PLAN.tp3Distance : lockedEntryPrice - GOLD_PLAN.tp3Distance,
+        tp1: lockedTradeSide === 'BUY' ? lockedEntryPrice + dyn.tp1Distance : lockedEntryPrice - dyn.tp1Distance,
+        tp2: lockedTradeSide === 'BUY' ? lockedEntryPrice + dyn.tp2Distance : lockedEntryPrice - dyn.tp2Distance,
+        tp3: lockedTradeSide === 'BUY' ? lockedEntryPrice + dyn.tp3Distance : lockedEntryPrice - dyn.tp3Distance,
         orderType: getOrderType(lockedTradeSide, lockedEntryPrice, price),
         orderMode: lockedOrderType && lockedOrderType.includes('STOP') ? 'BREAKOUT' : 'RETRACEMENT',
-        narrative: getOrderNarrative(getOrderType(lockedTradeSide, lockedEntryPrice, price))
+        narrative: getOrderNarrative(getOrderType(lockedTradeSide, lockedEntryPrice, price)),
+        atr: dyn.atr
       }
     : calculateDirectionalPlan(price, side, trend);
   const entry = Number.isFinite(plan.entry) ? plan.entry : price;
@@ -2416,7 +2722,7 @@ function getTradeMetrics(price = lastWsPrice) {
   const acc = Math.max(0, parseFloat(document.getElementById('accSize')?.value) || 10000);
   const risk = Math.min(100, Math.max(0, parseFloat(document.getElementById('riskPct')?.value) || 1));
   const riskAmt = acc * (risk / 100);
-  const slDist = side === 'WAIT' ? GOLD_PLAN.slDistance : Math.max(Math.abs(entry - sl), GOLD_PLAN.slDistance);
+  const slDist = side === 'WAIT' ? dyn.slDistance : Math.max(Math.abs(entry - sl), dyn.slDistance * 0.85);
   const rawLot = riskAmt / (slDist * GOLD_PLAN.contractSize);
   const lotSize = Math.min(GOLD_PLAN.maxLot, Math.max(GOLD_PLAN.minLot, rawLot));
   const lotCapped = rawLot > GOLD_PLAN.maxLot;
@@ -2445,7 +2751,7 @@ function assessTradingReadiness(price = lastWsPrice) {
   const entryUpper = m.entry + buffer;
   const entryLower = m.entry - buffer;
   if (!connected) return { code:'NO_TRADE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / DATA OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - DATA OFFLINE', badge:'LIVE DATA REQUIRED', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason:'Live stream sedang OFFLINE. Hindari eksekusi sampai harga/data tervalidasi kembali.' };
-  if (SIMULATION_BLOCKS_ENTRY && usingSimulatedPrice) return { code:'NO_TRADE_OFFLINE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / LIVE FEED OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - LIVE FEED OFFLINE', badge:'LIVE PRICE REQUIRED', signal:'🟠 NO TRADE / OFFLINE', final:'🟠 NO TRADE', reason:'Feed harga live tidak tersedia. Mode simulasi dinonaktifkan (CLEAN-122). Entry diblokir sampai API live terverifikasi.' };
+  if (SIMULATION_BLOCKS_ENTRY && usingSimulatedPrice) return { code:'NO_TRADE_OFFLINE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / LIVE FEED OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - LIVE FEED OFFLINE', badge:'LIVE PRICE REQUIRED', signal:'🟠 NO TRADE / OFFLINE', final:'🟠 NO TRADE', reason:'Feed harga live tidak tersedia. Mode simulasi dinonaktifkan (CLEAN-125). Entry diblokir sampai API live terverifikasi.' };
   if (recentPrices.length < MIN_TREND_SAMPLES) return { code:'NO_TRADE_WARMUP', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / DATA WARMUP', state:'NO TRADE', title:'🟠 NO TRADE - DATA WARMUP', badge:'TREND DATA REQUIRED', signal:'🟠 NO TRADE / WARMUP', final:'🟠 NO TRADE', reason:`Belum cukup tick live untuk analisis tren (${recentPrices.length}/${MIN_TREND_SAMPLES}). Tunggu data valid.` };
   if (newsRiskUnknown && !calendarManualOverride) return { code:'WAIT_NEWS', tone:'orange', action:'WAIT NEWS', side:m.side, setup:'WAIT NEWS / CALENDAR CHECK', state:'WAIT NEWS', title:'🟠 WAIT NEWS - CALENDAR CHECK', badge:'CALENDAR NOT VALIDATED', signal:'🟠 WAIT NEWS', final:'🟠 WAIT NEWS', reason:'Kalender ekonomi belum berhasil divalidasi. Cek high-impact news terlebih dahulu sebelum entry.' };
   if (highImpactNewsDetected) return { code:'WAIT_NEWS', tone:'orange', action:'WAIT NEWS', side:m.side, setup:'WAIT NEWS / HIGH IMPACT', state:'WAIT NEWS', title:'🟠 WAIT NEWS - HIGH IMPACT', badge:'NEWS FILTER ACTIVE', signal:'🟠 WAIT NEWS', final:'🟠 WAIT NEWS', reason:`Ada potensi high-impact news (${highImpactNewsLabel || 'event penting'}). Tombol entry mati otomatis sampai risiko berita mereda.` };
@@ -2854,26 +3160,65 @@ async function checkRealEconomicCalendar() {
 }
 
 async function fetchCalendarEventsWithFallback() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || 'null');
+    if (cached && cached.events && cached.events.length && (Date.now() - cached.savedAt) < CALENDAR_CACHE_TTL_MS) {
+      addLog('Calendar cache hit (' + cached.source + ')', 'info');
+      setTimeout(function () { refreshCalendarCacheBackground(); }, 80);
+      return { online: true, source: cached.source + ' (cache)', events: cached.events };
+    }
+  } catch (e) {}
   const errors = [];
-  for (const source of CALENDAR_SOURCES) {
+  const proxied = proxyUrl('/calendar');
+  if (proxied) {
     try {
-      const response = await fetchWithTimeout(source.url, { cache: 'no-store' }, 10000);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const response = await fetchWithTimeout(proxied, { cache: 'no-store' }, 12000);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
       const data = await response.json();
-      const events = normalizeCalendarEvents(data, source);
-      if (events.length) return { online: true, source: source.name, events };
-      errors.push(`${source.name}: empty response`);
+      if (data.online && Array.isArray(data.events) && data.events.length) {
+        localStorage.setItem(CALENDAR_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), source: data.source, events: data.events }));
+        return { online: true, source: 'proxy:' + data.source, events: data.events };
+      }
+      errors.push('proxy empty');
     } catch (err) {
-      errors.push(`${source.name}: ${err.message}`);
-      addLog(`Calendar source gagal: ${source.name} (${err.message})`, 'error');
+      errors.push('proxy: ' + err.message);
+      addLog('Calendar proxy gagal: ' + err.message, 'error');
     }
   }
-
-  return {
-    online: false,
-    source: 'All sources offline',
-    events: []
-  };
+  const results = await Promise.all(CALENDAR_SOURCES.map(async function (source) {
+    try {
+      const response = await fetchWithTimeout(source.url, { cache: 'no-store' }, 10000);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const data = await response.json();
+      const events = normalizeCalendarEvents(data, source);
+      if (events.length) return { ok: true, source: source.name, events: events };
+      return { ok: false, error: source.name + ': empty' };
+    } catch (err) {
+      return { ok: false, error: source.name + ': ' + err.message };
+    }
+  }));
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (r.ok) {
+      localStorage.setItem(CALENDAR_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), source: r.source, events: r.events }));
+      return { online: true, source: r.source, events: r.events };
+    }
+    errors.push(r.error);
+    addLog('Calendar source gagal: ' + r.error, 'error');
+  }
+  return { online: false, source: 'All sources offline', events: [] };
+}
+async function refreshCalendarCacheBackground() {
+  try {
+    const proxied = proxyUrl('/calendar');
+    if (!proxied) return;
+    const response = await fetchWithTimeout(proxied, { cache: 'no-store' }, 12000);
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data.online && data.events && data.events.length) {
+      localStorage.setItem(CALENDAR_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), source: data.source, events: data.events }));
+    }
+  } catch (e) {}
 }
 
 function normalizeCalendarEvents(data, source) {
@@ -2904,7 +3249,7 @@ function normalizeCalendarEvents(data, source) {
 }
 
 function buildLocalCalendarFallback(errors = []) {
-  // DISABLED CLEAN-122: no estimated/fake calendar rows
+  // DISABLED CLEAN-125: no estimated/fake calendar rows
   return [];
 }
 
