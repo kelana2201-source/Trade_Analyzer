@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
-<!-- BUILD-CLEAN-125: neutral defaults, proxy badges, price sync, CF removed, radar/conn status -->
+<!-- BUILD v5.7.0 CLEAN-125: reviewed & patched (floating PnL, partial TP, CSV import, tab highlight, theme engine, ping fix, TV studies, ATR consistency, security hardening, PWA assets, dead-code cleanup) -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Trading Signal System - Institutional Enterprise v5.6.2 (Live Plan Monitor on Top)</title>
+<title>AI Trading Signal System - Institutional Enterprise v5.7.0 (Live Plan Monitor on Top)</title>
 
 <meta name="theme-color" content="#d4a017">
 <meta name="background-color" content="#060a13">
@@ -19,6 +19,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--bg-deep:#060a13;--bg-card:#111a2e;--border:#1c2a4a;--gold:#d4a017;--gold-dim:#8b6914;--green:#22c55e;--green-dim:#166534;--red:#ef4444;--red-dim:#991b1b;--orange:#f97316;--blue:#38bdf8;--cyan:#06b6d4;--purple:#a855f7;--text:#e2e8f0;--text-muted:#64748b;--text-dim:#475569}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -276,21 +277,197 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
 /* ================= ORDER TYPES + INSTITUTIONAL ACTIVE LOGIC v5.14 ================= */
 .radar-icon{animation:radarSweep 1.8s linear infinite;transform-origin:center;color:var(--cyan)}@keyframes radarSweep{0%{transform:rotate(0deg);filter:drop-shadow(0 0 0 rgba(6,182,212,0))}50%{filter:drop-shadow(0 0 8px rgba(6,182,212,.75))}100%{transform:rotate(360deg)}}#clockEl,.active-time{animation:activeTimePulse 1.6s ease-in-out infinite}@keyframes activeTimePulse{0%,100%{box-shadow:0 0 0 rgba(212,160,23,0)}50%{box-shadow:0 0 14px rgba(212,160,23,.28)}}button.news-disabled{opacity:.45!important;cursor:not-allowed!important;filter:grayscale(.4)}.be-ready{color:var(--green)!important}.be-wait{color:var(--text-muted)!important}.dxy-bull{color:var(--red)!important}.dxy-bear{color:var(--green)!important}.dxy-neutral{color:var(--gold)!important}
 
+/* ================= THEME: GOLD PREMIUM ================= */
+body.theme-gold-premium{--bg-deep:#0c0a06;--bg-card:#1a160c;--border:#3a2f12;--text:#f3e7c4;--text-muted:#b9a577;--text-dim:#8a7a4e}
+body.theme-gold-premium .card{background:linear-gradient(145deg,rgba(26,22,12,.92),rgba(12,10,6,.96))}
+body.theme-gold-premium .glass-card{background:linear-gradient(135deg,rgba(26,22,12,.78),rgba(8,7,3,.85))!important}
+body.theme-gold-premium .premium-card{background:linear-gradient(145deg,rgba(30,24,10,.96),rgba(10,8,3,.98))!important}
+body.theme-gold-premium .tab-btn{background:rgba(26,22,12,.9)}
+body.theme-gold-premium .input-field{background:#0c0a06}
+
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--bg-deep)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ═══════════════════════════════════════════════════════════
+   PRO UPGRADE v5.8 — additive layer (tidak mengubah inti v5.7.0)
+   ═══════════════════════════════════════════════════════════ */
+:root{--ease:.22s ease}
+
+/* ===== THEMES (OLED Black / Dark Professional / Light) ===== */
+body.theme-oled-black{--bg-deep:#000;--bg-card:#0a0a0a;--border:#1c1c1c;--glass:rgba(0,0,0,.82);--glass-border:rgba(148,163,184,.12)}
+body.theme-oled-black .card,body.theme-oled-black .premium-card{background:#0a0a0a!important}
+body.theme-oled-black .glass-card{background:rgba(0,0,0,.85)!important}
+body.theme-dark-pro{--bg-deep:#0b1220;--bg-card:#111c30;--border:#243352;--gold:#f0b429;--glass:rgba(17,28,48,.72)}
+body.theme-light{--bg-deep:#eef2f7;--bg-card:#ffffff;--border:#d8dee9;--text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--glass:rgba(255,255,255,.85);--glass-border:rgba(15,23,42,.1)}
+body.theme-light .card,body.theme-light .premium-card{background:#fff!important;color:#0f172a}
+body.theme-light .glass-card{background:rgba(255,255,255,.9)!important}
+body.theme-light .bg-slate-900,body.theme-light .bg-slate-800{background:#f1f5f9!important;color:#0f172a}
+body.theme-light .input-field{background:#fff;color:#0f172a}
+body.theme-light .toast{background:#fff;color:#0f172a}
+body.theme-light .tab-btn{background:#fff;color:#475569}
+body.theme-light .log-line{color:#475569!important}
+
+/* ===== A11Y ===== */
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ===== Entry Guidance ===== */
+.guidance-card{border-radius:16px;padding:14px;border:2px solid var(--border);transition:border-color var(--ease),box-shadow var(--ease),background var(--ease)}
+.guidance-status{font-size:20px;font-weight:800;letter-spacing:.3px;line-height:1.2}
+.guidance-green{border-color:var(--green);background:rgba(34,197,94,.08);box-shadow:0 0 0 1px rgba(34,197,94,.15) inset}
+.guidance-orange{border-color:var(--orange);background:rgba(249,115,22,.08)}
+.guidance-red{border-color:var(--red);background:rgba(239,68,68,.08)}
+.validity-pill{font-family:'JetBrains Mono',monospace;font-weight:700}
+
+/* ===== Entry Checklist ===== */
+.check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px}
+.check-item{display:flex;align-items:center;gap:9px;border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-size:12px;background:rgba(0,0,0,.18)}
+body.theme-light .check-item{background:#f8fafc}
+.check-item .ci-dot{width:18px;height:18px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;flex:0 0 18px}
+.check-pass{border-left:3px solid var(--green)}.check-pass .ci-dot{background:rgba(34,197,94,.2);color:var(--green)}
+.check-fail{border-left:3px solid var(--red)}.check-fail .ci-dot{background:rgba(239,68,68,.2);color:var(--red)}
+.check-warn{border-left:3px solid var(--orange)}.check-warn .ci-dot{background:rgba(249,115,22,.2);color:var(--orange)}
+
+/* ===== Confidence gauge ===== */
+.gauge-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.gauge{width:96px;height:96px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--p,0)*1%),rgba(148,163,184,.18) 0);position:relative;flex:0 0 96px}
+.gauge::before{content:"";position:absolute;inset:9px;border-radius:999px;background:var(--bg-card)}
+.gauge span{position:relative;font-family:'JetBrains Mono',monospace;font-weight:800;font-size:19px}
+
+/* ===== Pros / Cons ===== */
+.proscons{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.proscons{grid-template-columns:1fr}}
+.pc-col{border:1px solid var(--border);border-radius:12px;padding:11px}
+.pc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.pc-row{display:flex;gap:7px;align-items:flex-start;font-size:12px;padding:4px 0;line-height:1.4}
+.pc-row i{margin-top:2px;flex:0 0 auto}
+
+/* ===== Session Monitor ===== */
+.session-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:900px){.session-grid{grid-template-columns:1fr 1fr}}
+.session-card{border:1px solid var(--border);border-radius:12px;padding:11px;background:rgba(0,0,0,.18);transition:border-color var(--ease),box-shadow var(--ease)}
+body.theme-light .session-card{background:#f8fafc}
+.session-card.live{border-color:var(--green);box-shadow:0 0 0 1px rgba(34,197,94,.14) inset}
+.session-name{font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.session-countdown{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);margin-top:6px}
+.session-strength{height:5px;border-radius:999px;background:rgba(148,163,184,.25);overflow:hidden;margin-top:7px}
+.session-strength i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--green))}
+
+/* ===== Risk Calculator ===== */
+.calc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:640px){.calc-grid{grid-template-columns:1fr}}
+.calc-out{border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:11px;padding:10px 11px;background:rgba(0,0,0,.18)}
+body.theme-light .calc-out{background:#f8fafc}
+
+/* ===== Trade Journal table ===== */
+.journal-table{width:100%;border-collapse:collapse;font-size:11px;font-family:'JetBrains Mono',monospace}
+.journal-table th{position:sticky;top:0;background:var(--bg-card);color:var(--text-muted);text-align:left;padding:8px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+.journal-table td{padding:7px 8px;border-bottom:1px solid rgba(28,42,74,.4);white-space:nowrap}
+body.theme-light .journal-table td{border-bottom:1px solid #e2e8f0}
+.res-badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700}
+.res-win{background:rgba(34,197,94,.16);color:var(--green)}
+.res-loss{background:rgba(239,68,68,.16);color:var(--red)}
+.res-open{background:rgba(56,189,248,.16);color:var(--blue)}
+.res-other{background:rgba(148,163,184,.16);color:var(--text-muted)}
+.filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+
+/* ===== Floating Mini Status (desktop) ===== */
+.floating-status{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:60;display:none;align-items:stretch;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--glass-border);border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.32);overflow:hidden;max-width:96vw}
+.floating-status.show{display:flex}
+.fs-cell{padding:8px 13px;font-size:11px;border-right:1px solid var(--glass-border);display:flex;flex-direction:column;gap:2px;min-width:0}
+.fs-cell:last-child{border-right:0}
+.fs-label{font-size:8px;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted)}
+.fs-value{font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap}
+@media(max-width:900px){.floating-status{display:none!important}}
+
+/* ===== Mobile Bottom Nav + FAB ===== */
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:70;display:none;grid-template-columns:repeat(5,1fr);gap:0;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--glass-border);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.bottom-nav button{background:none;border:0;color:var(--text-muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:7px 2px;min-height:48px;cursor:pointer}
+.bottom-nav button.active{color:var(--gold)}
+.bottom-nav button i{font-size:16px}
+.fab{position:fixed;right:14px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:71;display:none;width:56px;height:56px;border-radius:999px;border:0;background:linear-gradient(145deg,#e2ad16,#c9900d);color:#05070d;font-size:20px;box-shadow:0 12px 28px rgba(212,160,23,.4);cursor:pointer}
+@media(max-width:900px){.bottom-nav{display:grid}.fab{display:flex;align-items:center;justify-content:center}body{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}}
+
+/* ===== Skeleton ===== */
+.skel{background:linear-gradient(90deg,rgba(148,163,184,.08),rgba(148,163,184,.18),rgba(148,163,184,.08));background-size:200% 100%;animation:skel 1.3s infinite;border-radius:8px}
+@keyframes skel{to{background-position:-200% 0}}
+
+/* ===== Heatmap ===== */
+.heatmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.hm-cell{border-radius:11px;padding:10px;border:1px solid var(--border);background:rgba(0,0,0,.2)}
+body.theme-light .hm-cell{background:#f8fafc}
+.hm-sym{font-size:11px;font-weight:700;color:var(--text-muted)}
+.hm-val{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:14px;margin-top:4px}
+.hm-chg{font-size:10px;font-family:'JetBrains Mono',monospace;margin-top:2px}
+.hm-up{border-color:rgba(34,197,94,.5)}.hm-up .hm-val,.hm-up .hm-chg{color:var(--green)}
+.hm-dn{border-color:rgba(239,68,68,.5)}.hm-dn .hm-val,.hm-dn .hm-chg{color:var(--red)}
+.hm-neutral{opacity:.62}
+
+/* ===== Help modal ===== */
+.modal-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;max-width:460px;width:100%;padding:18px;max-height:82vh;overflow:auto}
+.kbd{display:inline-block;background:rgba(148,163,184,.18);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:11px}
+
+/* ===== Collapsible info cards (ringankan HP) ===== */
+.pro-details{border:1px solid var(--border);border-radius:14px;background:var(--bg-card);margin-bottom:12px;overflow:hidden}
+.pro-details>summary{list-style:none;cursor:pointer;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);display:flex;align-items:center;gap:8px;padding:13px 15px}
+.pro-details>summary::-webkit-details-marker{display:none}
+.pro-details>summary i.lead{color:var(--gold)}
+.pro-details>summary .chev{margin-left:auto;color:var(--text-muted);transition:transform .2s;font-size:12px}
+.pro-details[open]>summary{border-bottom:1px solid var(--border)}
+.pro-details[open]>summary .chev{transform:rotate(180deg)}
+.pro-details>summary+.card{border:0;border-radius:0;margin-bottom:0}
+
+/* ===== micro-interaction ===== */
+.lift{transition:transform var(--ease),box-shadow var(--ease)}
+.lift:hover{transform:translateY(-2px)}
 </style>
 </head>
 <body class="p-4 lg:p-6">
 
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- FLOATING MINI STATUS (desktop, muncul saat scroll) -->
+<div class="floating-status" id="floatingStatus" aria-label="Ringkasan posisi aktif">
+  <div class="fs-cell"><span class="fs-label">Pair</span><span class="fs-value" id="fsPair">XAUUSD</span></div>
+  <div class="fs-cell"><span class="fs-label">Side</span><span class="fs-value" id="fsSide">WAIT</span></div>
+  <div class="fs-cell"><span class="fs-label">Entry</span><span class="fs-value" id="fsEntry">—</span></div>
+  <div class="fs-cell"><span class="fs-label">SL</span><span class="fs-value" id="fsSl">—</span></div>
+  <div class="fs-cell"><span class="fs-label">TP1</span><span class="fs-value" id="fsTp">—</span></div>
+  <div class="fs-cell"><span class="fs-label">Conf</span><span class="fs-value" id="fsConf">—</span></div>
+  <div class="fs-cell"><span class="fs-label">Run</span><span class="fs-value" id="fsRun">00:00</span></div>
+</div>
+
+<!-- MOBILE BOTTOM NAV + FAB -->
+<button class="fab" id="fabGenerate" aria-label="Generate Signal"><i class="fas fa-bolt"></i></button>
+<nav class="bottom-nav" aria-label="Navigasi mobile">
+  <button onclick="switchTab('dashboard')" data-bn="dashboard"><i class="fas fa-chart-line"></i>Dashboard</button>
+  <button onclick="switchTab('tradingplan')" data-bn="tradingplan"><i class="fas fa-clipboard-list"></i>Plan</button>
+  <button onclick="switchTab('journal')" data-bn="journal"><i class="fas fa-book"></i>Journal</button>
+  <button onclick="switchTab('calendar'); checkRealEconomicCalendar()" data-bn="calendar"><i class="fas fa-calendar-alt"></i>News</button>
+  <button onclick="openMobileModules()" data-bn="modules"><i class="fas fa-th"></i>Modul</button>
+</nav>
+
+<!-- HELP / SHORTCUT MODAL -->
+<div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-3">
+      <h3 id="helpTitle" style="color:var(--gold);font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px"><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+      <button class="btn btn-outline text-xs" onclick="closeHelpModal()" aria-label="Tutup"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="text-xs space-y-2" id="helpBody"></div>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header class="app-header flex items-center justify-between mb-4 flex-wrap gap-2">
   <div class="header-brand flex items-center gap-3">
     <div class="brand-icon w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-600 to-yellow-800 flex items-center justify-center"><i class="fas fa-brain text-black text-lg"></i></div>
     <div>
-      <h1 class="text-lg font-bold tracking-tight" style="color:var(--gold)">AI TRADING SIGNAL SYSTEM <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono">v5.6.9 CLEAN-125</span></h1>
+      <h1 class="text-lg font-bold tracking-tight" style="color:var(--gold)">AI TRADING SIGNAL SYSTEM <span class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono">v5.7.0 CLEAN-125</span></h1>
       <p class="text-xs" style="color:var(--text-muted)">Smart Technical Engine + Real-Time DOM & Order Block + AI Auto-Renewal Plan</p>
     </div>
   </div>
@@ -414,6 +591,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
   <button class="tab-btn" id="btn-riskmatrix" onclick="switchTab('riskmatrix')"><i class="fas fa-shield-halved mr-1"></i> Correlation & Risk</button>
   <button class="tab-btn" id="btn-smartanalyzer" onclick="switchTab('smartanalyzer')"><i class="fas fa-wand-magic-sparkles mr-1"></i> Smart Analyzer & Sheets</button>
   <button class="tab-btn" id="btn-backtest" onclick="switchTab('backtest')"><i class="fas fa-history mr-1"></i> Backtest & Performance</button>
+  <button class="tab-btn" id="btn-journal" onclick="switchTab('journal')"><i class="fas fa-book mr-1"></i> Trade Journal</button>
   <button class="tab-btn" id="btn-settings" onclick="switchTab('settings')"><i class="fas fa-gear mr-1"></i> Settings</button>
 </div>
 
@@ -498,10 +676,76 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
 </div>
 
 
+<!-- ================= AI DECISION BREAKDOWN (pros/cons + confidence gauge) ================= -->
+<div class="card premium-card mb-4" id="aiBreakdownCard">
+  <div class="card-title justify-between">
+    <span><i class="fas fa-microscope" style="color:var(--gold)"></i> AI DECISION BREAKDOWN — ALASAN & RISIKO</span>
+    <span class="badge badge-gold mono" id="aiBdBias">—</span>
+  </div>
+  <div class="gauge-wrap mb-3">
+    <div class="gauge" id="aiConfGauge" style="--p:0" aria-hidden="true"><span id="aiConfGaugeTxt">0%</span></div>
+    <div class="flex-1 min-w-0">
+      <div class="text-xs text-muted mb-1">Rekomendasi AI</div>
+      <div class="text-base font-bold" id="aiBdRec" style="color:var(--orange)">Menunggu data live & validasi filter.</div>
+      <div class="text-[11px] text-muted mt-1" id="aiBdReason">—</div>
+    </div>
+  </div>
+  <div class="proscons">
+    <div class="pc-col">
+      <div class="pc-title" style="color:var(--green)"><i class="fas fa-circle-check"></i> Alasan Mendukung</div>
+      <div id="aiPros" class="text-muted text-xs">—</div>
+    </div>
+    <div class="pc-col">
+      <div class="pc-title" style="color:var(--orange)"><i class="fas fa-triangle-exclamation"></i> Risiko / Catatan</div>
+      <div id="aiCons" class="text-muted text-xs">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ENTRY GUIDANCE + CHECKLIST ================= -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+  <div class="guidance-card guidance-orange" id="entryGuidanceCard">
+    <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+      <div class="card-title mb-0"><i class="fas fa-bullseye" style="color:var(--gold)"></i> PANDUAN ENTRY</div>
+      <span class="validity-pill badge badge-orange" id="validityPill"><i class="fas fa-clock mr-1"></i> Valid —</span>
+    </div>
+    <div class="guidance-status text-orange-400" id="guidanceStatus" role="status" aria-live="polite">JANGAN ENTRY</div>
+    <div class="text-xs text-muted mt-2" id="guidanceReason">Menunggu validasi live feed, tren, kalender & checklist.</div>
+    <div class="text-[11px] mt-2" id="guidanceAction" style="color:var(--gold)">—</div>
+  </div>
+
+  <div class="card lift">
+    <div class="card-title justify-between">
+      <span><i class="fas fa-list-check"></i> ENTRY CHECKLIST</span>
+      <span class="badge badge-orange mono" id="checklistScore">0/0</span>
+    </div>
+    <div class="check-grid" id="checklistGrid">
+      <div class="check-item check-warn"><span class="ci-dot"><i class="fas fa-minus"></i></span>Memuat…</div>
+    </div>
+    <div class="text-[10px] text-muted mt-2">ENTRY SEKARANG hanya muncul bila seluruh checklist vital hijau.</div>
+  </div>
+</div>
+
+<!-- ================= SESSION MONITOR (collapsible) ================= -->
+<details class="pro-details" data-pro-collapse>
+  <summary><i class="fas fa-globe lead"></i> Session Monitor <span class="text-muted" style="font-size:10px;text-transform:none;letter-spacing:0">(Sydney · Tokyo · London · NY)</span><i class="fas fa-chevron-down chev"></i></summary>
+  <div class="card">
+    <div class="session-grid" id="sessionGrid"></div>
+  </div>
+</details>
+
+<!-- ================= MARKET HEATMAP (collapsible) ================= -->
+<details class="pro-details" data-pro-collapse>
+  <summary><i class="fas fa-fire lead"></i> Market Heatmap <span class="text-muted" style="font-size:10px;text-transform:none;letter-spacing:0">XAUUSD live · lainnya butuh feed</span><i class="fas fa-chevron-down chev"></i></summary>
+  <div class="card">
+    <div class="heatmap" id="heatmapGrid"></div>
+  </div>
+</details>
+
 <!-- Risk Disclaimer -->
 <div class="card mb-4" style="border-color:rgba(249,115,22,.35);background:rgba(249,115,22,.06)">
   <div class="text-xs text-muted leading-relaxed">
-    <strong class="text-orange-400">Catatan risiko:</strong> Mode real-data only (CLEAN-125). Tidak ada harga/DOM/kalender/backtest demo. Jika API live gagal (CORS/network), sistem offline dan menolak entry. Validasi selalu di broker Anda sebelum eksekusi live.
+    <strong class="text-orange-400">Catatan risiko:</strong> Mode real-data only (CLEAN-125). Tidak ada harga/DOM/kalender/backtest demo. Jika API live gagal (CORS/network), sistem offline dan menolak entry. Validasi selalu di broker Anda sebelum eksekusi live. <strong class="text-amber-400">Google Sheets & Telegram harus diisi sendiri di Settings</strong> (secret tidak lagi di-hardcode).
   </div>
 </div>
 
@@ -546,13 +790,38 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
   </div>
 
 
+  <!-- RISK / POSITION SIZE CALCULATOR -->
+  <div class="card premium-card mb-4">
+    <div class="card-title"><i class="fas fa-calculator" style="color:var(--gold)"></i> RISK & POSITION SIZE CALCULATOR</div>
+    <div class="calc-grid">
+      <div class="space-y-2">
+        <div><label class="text-[10px] text-muted">Account USD</label>
+          <input type="number" class="input-field" id="calcAcc" value="10000" oninput="recalcRiskCalc()"></div>
+        <div><label class="text-[10px] text-muted">Risk %</label>
+          <input type="number" class="input-field" id="calcRisk" value="1" step="0.1" oninput="recalcRiskCalc()"></div>
+        <div><label class="text-[10px] text-muted">SL Distance (poin XAU)</label>
+          <input type="number" class="input-field" id="calcSl" value="8" step="0.1" oninput="recalcRiskCalc()"></div>
+        <div><label class="text-[10px] text-muted">Target TP (poin, opsional)</label>
+          <input type="number" class="input-field" id="calcTp" value="12" step="0.1" oninput="recalcRiskCalc()"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 content-start">
+        <div class="calc-out"><div class="text-[9px] text-muted uppercase">Risk $</div><div class="mono font-bold text-amber-400 text-lg" id="calcRiskUsd">$0</div></div>
+        <div class="calc-out"><div class="text-[9px] text-muted uppercase">Lot Size</div><div class="mono font-bold text-cyan-400 text-lg" id="calcLot">0.00</div></div>
+        <div class="calc-out"><div class="text-[9px] text-muted uppercase">Potential Profit</div><div class="mono font-bold text-emerald-400 text-lg" id="calcProfit">$0</div></div>
+        <div class="calc-out"><div class="text-[9px] text-muted uppercase">Risk : Reward</div><div class="mono font-bold text-purple-400 text-lg" id="calcRR">1 : 0</div></div>
+        <div class="calc-out col-span-2"><div class="text-[9px] text-muted uppercase">Contract Size / Pip Value</div><div class="mono text-sm" id="calcContract">100 / $100 per poin per lot</div></div>
+      </div>
+    </div>
+    <div class="text-[10px] text-muted mt-2">Estimasi berdasarkan kontrak XAUUSD (100 oz/lot). Validasi margin & swap di broker Anda.</div>
+  </div>
+
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
     <div class="lg:col-span-8 flex flex-col gap-4">
       <div class="card" style="padding:8px">
         <div class="chart-toolbar flex items-center justify-between mb-2 px-2">
           <div class="chart-price-row flex items-center gap-3">
             <span class="text-sm font-bold text-amber-400" id="chSym">XAUUSD</span>
-            <span class="text-lg font-bold mono" id="chPrice">4,087.60</span>
+            <span class="text-lg font-bold mono" id="chPrice">—</span>
             <span class="badge mono text-[10px] badge-orange" id="chChg">--%</span>
           </div>
           <div class="chart-actions flex items-center gap-2 flex-wrap">
@@ -604,7 +873,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
       <div class="card">
         <div class="card-title"><i class="fas fa-terminal"></i> SYSTEM LOG</div>
         <div id="logBox" class="overflow-y-auto" style="max-height:140px;font-family:'JetBrains Mono',monospace;font-size:10px">
-          <div class="log-line text-dim">[SYSTEM] Unified AI Engine v5.6.9 CLEAN-125. Neutral defaults + proxy labels active.</div>
+          <div class="log-line text-dim">[SYSTEM] Unified AI Engine v5.7.0 CLEAN-125. Real-data only · simulasi & data fiktif dihapus.</div>
         </div>
       </div>
     </div>
@@ -621,11 +890,11 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
       <span><i class="fas fa-calendar-alt"></i> USD HIGH IMPACT CALENDAR FILTER (NFP, CPI, FOMC)</span>
       <div class="calendar-actions">
         <button class="btn btn-gold text-xs py-1" onclick="checkRealEconomicCalendar()"><i class="fas fa-rotate"></i> REFRESH CALENDAR</button>
-        <button class="btn btn-outline text-xs py-1 manual-override-active" id="calendarOverrideBtn" onclick="toggleCalendarManualOverride()"><i class="fas fa-user-shield"></i> MANUAL OVERRIDE: ON</button>
+        <button class="btn btn-outline text-xs py-1" id="calendarOverrideBtn" onclick="toggleCalendarManualOverride()"><i class="fas fa-user-shield"></i> MANUAL OVERRIDE: OFF</button>
       </div>
     </div>
     <div class="calendar-monitor-grid" id="calendarMonitorGrid">
-      <div class="calendar-stat"><div class="calendar-stat-label">API Status</div><div class="calendar-stat-value" id="calendarApiStatusEl">🟠 MANUAL MODE</div></div>
+      <div class="calendar-stat"><div class="calendar-stat-label">API Status</div><div class="calendar-stat-value" id="calendarApiStatusEl">⚪ NOT CHECKED</div></div>
       <div class="calendar-stat"><div class="calendar-stat-label">Source</div><div class="calendar-stat-value" id="calendarSourceEl">--</div></div>
       <div class="calendar-stat"><div class="calendar-stat-label">Last Update</div><div class="calendar-stat-value" id="calendarLastUpdateEl">--</div></div>
       <div class="calendar-stat"><div class="calendar-stat-label">Next News</div><div class="calendar-stat-value" id="calendarNextEventEl">--</div></div>
@@ -647,7 +916,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
         </thead>
         <tbody class="divide-y divide-slate-800/60" id="calendarTableBody">
           <tr>
-            <td class="p-3 text-muted" colspan="8">Mode Manual aktif — analisis trading TIDAK ditahan oleh kalender. Cek berita ekonomi (NFP/CPI/FOMC) secara manual di forexfactory.com/calendar, lalu klik REFRESH CALENDAR untuk mencoba mengambil feed otomatis (opsional).</td>
+            <td class="p-3 text-muted" colspan="8">Kalender belum divalidasi. Validasi berjalan otomatis tiap 10 menit, atau tekan REFRESH CALENDAR. AI tetap menganalisis harga; hanya berita High Impact <strong>terverifikasi</strong> yang menahan entry (WAIT NEWS).</td>
           </tr>
         </tbody>
       </table>
@@ -792,6 +1061,44 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
 </div>
 
 
+<!-- ================= TAB: TRADE JOURNAL ================= -->
+<div id="tab-journal" class="hidden space-y-4">
+  <div class="card premium-card">
+    <div class="card-title justify-between">
+      <span><i class="fas fa-book" style="color:var(--gold)"></i> TRADE JOURNAL (otomatis dari sinyal AI)</span>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn btn-outline text-xs" onclick="exportJournalCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+        <button class="btn btn-outline text-xs" onclick="exportJournalExcel()"><i class="fas fa-file-excel"></i> XLSX</button>
+        <button class="btn btn-outline text-xs" style="border-color:var(--red);color:var(--red)" onclick="clearJournal()"><i class="fas fa-trash"></i> RESET</button>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 my-3 text-xs mono">
+      <div class="calc-out"><div class="text-[9px] text-muted uppercase">Total Trade</div><div class="text-lg font-bold" id="jrnTotal">0</div></div>
+      <div class="calc-out"><div class="text-[9px] text-muted uppercase">Win Rate</div><div class="text-lg font-bold text-emerald-400" id="jrnWinRate">—</div></div>
+      <div class="calc-out"><div class="text-[9px] text-muted uppercase">Profit Factor</div><div class="text-lg font-bold text-cyan-400" id="jrnPF">—</div></div>
+      <div class="calc-out"><div class="text-[9px] text-muted uppercase">Net P/L</div><div class="text-lg font-bold text-amber-400" id="jrnNet">$0</div></div>
+      <div class="calc-out"><div class="text-[9px] text-muted uppercase">Avg RR</div><div class="text-lg font-bold text-purple-400" id="jrnAvgRR">—</div></div>
+    </div>
+    <div class="filter-row">
+      <button class="btn btn-gold text-xs" data-jrnfilter="all" onclick="setJournalFilter('all')">Semua</button>
+      <button class="btn btn-outline text-xs" data-jrnfilter="open" onclick="setJournalFilter('open')">Open</button>
+      <button class="btn btn-outline text-xs" data-jrnfilter="win" onclick="setJournalFilter('win')">Win</button>
+      <button class="btn btn-outline text-xs" data-jrnfilter="loss" onclick="setJournalFilter('loss')">Loss</button>
+      <span class="text-[10px] text-muted ml-auto">Journal disimpan lokal (max 500 baris) · auto-backup</span>
+    </div>
+    <div class="overflow-x-auto" style="max-height:520px;overflow-y:auto">
+      <table class="journal-table">
+        <thead><tr>
+          <th>Waktu</th><th>Pair</th><th>Side</th><th>Entry</th><th>SL</th><th>TP1/2/3</th><th>Lot</th><th>Result</th><th>P/L</th><th>Catatan AI</th>
+        </tr></thead>
+        <tbody id="journalTableBody">
+          <tr><td colspan="10" class="p-4 text-center text-muted">Belum ada trade. Journal terisi otomatis saat sinyal ENTRY VALID terkunci.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- ================= TAB 10: SETTINGS ================= -->
 <div id="tab-settings" class="hidden space-y-4">
   <div class="card premium-card">
@@ -825,7 +1132,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
       <div class="settings-section">
         <h3>Theme, Backup & API</h3>
         <div class="field-stack">
-          <label>Theme</label><select class="input-field" id="settingTheme"><option value="institutional-dark">Institutional Dark</option><option value="gold-premium">Gold Premium</option></select>
+          <label>Theme</label><select class="input-field" id="settingTheme"><option value="institutional-dark">Institutional Dark</option><option value="gold-premium">Gold Premium</option><option value="oled-black">OLED Black</option><option value="dark-pro">Dark Professional</option><option value="light">Light (experimental)</option></select>
           <label>API Mode</label><select class="input-field" id="settingApiMode"><option value="auto">Live Only (no simulation)</option><option value="simulation" disabled>Simulation Removed (CLEAN-125)</option></select>
           <div class="grid grid-cols-2 gap-2 mt-2"><button class="btn btn-outline" onclick="autoBackupJournal()">Backup</button><button class="btn btn-outline" onclick="restoreBackupJournal()">Restore</button></div>
         </div>
@@ -834,6 +1141,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
         <h3>Data Proxy (OHLC / Multi-TF / DXY)</h3>
         <div class="field-stack">
           <label>Proxy Base URL</label><input class="input-field" id="settingProxyBaseUrl" placeholder="https://xau-proxy.example.workers.dev">
+          <label class="flex items-center gap-2"><input type="checkbox" id="settingUseWs"> Coba WebSocket real-time <span class="text-[10px] text-muted">(matikan jika proxy tidak mendukung WS → log bersih, pakai HTTP poll)</span></label>
         </div>
       </div>
       <div class="settings-section">
@@ -896,7 +1204,7 @@ const OHLC_CACHE = { M15: [], H1: [], H4: [], D1: [], updatedAt: 0 };
 
 const MIN_TREND_SAMPLES = 12;
 const SIDEWAYS_RANGE_PCT = 0.035; // percentage of price, not fixed dollars
-const SIMULATION_BLOCKS_ENTRY = true; // no fake ticks; offline = no trade
+// CLEAN-125: simulasi harga dinonaktifkan permanen — offline = tidak ada sinyal.
 
 const CALENDAR_SOURCES = [
   {
@@ -911,8 +1219,10 @@ const CALENDAR_SOURCES = [
   }
 ];
 
-const GOOGLE_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwq6qiGrkEjbSTJNETO16uxgQylnTF-yYvVOE0BUajclXwdbSnHmVkQRkL-FvQPxEP5/exec';
-const GOOGLE_SHEETS_TOKEN = 'xau_ai_journal_2026_aman';
+// SECURITY (CLEAN-125): jangan hardcode secret di sisi klien.
+// Biarkan kosong secara default — isi URL + token Sheets Anda sendiri di Settings.
+const GOOGLE_SHEETS_WEBHOOK_URL = '';
+const GOOGLE_SHEETS_TOKEN = '';
 
 const STORAGE_KEYS = {
   settings: 'aiTradingEnterpriseSettings.v1',
@@ -933,6 +1243,7 @@ const DEFAULT_SETTINGS = {
   notifyBrowser: true,
   notifySound: true,
   notifyTelegramOnLock: true,
+  useWs: true,
   proxyBaseUrl: 'https://xau-proxy.kelana2201.workers.dev'
 };
 
@@ -964,13 +1275,21 @@ let lastApiResponseMs = 0;
 let lastDataSource = 'offline';
 let usingSimulatedPrice = true;
 let livePriceVerified = false;
+let liveOfflineLogged = false;
+let lastPriceLogMs = 0;
 let lastLatencyMs = 0;
 let calendarCountdownTimer = null;
 let calendarApiOnline = false;
 let calendarSourceName = 'Not checked';
 let calendarLastUpdatedAt = null;
-let calendarManualOverride = true; // default manual: API kalender eksternal sering diblokir CORS di browser
+let calendarManualOverride = false; // false: high-impact TERVERIFIKASI menahan entry. ON = admin tanggung risiko news.
 let nextCalendarEvent = null;
+let calendarValidated = false;          // TRUE hanya jika API kalender berhasil & terverifikasi
+let calendarStatus = 'not_checked';     // not_checked | verified | updating | unavailable | high_impact
+let calendarRetryCount = 0;             // jumlah kegagalan sejak sukses terakhir
+let nextHighImpactNews = null;          // event high-impact terdekat (untuk tampilan/countdown)
+let calendarAutoTimer = null;
+const CALENDAR_AUTO_INTERVAL_MS = 10 * 60 * 1000; // auto-validasi tiap 10 menit
 let dxyState = { value: null, changePct: 0, bias: 'UNKNOWN', source: 'not checked' };
 let newsHardBlockActive = false;
 let breakEvenSuggested = false;
@@ -986,9 +1305,10 @@ let ohlcRefreshTimer = null;
 let priceSocket = null;
 let priceSocketRetryTimer = null;
 let priceSocketRetries = 0;
+let wsFailHinted = false;
 let wsModeActive = false;
 const WS_INTERVAL_MS = 1000;
-const WS_MAX_RETRIES = 8;
+const WS_MAX_RETRIES = 4;
 
 
 
@@ -1116,13 +1436,20 @@ function closePriceSocket() {
 function schedulePriceSocketReconnect() {
   if (!connected) return;
   if (priceSocketRetries >= WS_MAX_RETRIES) {
-    addLog('WebSocket gagal berulang — fallback polling HTTP 3s.', 'error');
+    addLog('WebSocket gagal berulang — memakai HTTP poll 3s (interval cadangan sudah aktif).', 'error');
     wsModeActive = false;
-    if (livePriceInterval) clearInterval(livePriceInterval);
-    livePriceInterval = setInterval(function () {
-      if (connected) fetchRealLivePrice();
-    }, 3000);
-    fetchRealLivePrice();
+    // Auto-disable WS persisten: connect berikutnya tak mencoba WS lagi → log bersih.
+    try {
+      const st = getSettings();
+      if (st.useWs !== false) {
+        st.useWs = false;
+        appSettings = st;
+        localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(st));
+        const cb = document.getElementById('settingUseWs'); if (cb) cb.checked = false;
+        addLog('WebSocket otomatis dimatikan (proxy tidak mendukung WS). Aktifkan manual di Settings bila proxy sudah mendukung.', 'info');
+      }
+    } catch (e) {}
+    if (!wsFailHinted) { wsFailHinted = true; showToast('WebSocket tidak didukung proxy — otomatis dimatikan. HTTP poll tetap jalan.', 'info'); }
     return;
   }
   const delay = Math.min(10000, 800 * Math.pow(1.6, priceSocketRetries));
@@ -1155,11 +1482,8 @@ function connectPriceSocket() {
       wsModeActive = true;
       addLog('WebSocket live tick aktif (' + WS_INTERVAL_MS + 'ms).', 'success');
       showToast('WebSocket real-time aktif', 'success');
-      // stop HTTP poll while WS is healthy
-      if (livePriceInterval) {
-        clearInterval(livePriceInterval);
-        livePriceInterval = null;
-      }
+      // HTTP poll dibiarkan hidup; ia otomatis skip selama wsModeActive=true,
+      // & resume sendiri bila WS putus (tak perlu menunggu retry habis).
       try { sock.send(JSON.stringify({ type: 'ping' })); } catch (e) {}
     };
 
@@ -1230,7 +1554,7 @@ async function fetchRealLivePrice() {
     if (!Number.isFinite(newPrice) && lastErr) throw lastErr;
   } catch (err) {
     lastApiResponseMs = Math.round(performance.now() - startedAt);
-    addLog('Live feed XAUUSD tidak tersedia (' + err.message + '). Set Proxy Base URL di Settings jika CORS memblokir.', 'error');
+    if (!liveOfflineLogged) addLog('Live feed XAUUSD tidak tersedia (' + err.message + '). Set Proxy Base URL di Settings jika CORS memblokir.', 'error');
   }
 
   if (!Number.isFinite(newPrice) || newPrice <= 0) {
@@ -1241,12 +1565,14 @@ async function fetchRealLivePrice() {
     lastLatencyMs = Math.round(performance.now() - startedAt);
     updateMarketTelemetry('offline', lastLatencyMs, lastApiResponseMs);
     applyTradingReadiness(lastWsPrice);
-    addLog('Live feed XAUUSD offline. Tidak ada harga simulasi — entry diblokir.', 'error');
+    if (!liveOfflineLogged) { addLog('Live feed XAUUSD offline. Tidak ada harga simulasi — entry diblokir. Polling lanjut diam-diam sampai pulih.', 'error'); liveOfflineLogged = true; }
     return;
   }
 
   usingSimulatedPrice = false;
   livePriceVerified = true;
+  const justRecovered = liveOfflineLogged;
+  if (justRecovered) { addLog('Live feed XAUUSD kembali online.', 'success'); liveOfflineLogged = false; lastPriceLogMs = 0; }
 
   const pctChange = lastWsPrice ? ((newPrice - lastWsPrice) / lastWsPrice) * 100 : 0;
   handleGoldAutoRenew(newPrice);
@@ -1256,12 +1582,11 @@ async function fetchRealLivePrice() {
   lastWsPrice = newPrice;
   updatePriceDisplay(newPrice, pctChange);
   updateMarketTelemetry(sourceLabel, lastLatencyMs, lastApiResponseMs);
-  addLog(`Harga XAUUSD live dari ${sourceLabel}: ${formatPrice(newPrice)}`, 'success');
-}
-
-function simulatePrice(_base, _cfg = getSymbolConfig()) {
-  // DISABLED (CLEAN-125 real-only). Never invent prices.
-  return null;
+  // Anti-spam: catat harga saat recovery atau maksimal setiap 30 dtk (bukan tiap poll / tiap ganti source).
+  if (justRecovered || Date.now() - lastPriceLogMs > 30000) {
+    addLog(`Harga XAUUSD live dari ${sourceLabel}: ${formatPrice(newPrice)}`, 'success');
+    lastPriceLogMs = Date.now();
+  }
 }
 
 function handleGoldAutoRenew(price) {
@@ -1316,6 +1641,8 @@ function loadSettingsToForm() {
   if (ns) ns.checked = st.notifySound !== false;
   const nt = document.getElementById('settingNotifyTelegramOnLock');
   if (nt) nt.checked = st.notifyTelegramOnLock !== false;
+  const uw = document.getElementById('settingUseWs');
+  if (uw) uw.checked = st.useWs !== false;
   setSystemStatus('telegram', st.telegramToken && st.telegramChatId ? 'ok' : 'warn', st.telegramToken && st.telegramChatId ? 'Ready' : 'Setup');
   setSystemStatus('sheets', st.sheetsUrl && st.sheetsToken ? 'ok' : 'warn', st.sheetsUrl && st.sheetsToken ? 'Ready' : 'Setup');
 }
@@ -1327,8 +1654,8 @@ function safeSetValue(id, value) {
 
 function saveSettings() {
   const st = {
-    sheetsUrl: document.getElementById('settingSheetsUrl')?.value?.trim() || GOOGLE_SHEETS_WEBHOOK_URL,
-    sheetsToken: document.getElementById('settingSheetsToken')?.value?.trim() || GOOGLE_SHEETS_TOKEN,
+    sheetsUrl: document.getElementById('settingSheetsUrl')?.value?.trim() || '',
+    sheetsToken: document.getElementById('settingSheetsToken')?.value?.trim() || '',
     telegramToken: document.getElementById('settingTelegramToken')?.value?.trim() || '',
     telegramChatId: document.getElementById('settingTelegramChatId')?.value?.trim() || '',
     riskDefault: Number(document.getElementById('settingRiskDefault')?.value || 1),
@@ -1339,6 +1666,7 @@ function saveSettings() {
     notifyBrowser: document.getElementById('settingNotifyBrowser')?.checked !== false,
     notifySound: document.getElementById('settingNotifySound')?.checked !== false,
     notifyTelegramOnLock: document.getElementById('settingNotifyTelegramOnLock')?.checked !== false,
+    useWs: document.getElementById('settingUseWs')?.checked !== false,
     proxyBaseUrl: document.getElementById('settingProxyBaseUrl')?.value?.trim() || ''
   };
   appSettings = { ...DEFAULT_SETTINGS, ...st };
@@ -1355,6 +1683,17 @@ function applySettingsToRuntime() {
   setSystemStatus('broker', 'ok', st.broker ? 'Connected' : 'Manual');
   setSystemStatus('telegram', st.telegramToken && st.telegramChatId ? 'ok' : 'warn', st.telegramToken && st.telegramChatId ? 'Ready' : 'Setup');
   setSystemStatus('sheets', st.sheetsUrl && st.sheetsToken ? 'ok' : 'warn', st.sheetsUrl && st.sheetsToken ? 'Ready' : 'Setup');
+  applyTheme(st.theme);
+}
+
+function applyTheme(theme) {
+  const VALID = ['institutional-dark', 'gold-premium', 'oled-black', 'dark-pro', 'light'];
+  const t = VALID.includes(theme) ? theme : 'institutional-dark';
+  document.body.classList.remove('theme-gold-premium', 'theme-oled-black', 'theme-dark-pro', 'theme-light');
+  if (t !== 'institutional-dark') document.body.classList.add('theme-' + t);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  const colors = { 'institutional-dark': '#060a13', 'gold-premium': '#1a160c', 'oled-black': '#000000', 'dark-pro': '#0b1220', 'light': '#eef2f7' };
+  if (meta) meta.setAttribute('content', colors[t] || '#060a13');
 }
 
 function setSystemStatus(key, state = 'ok', label = 'Ready') {
@@ -1371,13 +1710,14 @@ function setSystemStatus(key, state = 'ok', label = 'Ready') {
 
 
 function updateMarketTelemetry(sourceLabel = lastDataSource, latency = lastLatencyMs, apiMs = lastApiResponseMs) {
-  const isLive = sourceLabel !== 'simulated';
+  const isLive = sourceLabel && sourceLabel !== 'simulated' && sourceLabel !== 'offline';
   safeText('dataModeBadge', isLive ? '🟢 LIVE MARKET' : '🔴 LIVE FEED OFFLINE');
   const updateTime = new Date().toLocaleTimeString('id-ID');
   safeText('lastUpdateEl', updateTime);
   safeText('mobileStatusUpdate', updateTime.slice(0,5));
   safeText('latencyEl', `${latency || 0} ms`);
-  safeText('pingEl', `${Math.max(12, Math.round((latency || 20) * 0.55))} ms`);
+  // "Ping" di browser tidak bisa diukur (ICMP). Pakai RTT fetch yang nyata, bukan angka acak.
+  safeText('pingEl', latency ? `${latency} ms` : '-- ms');
   safeText('apiRespEl', apiMs ? `${apiMs} ms` : '-- ms');
   setSystemStatus('livefeed', isLive ? 'ok' : 'bad', isLive ? 'Live Market' : 'Offline');
   setSystemStatus('ai', 'ok', 'Active');
@@ -1399,9 +1739,11 @@ function getTradingSession(now = new Date()) {
   const inLondon = hour >= 7 && hour < 16;
   const inNewYork = hour >= 12 && hour < 21;
   const inAsia = hour >= 0 && hour < 7;
+  const inSydney = hour >= 21 && hour < 24;
   if (inLondon && inNewYork) return { name: 'London / New York Overlap', risk: 'HIGH LIQUIDITY', active: true };
   if (inLondon) return { name: 'London Session', risk: 'ACTIVE', active: true };
   if (inNewYork) return { name: 'New York Session', risk: 'ACTIVE', active: true };
+  if (inSydney) return { name: 'Sydney Session', risk: 'OPENING', active: true };
   if (inAsia) return { name: 'Asia Session', risk: 'LOWER VOL', active: true };
   return { name: 'Off Major Session', risk: 'THIN LIQUIDITY', active: false };
 }
@@ -1473,10 +1815,13 @@ function initEnterpriseModules() {
   ohlcRefreshTimer = setInterval(function () { refreshOhlcFromProxy(); }, 5 * 60 * 1000);
   updateNewsHardBlockUI();
   setInterval(() => {
-    safeText('pingEl', `${Math.floor(18 + Math.random() * 28)} ms`);
     updateCalendarCountdowns();
     updateSessionUI();
   }, 30000);
+  // [CALENDAR FIX] Auto-validasi kalender: sekologi setelah startup + tiap 10 menit (silent, tidak memblok AI).
+  setTimeout(function () { checkRealEconomicCalendar(true); }, 8000);
+  if (calendarAutoTimer) clearInterval(calendarAutoTimer);
+  calendarAutoTimer = setInterval(function () { checkRealEconomicCalendar(true); }, CALENDAR_AUTO_INTERVAL_MS);
   document.getElementById('riskPct')?.addEventListener('input', (e) => { e.currentTarget.dataset.userEdited = '1'; });
 }
 
@@ -1534,7 +1879,15 @@ function updateRiskManagement() {
   const sumNeg = arr => arr.reduce((a,r)=>a+Math.min(0,Number(r.pnl||0)),0);
   const wins = rows.filter(r => Number(r.pnl||0)>0).length;
   const closed = rows.filter(r => r.resultTrade && r.resultTrade !== 'OPEN').length;
-  const floating = dayRows.filter(r=>r.resultTrade==='OPEN').reduce((a)=>a+0,0);
+  const floating = rows.filter(r => r.resultTrade === 'OPEN').reduce((sum, r) => {
+    const entry = Number(r.entry);
+    const totalLot = Number(r.lotSize) || 0;
+    const openLot = Math.max(0, totalLot - (Number(r.closedLot) || 0));
+    const side = r.action;
+    if (!openLot || !Number.isFinite(entry) || (side !== 'BUY' && side !== 'SELL') || !livePriceVerified || !Number.isFinite(lastWsPrice) || lastWsPrice <= 0) return sum;
+    const move = side === 'BUY' ? (lastWsPrice - entry) : (entry - lastWsPrice);
+    return sum + move * openLot * GOLD_PLAN.contractSize;
+  }, 0);
   safeText('riskDailyProfit', formatMoney(sumPos(dayRows)));
   safeText('riskDailyLoss', formatMoney(sumNeg(dayRows)));
   safeText('riskWeeklyProfit', formatMoney(sumPos(weekRows)));
@@ -1543,9 +1896,10 @@ function updateRiskManagement() {
   safeText('riskWinRate', closed ? `${((wins/closed)*100).toFixed(1)}%` : '--%');
   safeText('riskDrawdown', `${Math.min(12, Math.max(0, Math.abs(sumNeg(monthRows))/Math.max(acc,1)*100)).toFixed(2)}%`);
   safeText('riskFloatingPL', formatMoney(floating));
-  safeText('riskEquity', formatMoney(acc + sumPos(monthRows) + sumNeg(monthRows)));
-  safeText('riskMargin', formatMoney(Math.max(0, getTradeMetrics(lastWsPrice).lotSize * 120)));
-  safeText('riskFreeMargin', formatMoney(Math.max(0, acc - getTradeMetrics(lastWsPrice).lotSize * 120)));
+  safeText('riskEquity', formatMoney(acc + sumPos(monthRows) + sumNeg(monthRows) + floating));
+  // Margin butuh data broker sungguhan; tidak ditampilkan angka estimasi fiktif.
+  safeText('riskMargin', '— (broker)');
+  safeText('riskFreeMargin', '— (broker)');
   safeText('riskMaxRisk', formatMoney(riskAmt));
   safeText('riskRemaining', formatMoney(Math.max(0, riskAmt - Math.abs(sumNeg(dayRows)))));
 }
@@ -1553,7 +1907,7 @@ function updateRiskManagement() {
 function getPriceSamples(extraPrice = lastWsPrice) {
   const samples = recentPrices.filter(v => Number.isFinite(v) && v > 0);
   if (Number.isFinite(extraPrice) && extraPrice > 0 && samples[samples.length - 1] !== extraPrice) samples.push(extraPrice);
-  return samples.slice(-60);
+  return samples.slice(-48);
 }
 
 
@@ -1565,19 +1919,6 @@ function proxyUrl(pathQuery) {
   const base = getProxyBase();
   if (!base) return null;
   return base + (pathQuery.startsWith('/') ? pathQuery : '/' + pathQuery);
-}
-function computeAtrFromTicks(period = GOLD_PLAN.atrPeriod) {
-  const samples = getPriceSamples(lastWsPrice);
-  if (samples.length < period + 1) return null;
-  const ranges = [];
-  for (let i = 1; i < samples.length; i++) ranges.push(Math.abs(samples[i] - samples[i - 1]));
-  const slice = ranges.slice(-period);
-  if (!slice.length) return null;
-  let atr = slice[0];
-  const k = 1 / period;
-  for (let i = 1; i < slice.length; i++) atr = atr * (1 - k) + slice[i] * k;
-  atr = atr * 2.8;
-  return Math.min(GOLD_PLAN.atrCeil, Math.max(GOLD_PLAN.atrFloor, atr));
 }
 function computeAtrFromOhlc(candles, period = GOLD_PLAN.atrPeriod) {
   if (!Array.isArray(candles) || candles.length < period + 1) return null;
@@ -1593,8 +1934,9 @@ function computeAtrFromOhlc(candles, period = GOLD_PLAN.atrPeriod) {
   return Math.min(GOLD_PLAN.atrCeil, Math.max(GOLD_PLAN.atrFloor, atr));
 }
 function getActiveAtr() {
-  const ohlcAtr = computeAtrFromOhlc(OHLC_CACHE.M15.length ? OHLC_CACHE.M15 : OHLC_CACHE.H1);
-  const atr = ohlcAtr || computeAtrFromTicks() || GOLD_PLAN.slDistance;
+  // ATR hanya dihitung dari candle OHLC nyata (proxy). Tanpa OHLC → pakai default plan konservatif,
+  // bukan estimasi fiktif dari tick tunggal (data tidak akurat dilarang CLEAN-125).
+  const atr = computeAtrFromOhlc(OHLC_CACHE.M15.length ? OHLC_CACHE.M15 : OHLC_CACHE.H1) || GOLD_PLAN.slDistance;
   lastAtrValue = atr;
   return atr;
 }
@@ -1798,14 +2140,16 @@ function getConfidenceComponents(decision = currentPlanDecision) {
   const trend = analyzeMarketTrend(lastWsPrice);
   const smc = getSMCState();
   const dataOk = livePriceVerified && !usingSimulatedPrice && recentPrices.length >= MIN_TREND_SAMPLES;
-  const newsClear = calendarManualOverride || (!highImpactNewsDetected && !newsRiskUnknown);
+  // [CALENDAR FIX] News Filter: full saat verified/clear, parsial saat unverified (bukan 0/block), 0 saat high-impact.
+  const newsClear = calendarManualOverride || !highImpactNewsDetected;
+  const newsScore = !newsClear ? 0 : (calendarValidated || calendarManualOverride ? 10 : 6);
   const smcActive = Object.values(smc).filter(v => v[2]).length;
   const side = getTradeMetrics(lastWsPrice).side;
   const domAligned = side === 'BUY' ? lastPctChange >= 0 : side === 'SELL' ? lastPctChange <= 0 : false;
   const trendValue = dataOk && ['BULLISH','BEARISH'].includes(trend.direction) ? Math.round(20 * Math.min(1, trend.strength / 100)) : 0;
   const structureValue = dataOk ? Math.round(15 * Math.min(1, smcActive / 4)) : 0;
   return [
-    { name:'Trend Analysis', value: trendValue, max:20 }, { name:'Market Structure', value: structureValue, max:15 }, { name:'Liquidity', value: dataOk && smc.smcSweep[2] ? 12 : 0, max:12 }, { name:'Order Block', value: dataOk && smc.smcOrderBlock[2] ? 15 : 0, max:15 }, { name:'Volume/Momentum', value: dataOk ? Math.min(10, Math.round(Math.abs(trend.momentumPct) * 180)) : 0, max:10 }, { name:'DOM Proxy', value: dataOk && domAligned ? 10 : dataOk ? 4 : 0, max:10 }, { name:'News Filter', value: newsClear ? 10 : 0, max:10 }, { name:'Multi-Timeframe', value: dataOk && ['BULLISH','BEARISH'].includes(trend.direction) ? 8 : 0, max:8 }
+    { name:'Trend Analysis', value: trendValue, max:20 }, { name:'Market Structure', value: structureValue, max:15 }, { name:'Liquidity', value: dataOk && smc.smcSweep[2] ? 12 : 0, max:12 }, { name:'Order Block', value: dataOk && smc.smcOrderBlock[2] ? 15 : 0, max:15 }, { name:'Volume/Momentum', value: dataOk ? Math.min(10, Math.round(Math.abs(trend.momentumPct) * 180)) : 0, max:10 }, { name:'DOM Proxy', value: dataOk && domAligned ? 10 : dataOk ? 4 : 0, max:10 }, { name:'News Filter', value: newsScore, max:10 }, { name:'Multi-Timeframe', value: dataOk && ['BULLISH','BEARISH'].includes(trend.direction) ? 8 : 0, max:8 }
   ].map(c => ({ ...c, pct: Math.round((c.value / c.max) * 100) }));
 }
 function updateAIIntelligence(decision = currentPlanDecision) {
@@ -1836,7 +2180,7 @@ function buildAIReasons(decision) {
     { ok:smc.smcBos[2], text:`BOS proxy: ${smc.smcBos[1]}` },
     { ok:smc.smcChoch[2] || smc.smcSweep[2], text:`CHOCH/Sweep proxy: ${smc.smcChoch[1]} / ${smc.smcSweep[1]}` },
     { ok:smc.smcOrderBlock[2], text:`Order Block proxy: ${smc.smcOrderBlock[1]}` },
-    { ok:calendarManualOverride || (!highImpactNewsDetected && !newsRiskUnknown), text: calendarManualOverride ? 'Manual override kalender aktif oleh admin' : highImpactNewsDetected ? 'Ada USD High Impact News' : newsRiskUnknown ? 'News belum tervalidasi' : 'Tidak ada High Impact News dekat' },
+    { ok:calendarManualOverride || !highImpactNewsDetected, text: calendarManualOverride ? 'Override kalender ON (admin tanggung risiko news)' : calendarStatus === 'high_impact' ? ('High Impact News: ' + (highImpactNewsLabel || 'aktif')) : calendarStatus === 'verified' ? 'Calendar TERVERIFIKASI — tidak ada high-impact dekat' : calendarStatus === 'unavailable' ? 'Calendar offline — belum diverifikasi (AI tetap analisis harga)' : 'Calendar belum dicek' },
     { ok:domAligned, text:domAligned ? `DOM/momentum proxy selaras dengan ${m.side}` : 'DOM/momentum proxy belum selaras dengan arah trade' },
     { ok:dxyState.bias !== 'UNKNOWN', text:`DXY monitor: ${dxyState.bias} (${dxyState.source})` },
     { ok:getTradingSession().active, text:`Session checker: ${getTradingSession().name} / ${getTradingSession().risk}` },
@@ -1863,7 +2207,12 @@ function calculateEMA(values, period) {
 function getTradingViewStudies() {
   const indicators = getEnabledIndicators();
   const studies = [];
-  if (indicators.includes('ema20')) studies.push('MASimple@tv-basicstudies');
+  // Studies yang benar-benar didukung embed lite TradingView.
+  // Catatan: panjang EMA spesifik (20/50/200) hanya presisi di chart internal (canvas),
+  // di TradingView tampil sebagai MA Exponential tunggal.
+  if (indicators.includes('ema20') || indicators.includes('ema50') || indicators.includes('ema200')) studies.push('MAExp@tv-basicstudies');
+  if (indicators.includes('vwap')) studies.push('VWAP@tv-basicstudies');
+  if (indicators.includes('atr')) studies.push('ATR@tv-basicstudies');
   if (indicators.includes('volume')) studies.push('Volume@tv-basicstudies');
   return studies;
 }
@@ -1969,9 +2318,20 @@ function exportJournalCSV() {
 }
 function exportJournalExcel() {
   const rows = getJournalHistory();
-  const cols = ['savedAt','pair','entry','stopLoss','tp1','tp2','tp3','lotSize','confidence','status','aiExplanation'];
-  const table = `<table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${rows.map(r=>`<tr>${cols.map(c=>`<td>${escapeHtml(r[c] ?? '')}</td>`).join('')}</tr>`).join('')}</table>`;
-  downloadText('ai-trading-journal.xls', table, 'application/vnd.ms-excel');
+  const cols = ['savedAt','pair','action','entry','stopLoss','tp1','tp2','tp3','lotSize','confidence','resultTrade','pnl','aiExplanation'];
+  if (typeof XLSX === 'undefined') {
+    // Fallback: CSV bila lib XLSX belum termuat (offline).
+    const csv = [cols.join(','), ...rows.map(r => cols.map(c => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
+    downloadText('ai-trading-journal.csv', csv, 'text/csv');
+    showToast('Lib XLSX belum termuat — ekspor sebagai CSV.', 'info');
+    return;
+  }
+  const aoa = [cols, ...rows.map(r => cols.map(c => r[c] ?? ''))];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Journal');
+  XLSX.writeFile(wb, 'ai-trading-journal.xlsx');
+  addLog('Journal diekspor sebagai .xlsx.', 'success');
 }
 function exportJournalPDF() {
   const rows = getJournalHistory();
@@ -2032,6 +2392,24 @@ function exportJournalPDF() {
     }
   }, 300);
 }
+function parseCsvLine(line) {
+  const out = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQ) {
+      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') inQ = false;
+      else cur += ch;
+    } else {
+      if (ch === '"') inQ = true;
+      else if (ch === ',') { out.push(cur); cur = ''; }
+      else cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
 function importHistoryFile(event) {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -2039,10 +2417,26 @@ function importHistoryFile(event) {
   reader.onload = () => {
     try {
       const text = reader.result;
-      const rows = file.name.endsWith('.json') ? JSON.parse(text) : text.split('\n').slice(1).filter(Boolean).map(line => ({ raw: line, savedAt:new Date().toISOString() }));
+      let rows;
+      const headers = ['savedAt','pair','entry','stopLoss','tp1','tp2','tp3','lotSize','confidence','trend','news','dom','aiExplanation','resultTrade','traderNotes'];
+      if (file.name.endsWith('.json')) {
+        rows = JSON.parse(text);
+      } else {
+        const lines = text.split(/\r?\n/).filter(l => l.trim().length);
+        const dataLines = lines[0] && lines[0].toLowerCase().replace(/[^a-z]/g, '').startsWith('savedat') ? lines.slice(1) : lines;
+        rows = dataLines.map(line => {
+          const vals = parseCsvLine(line);
+          const obj = {};
+          headers.forEach((h, i) => {
+            const v = (vals[i] ?? '').trim();
+            obj[h] = v === '' ? '' : (['entry','stopLoss','tp1','tp2','tp3','lotSize'].includes(h) ? Number(v) : v);
+          });
+          return obj;
+        }).filter(r => r.savedAt || Number.isFinite(r.entry));
+      }
       setJournalHistory(Array.isArray(rows) ? rows : []);
       updateDashboardSummary(); updateRiskManagement();
-      showToast('History berhasil diimport', 'success');
+      showToast(`Import berhasil: ${Array.isArray(rows) ? rows.length : 0} baris.`, 'success');
     } catch (err) { showToast(`Import gagal: ${err.message}`, 'error'); }
   };
   reader.readAsText(file);
@@ -2098,8 +2492,9 @@ function captureChartPlaceholder() {
 }
 function getSheetsRequestUrl() {
   const st = getSettings();
-  const base = st.sheetsUrl || GOOGLE_SHEETS_WEBHOOK_URL;
-  const token = st.sheetsToken || GOOGLE_SHEETS_TOKEN;
+  const base = (st.sheetsUrl || GOOGLE_SHEETS_WEBHOOK_URL || '').trim();
+  const token = (st.sheetsToken || GOOGLE_SHEETS_TOKEN || '').trim();
+  if (!base || !token) return null; // belum dikonfigurasi → skip sync (secure-by-default)
   return `${base}?token=${encodeURIComponent(token)}`;
 }
 
@@ -2207,6 +2602,7 @@ function toggleSystemDetails() {
 
 function switchTab(tabId) {
   if (document.getElementById('mobileModuleDrawer')?.classList.contains('open')) closeMobileModules();
+  const requestedTab = tabId;
 
   // Trading Plan tab removed as content panel — jump to live monitor on top
   if (tabId === 'tradingplan') {
@@ -2222,7 +2618,7 @@ function switchTab(tabId) {
     tabId = 'dashboard';
   }
 
-  const tabs = ['dashboard', 'tradingplan', 'calendar', 'confluence', 'dom', 'sentiment', 'riskmatrix', 'smartanalyzer', 'backtest', 'settings'];
+  const tabs = ['dashboard', 'tradingplan', 'journal', 'calendar', 'confluence', 'dom', 'sentiment', 'riskmatrix', 'smartanalyzer', 'backtest', 'settings'];
   tabs.forEach(id => {
     const el = document.getElementById(`tab-${id}`);
     const btn = document.getElementById(`btn-${id}`);
@@ -2235,10 +2631,18 @@ function switchTab(tabId) {
   if (activeEl) activeEl.classList.remove('hidden');
   if (activeBtn) activeBtn.classList.add('active');
 
+  // Klik "Plan Monitor" → sorot tombolnya sendiri, bukan Live Dashboard.
+  if (requestedTab === 'tradingplan') {
+    if (activeBtn) activeBtn.classList.remove('active');
+    const tpBtn = document.getElementById('btn-tradingplan');
+    if (tpBtn) tpBtn.classList.add('active');
+  }
+
   if (tabId === 'dom') updateDomTable(lastWsPrice);
   if (tabId === 'confluence') updateSMCGrid();
   if (tabId === 'riskmatrix') updateRiskManagement();
   if (tabId === 'backtest') renderBacktestCharts();
+  if (tabId === 'journal' && typeof renderJournalTable === 'function') renderJournalTable();
   if (tabId === 'settings') loadSettingsToForm();
 }
 
@@ -2590,19 +2994,6 @@ function initTradingViewWidget() {
   container.appendChild(help);
 }
 
-function changeSymbol() {
-  currentSymbol = GOLD_SYMBOL;
-  const cfg = getSymbolConfig();
-  recentPrices = [];
-  chartFeedIndex = 0;
-  chartMode = 'tradingview';
-  setInitialPlan(lastWsPrice || cfg.initial);
-  initTradingViewWidget();
-  updatePriceDisplay(lastWsPrice || cfg.initial, 0);
-  showToast('Mode XAUUSD only aktif', 'info');
-  addLog('Symbol terkunci: XAUUSD only.', 'info');
-}
-
 function updateConnectionBadge(isConnected) {
   const badge = document.getElementById('connBadge');
   if (badge) {
@@ -2629,21 +3020,22 @@ function doConnect() {
     requestBrowserNotifyPermission();
   }
 
-  // Prefer WebSocket real-time via proxy; fallback HTTP poll
-  const wsOk = connectPriceSocket();
-  if (!wsOk) {
-    fetchRealLivePrice();
-    if (livePriceInterval) clearInterval(livePriceInterval);
-    livePriceInterval = setInterval(function () {
-      if (connected && !wsModeActive) fetchRealLivePrice();
-    }, 3000);
-    showToast('Live polling HTTP aktif', 'success');
-    addLog('Live stream dimulai (HTTP poll 3s).', 'success');
-  } else {
-    // also one REST snapshot immediately while WS handshakes
-    fetchRealLivePrice();
+  // HTTP poll safety-net: SELALU jalan & otomatis skip saat WebSocket aktif,
+  // sehingga harga tetap mengalir walau WS gagal/gangguan.
+  if (livePriceInterval) clearInterval(livePriceInterval);
+  livePriceInterval = setInterval(function () {
+    if (connected && !wsModeActive) fetchRealLivePrice();
+  }, 3000);
+  fetchRealLivePrice();
+
+  const useWs = getSettings().useWs !== false;
+  const wsOk = useWs ? connectPriceSocket() : false;
+  if (wsOk) {
     showToast('Menghubungkan WebSocket…', 'info');
-    addLog('Live stream dimulai (WebSocket preferred).', 'success');
+    addLog('Live stream: WebSocket preferred (HTTP poll sebagai cadangan).', 'success');
+  } else {
+    showToast('Live polling HTTP aktif', 'success');
+    addLog(useWs ? 'Live stream: HTTP poll 3s (WebSocket tidak tersedia di proxy ini).' : 'Live stream: HTTP poll 3s (WebSocket dimatikan di Settings).', 'success');
   }
 }
 
@@ -2865,16 +3257,20 @@ function closeSetupManual() {
 function updatePriceDisplay(price, pctChange) {
   const cfg = getSymbolConfig();
   lastPctChange = Number.isFinite(pctChange) ? pctChange : 0;
-  if (Number.isFinite(price) && price > 0) {
+  const chgEl = document.getElementById('chChg');
+  // Hanya simpan & tampilkan harga yang sudah terverifikasi live (bukan seed internal).
+  if (!livePriceVerified || !Number.isFinite(price) || price <= 0) {
+    safeText('chPrice', '—');
+    if (chgEl) { chgEl.innerText = '--%'; chgEl.className = 'badge mono text-[10px] badge-orange'; }
+  } else {
     recentPrices.push(price);
     if (recentPrices.length > 48) recentPrices.shift();
-  }
-  safeText('chPrice', formatPrice(price, cfg.decimals));
-  const chgEl = document.getElementById('chChg');
-  if (chgEl) {
-    const sign = pctChange >= 0 ? '+' : '';
-    chgEl.innerText = sign + pctChange.toFixed(2) + '%';
-    chgEl.className = 'badge mono text-[10px] ' + (pctChange >= 0 ? 'badge-green' : 'badge-red');
+    safeText('chPrice', formatPrice(price, cfg.decimals));
+    if (chgEl) {
+      const sign = pctChange >= 0 ? '+' : '';
+      chgEl.innerText = sign + pctChange.toFixed(2) + '%';
+      chgEl.className = 'badge mono text-[10px] ' + (pctChange >= 0 ? 'badge-green' : 'badge-red');
+    }
   }
   pendingPriceUi = price;
   if (priceUiTimer) return;
@@ -2951,10 +3347,11 @@ function assessTradingReadiness(price = lastWsPrice) {
   const entryUpper = m.entry + buffer;
   const entryLower = m.entry - buffer;
   if (!connected) return { code:'NO_TRADE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / DATA OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - DATA OFFLINE', badge:'LIVE DATA REQUIRED', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason:'Live stream sedang OFFLINE. Hindari eksekusi sampai harga/data tervalidasi kembali.' };
-  if (SIMULATION_BLOCKS_ENTRY && usingSimulatedPrice) return { code:'NO_TRADE_OFFLINE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / LIVE FEED OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - LIVE FEED OFFLINE', badge:'LIVE PRICE REQUIRED', signal:'🟠 NO TRADE / OFFLINE', final:'🟠 NO TRADE', reason:'Feed harga live tidak tersedia. Mode simulasi dinonaktifkan (CLEAN-125). Entry diblokir sampai API live terverifikasi.' };
+  if (usingSimulatedPrice) return { code:'NO_TRADE_OFFLINE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / LIVE FEED OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - LIVE FEED OFFLINE', badge:'LIVE PRICE REQUIRED', signal:'🟠 NO TRADE / OFFLINE', final:'🟠 NO TRADE', reason:'Feed harga live tidak tersedia. Mode simulasi dinonaktifkan (CLEAN-125). Entry diblokir sampai API live terverifikasi.' };
   if (recentPrices.length < MIN_TREND_SAMPLES) return { code:'NO_TRADE_WARMUP', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / DATA WARMUP', state:'NO TRADE', title:'🟠 NO TRADE - DATA WARMUP', badge:'TREND DATA REQUIRED', signal:'🟠 NO TRADE / WARMUP', final:'🟠 NO TRADE', reason:`Belum cukup tick live untuk analisis tren (${recentPrices.length}/${MIN_TREND_SAMPLES}). Tunggu data valid.` };
-  if (newsRiskUnknown && !calendarManualOverride) return { code:'WAIT_NEWS', tone:'orange', action:'WAIT NEWS', side:m.side, setup:'WAIT NEWS / CALENDAR CHECK', state:'WAIT NEWS', title:'🟠 WAIT NEWS - CALENDAR CHECK', badge:'CALENDAR NOT VALIDATED', signal:'🟠 WAIT NEWS', final:'🟠 WAIT NEWS', reason:'Kalender ekonomi belum berhasil divalidasi. Cek high-impact news terlebih dahulu sebelum entry.' };
-  if (highImpactNewsDetected) return { code:'WAIT_NEWS', tone:'orange', action:'WAIT NEWS', side:m.side, setup:'WAIT NEWS / HIGH IMPACT', state:'WAIT NEWS', title:'🟠 WAIT NEWS - HIGH IMPACT', badge:'NEWS FILTER ACTIVE', signal:'🟠 WAIT NEWS', final:'🟠 WAIT NEWS', reason:`Ada potensi high-impact news (${highImpactNewsLabel || 'event penting'}). Tombol entry mati otomatis sampai risiko berita mereda.` };
+  // [CALENDAR FIX] API kalender gagal BUKAN alasan mengunci AI. Hanya High Impact News
+  // TERVERIFIKASI yang menahan entry — dan tetap bisa di-override admin.
+  if (highImpactNewsDetected && !calendarManualOverride) return { code:'WAIT_NEWS', tone:'orange', action:'WAIT NEWS', side:m.side, setup:'WAIT NEWS / HIGH IMPACT', state:'WAIT NEWS', title:'🟠 WAIT NEWS - HIGH IMPACT', badge:'NEWS FILTER ACTIVE', signal:'🟠 WAIT NEWS', final:'🟠 WAIT NEWS', reason:`High-impact news terverifikasi: ${highImpactNewsLabel || 'event penting'}. Entry ditahan sampai risiko mereda (atau aktifkan Manual Override).` };
   if (m.side === 'WAIT') return { code:'NO_TRADE_NO_TREND', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / NO TREND EDGE', state:'NO TRADE', title:'🟠 NO TRADE - NO TREND EDGE', badge:'NO DIRECTIONAL EDGE', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason:`Trend engine belum memberikan arah BUY/SELL yang valid: ${m.trend.reason}` };
   if (isSidewaysMarket(price)) return { code:'WAIT_BREAKOUT', tone:'orange', action:'WAIT BREAKOUT', side:m.side, setup:`WAIT BREAKOUT / ${m.orderType}`, state:'WAIT BREAKOUT', title:`🟠 WAIT BREAKOUT - ${m.orderType}`, badge:'RANGE TOO TIGHT', signal:'🟠 WAIT BREAKOUT', final:'🟠 WAIT BREAKOUT', reason:`Range harga terlalu sempit secara persentase (<${SIDEWAYS_RANGE_PCT}%). Tunggu breakout/rejection.` };
   const invalid = m.side === 'BUY' ? price <= m.sl : price >= m.sl;
@@ -3187,12 +3584,14 @@ function updateTradingPlanValues(price) {
   const m = getTradeMetrics(price);
   const d = m.cfg.decimals;
   const hasActionableSide = m.side === 'BUY' || m.side === 'SELL';
+  // Hanya tampilkan harga live bila feed sudah terverifikasi — bukan seed internal.
+  const live = livePriceVerified && Number.isFinite(price) && price > 0;
   const rr1 = hasActionableSide ? m.rr(m.tp1).toFixed(1) : '0.0';
   const rr2 = hasActionableSide ? m.rr(m.tp2).toFixed(1) : '0.0';
   const rr3 = hasActionableSide ? m.rr(m.tp3).toFixed(1) : '0.0';
 
   safeText('tpPair', m.cfg.display);
-  safeText('tpBias', m.bias);
+  safeText('tpBias', live ? m.bias : 'WAIT');
   const biasEl = document.getElementById('tpBias');
   if (biasEl) biasEl.className = m.side === 'BUY' ? 'text-green-400' : m.side === 'SELL' ? 'text-red-400' : 'text-orange-400';
 
@@ -3209,19 +3608,19 @@ function updateTradingPlanValues(price) {
             ? 'Invalid Entry:'
             : `Recheck Level (${m.orderType}):`;
   safeText('tpEntryLabel', entryLabel);
-  safeText('tpEntryPrice', hasActionableSide ? formatPrice(m.entry, d) : formatPrice(price, d));
-  safeText('tpStopLoss', hasActionableSide ? `SL: ${formatPrice(m.sl, d)} (-${m.slDist.toFixed(d > 3 ? 5 : 2)} pts)` : 'SL: N/A - no actionable setup');
+  safeText('tpEntryPrice', (hasActionableSide && live) ? formatPrice(m.entry, d) : (live ? formatPrice(price, d) : '—'));
+  safeText('tpStopLoss', (hasActionableSide && live) ? `SL: ${formatPrice(m.sl, d)} (-${m.slDist.toFixed(d > 3 ? 5 : 2)} pts)` : (live ? 'SL: N/A - no actionable setup' : 'SL: —'));
   safeText('tpRiskAmt', `$${m.riskAmt.toFixed(2)} (${m.risk}%)`);
-  safeText('tpLotSize', hasActionableSide ? `${m.lotSize.toFixed(2)} Lot${m.lotCapped ? ' (CAP)' : ''}` : 'N/A');
-  safeText('tpTier1', hasActionableSide ? `${formatPrice(m.tp1, d)} (1:${rr1})` : 'N/A - wait for valid trend');
-  safeText('tpTier2', hasActionableSide ? `${formatPrice(m.tp2, d)} (1:${rr2})` : 'N/A - wait for valid trend');
-  safeText('tpTier3', hasActionableSide ? `${formatPrice(m.tp3, d)} (1:${rr3})` : 'N/A - wait for valid trend');
+  safeText('tpLotSize', (hasActionableSide && live) ? `${m.lotSize.toFixed(2)} Lot${m.lotCapped ? ' (CAP)' : ''}` : 'N/A');
+  safeText('tpTier1', (hasActionableSide && live) ? `${formatPrice(m.tp1, d)} (1:${rr1})` : 'N/A - wait for valid trend');
+  safeText('tpTier2', (hasActionableSide && live) ? `${formatPrice(m.tp2, d)} (1:${rr2})` : 'N/A - wait for valid trend');
+  safeText('tpTier3', (hasActionableSide && live) ? `${formatPrice(m.tp3, d)} (1:${rr3})` : 'N/A - wait for valid trend');
 
   // Keep dashboard signal card synchronized with the locked plan.
-  safeText('sigEntry', hasActionableSide ? formatPrice(m.entry, d) : 'N/A');
-  safeText('sigSl', hasActionableSide ? formatPrice(m.sl, d) : 'N/A');
-  safeText('posLot', hasActionableSide ? `${m.lotSize.toFixed(2)} Lot${m.lotCapped ? ' (CAP)' : ''}` : 'N/A');
-  safeText('sigRR', hasActionableSide ? `1 : ${m.rr(m.tp1).toFixed(2)}` : 'N/A');
+  safeText('sigEntry', (hasActionableSide && live) ? formatPrice(m.entry, d) : 'N/A');
+  safeText('sigSl', (hasActionableSide && live) ? formatPrice(m.sl, d) : 'N/A');
+  safeText('posLot', (hasActionableSide && live) ? `${m.lotSize.toFixed(2)} Lot${m.lotCapped ? ' (CAP)' : ''}` : 'N/A');
+  safeText('sigRR', (hasActionableSide && live) ? `1 : ${m.rr(m.tp1).toFixed(2)}` : 'N/A');
   applyTradingReadiness(price);
 }
 
@@ -3283,16 +3682,22 @@ function generateSignal() {
   updateDashboardSummary();
 }
 
-async function checkRealEconomicCalendar() {
+async function checkRealEconomicCalendar(silent) {
   const tbody = document.getElementById('calendarTableBody');
-  if (!tbody) return;
-
-  showToast('Mengambil USD high-impact calendar...', 'info');
+  calendarStatus = 'updating';
+  calendarRetryCount = 0;
+  updateCalendarMonitorUI();
   setSystemStatus('calendar', 'warn', 'Fetching');
-  setCalendarApiState(false, 'Fetching...', null, null);
-  tbody.innerHTML = getCalendarLoadingRows();
+  if (tbody) tbody.innerHTML = getCalendarLoadingRows();
+  if (!silent) showToast('Memvalidasi kalender USD high-impact…', 'info');
+  const srcList = (getProxyBase() ? 'proxy → ' : '') + CALENDAR_SOURCES.map(s => s.name).join(', ');
+  addLog('[CALENDAR] Request start — sources: ' + srcList, 'info');
 
+  const t0 = performance.now();
   const result = await fetchCalendarEventsWithFallback();
+  const elapsedMs = Math.round(performance.now() - t0);
+  addLog('[CALENDAR] Selesai ' + elapsedMs + 'ms — online=' + result.online + ', source=' + result.source + ', events=' + result.events.length + ', retries=' + calendarRetryCount, result.online ? 'success' : 'error');
+
   const filtered = result.events
     .filter(isGoldUsdHighImpactEvent)
     .sort((a, b) => (Date.parse(a.date || '') || 0) - (Date.parse(b.date || '') || 0))
@@ -3301,101 +3706,95 @@ async function checkRealEconomicCalendar() {
   const highEvent = result.online ? filtered.find(isHighImpactEventSoon) : null;
   highImpactNewsDetected = Boolean(highEvent);
   highImpactNewsLabel = highEvent ? `${highEvent.currency || ''} ${highEvent.title || highEvent.event || ''} ${highEvent.date || ''}`.trim() : '';
-  newsRiskUnknown = !result.online && !calendarManualOverride;
-  nextCalendarEvent = filtered.find(e => (Date.parse(e.date || '') || Infinity) >= Date.now() - 3600000) || filtered[0] || null;
+  nextHighImpactNews = filtered.length ? (filtered.find(e => (Date.parse(e.date || '') || Infinity) >= Date.now()) || filtered[0]) : null;
+  // [CALENDAR FIX] offline = informational, BUKAN pengunci AI.
+  newsRiskUnknown = !result.online;
+  calendarValidated = Boolean(result.online);
+  nextCalendarEvent = nextHighImpactNews || (filtered.find(e => (Date.parse(e.date || '') || Infinity) >= Date.now() - 3600000) || filtered[0] || null);
+
+  if (result.online && highImpactNewsDetected) calendarStatus = 'high_impact';
+  else if (result.online) calendarStatus = 'verified';
+  else calendarStatus = 'unavailable';
 
   setCalendarApiState(result.online, result.source, new Date(), nextCalendarEvent);
   applyTradingReadiness(lastWsPrice);
   updateNewsHardBlockUI();
+  addLog('[CALENDAR] Validasi: ' + (result.online ? (highImpactNewsDetected ? 'HIGH IMPACT terdeteksi → WAIT NEWS' : 'TERVERIFIKASI, tanpa high-impact → AI lanjut') : 'OFFLINE → AI tetap analisis harga (kalender belum diverifikasi)'), result.online ? (highImpactNewsDetected ? 'info' : 'success') : 'error');
 
-  if (!filtered.length) {
-    tbody.innerHTML = `
-      <tr>
-        <td class="p-3 text-amber-400">This week</td>
-        <td class="p-3"><span class="badge badge-blue">USD</span></td>
-        <td class="p-3 font-semibold">Tidak ada USD High Impact khusus Gold (NFP/CPI/FOMC) terdeteksi dari ${escapeHtml(result.source)}</td>
-        <td class="p-3"><span class="badge ${result.online ? 'badge-green' : 'badge-orange'}">${result.online ? 'CLEAR' : 'FALLBACK'}</span></td>
-        <td class="p-3">--</td>
-        <td class="p-3">--</td>
-        <td class="p-3">--</td>
-        <td class="p-3 text-amber-400">${result.online ? 'Clear' : 'Manual check'}</td>
-      </tr>`;
-
-    if (result.online) {
-      setSystemStatus('calendar', 'ok', 'Clear');
-      showToast('Calendar clear: tidak ada USD High Impact NFP/CPI/FOMC dekat.', 'success');
-      addLog(`USD high-impact calendar clear dari ${result.source}.`, 'success');
-    } else if (calendarManualOverride) {
-      setSystemStatus('calendar', 'warn', 'Override');
-      showToast('Calendar API offline. Manual Override aktif, analisis tetap dilanjutkan.', 'info');
-      addLog(`Calendar offline, fallback ${result.source}. Manual override aktif.`, 'info');
+  if (tbody) {
+    if (!filtered.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td class="p-3 text-amber-400">${escapeHtml(new Date().toLocaleDateString('id-ID'))}</td>
+          <td class="p-3"><span class="badge badge-blue">USD</span></td>
+          <td class="p-3 font-semibold">${result.online ? 'Tidak ada USD High Impact (NFP/CPI/FOMC) pekan ini' : 'Data kalender tidak tersedia — menampilkan cache bila ada'}</td>
+          <td class="p-3"><span class="badge ${result.online ? 'badge-green' : 'badge-orange'}">${result.online ? 'CLEAR' : 'OFFLINE'}</span></td>
+          <td class="p-3">--</td><td class="p-3">--</td><td class="p-3">--</td>
+          <td class="p-3 text-amber-400">${result.online ? 'Clear' : 'Refresh'}</td>
+        </tr>`;
     } else {
-      setSystemStatus('calendar', 'bad', 'Offline');
-      showToast('Calendar API offline. Sistem menahan analisis sampai manual override atau API pulih.', 'error');
-      addLog(`Calendar offline. Fallback ${result.source}; newsRiskUnknown aktif.`, 'error');
+      tbody.innerHTML = filtered.map(e => renderCalendarRow(e, result.online)).join('');
     }
-    updateCalendarCountdowns();
-    return;
   }
 
-  tbody.innerHTML = filtered.map(e => renderCalendarRow(e, result.online)).join('');
-
-  if (highImpactNewsDetected) {
-    setSystemStatus('calendar', 'warn', 'High Impact');
-    showToast('USD High Impact (NFP/CPI/FOMC) terdeteksi. Trading Plan diset WAIT NEWS.', 'info');
-    addLog(`USD high impact filter aktif: ${highImpactNewsLabel}`, 'info');
-  } else if (result.online) {
-    setSystemStatus('calendar', 'ok', 'Online');
-    showToast(`Calendar online via ${result.source}. Tidak ada event high-impact dekat.`, 'success');
-    addLog(`USD high-impact calendar online via ${result.source}.`, 'success');
-  } else if (calendarManualOverride) {
-    setSystemStatus('calendar', 'warn', 'Override');
-    showToast('Calendar API offline; fallback ditampilkan dan Manual Override aktif.', 'info');
-    addLog('Calendar fallback + manual override aktif.', 'info');
+  if (calendarStatus === 'high_impact') {
+    setSystemStatus('calendar', 'bad', 'High Impact');
+    if (!silent) showToast('High Impact News aktif: ' + highImpactNewsLabel + ' — WAIT NEWS', 'info');
+  } else if (calendarStatus === 'verified') {
+    setSystemStatus('calendar', 'ok', 'Verified');
+    if (!silent) showToast('Calendar TERVERIFIKASI — tidak ada high-impact news dekat. AI lanjut normal.', 'success');
   } else {
-    setSystemStatus('calendar', 'bad', 'Offline');
-    showToast('Calendar API offline. Fallback estimasi ditampilkan; analisis ditahan sampai override.', 'error');
-    addLog('Calendar API offline; fallback estimasi ditampilkan.', 'error');
+    setSystemStatus('calendar', 'warn', calendarManualOverride ? 'Override' : 'Offline');
+    if (!silent) showToast('Calendar offline — AI tetap menganalisis harga (kalender belum diverifikasi).', 'info');
+    addLog('[CALENDAR] Cache terakhir: ' + (calendarLastUpdatedAt ? calendarLastUpdatedAt.toLocaleString('id-ID') : 'belum pernah') + '. Tekan Refresh Calendar untuk mencoba lagi.', 'info');
   }
-
   updateCalendarCountdowns();
 }
 
 async function fetchCalendarEventsWithFallback() {
+  // 1) Cache segar (TTL) → pakai + refresh di background
   try {
     const cached = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || 'null');
     if (cached && cached.events && cached.events.length && (Date.now() - cached.savedAt) < CALENDAR_CACHE_TTL_MS) {
-      addLog('Calendar cache hit (' + cached.source + ')', 'info');
-      setTimeout(function () { refreshCalendarCacheBackground(); }, 80);
+      addLog('[CALENDAR] Cache hit (' + cached.source + ', age ' + Math.round((Date.now() - cached.savedAt) / 1000) + 's) → background refresh', 'info');
+      setTimeout(refreshCalendarCacheBackground, 150);
       return { online: true, source: cached.source + ' (cache)', events: cached.events };
     }
   } catch (e) {}
-  const errors = [];
+
+  // 2) Proxy (jika dikonfigurasi)
   const proxied = proxyUrl('/calendar');
   if (proxied) {
+    const t = performance.now();
     try {
       const response = await fetchWithTimeout(proxied, { cache: 'no-store' }, 12000);
+      addLog('[CALENDAR] proxy ' + proxied + ' → HTTP ' + response.status + ' (' + Math.round(performance.now() - t) + 'ms)', 'info');
       if (!response.ok) throw new Error('HTTP ' + response.status);
       const data = await response.json();
       if (data.online && Array.isArray(data.events) && data.events.length) {
         localStorage.setItem(CALENDAR_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), source: data.source, events: data.events }));
         return { online: true, source: 'proxy:' + data.source, events: data.events };
       }
-      errors.push('proxy empty');
+      calendarRetryCount++; addLog('[CALENDAR] proxy respons kosong/invalid (events=0)', 'error');
     } catch (err) {
-      errors.push('proxy: ' + err.message);
-      addLog('Calendar proxy gagal: ' + err.message, 'error');
+      calendarRetryCount++; addLog('[CALENDAR] proxy gagal: ' + err.message + ' (' + proxied + ')', 'error');
     }
   }
+
+  // 3) Sumber publik langsung
   const results = await Promise.all(CALENDAR_SOURCES.map(async function (source) {
+    const t = performance.now();
     try {
       const response = await fetchWithTimeout(source.url, { cache: 'no-store' }, 10000);
+      addLog('[CALENDAR] ' + source.name + ' → HTTP ' + response.status + ' (' + Math.round(performance.now() - t) + 'ms)', 'info');
       if (!response.ok) throw new Error('HTTP ' + response.status);
       const data = await response.json();
       const events = normalizeCalendarEvents(data, source);
+      addLog('[CALENDAR] ' + source.name + ' parsed ' + events.length + ' events', 'info');
       if (events.length) return { ok: true, source: source.name, events: events };
       return { ok: false, error: source.name + ': empty' };
     } catch (err) {
+      calendarRetryCount++; addLog('[CALENDAR] ' + source.name + ' gagal: ' + err.message, 'error');
       return { ok: false, error: source.name + ': ' + err.message };
     }
   }));
@@ -3405,9 +3804,16 @@ async function fetchCalendarEventsWithFallback() {
       localStorage.setItem(CALENDAR_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), source: r.source, events: r.events }));
       return { online: true, source: r.source, events: r.events };
     }
-    errors.push(r.error);
-    addLog('Calendar source gagal: ' + r.error, 'error');
   }
+
+  // 4) Semua gagal → pakai cache kedaluwarsa (online=false, tampilan saja)
+  try {
+    const cached = JSON.parse(localStorage.getItem(CALENDAR_CACHE_KEY) || 'null');
+    if (cached && cached.events && cached.events.length) {
+      addLog('[CALENDAR] Semua source offline — pakai cache kedaluwarsa (' + cached.source + ', age ' + Math.round((Date.now() - cached.savedAt) / 1000) + 's)', 'error');
+      return { online: false, source: cached.source + ' (stale cache)', events: cached.events };
+    }
+  } catch (e) {}
   return { online: false, source: 'All sources offline', events: [] };
 }
 async function refreshCalendarCacheBackground() {
@@ -3448,26 +3854,6 @@ function normalizeCalendarEvents(data, source) {
     previous: e.previous ?? e.Previous ?? '',
     source: source.name
   })).filter(e => e.title || e.currency || e.date);
-}
-
-function buildLocalCalendarFallback(errors = []) {
-  // DISABLED CLEAN-125: no estimated/fake calendar rows
-  return [];
-}
-
-function addDays(date, days) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  d.setHours(19, 30, 0, 0);
-  return d;
-}
-
-function nextWeekdayDate(fromDate, weekday, minDaysAhead = 1) {
-  const d = new Date(fromDate);
-  d.setDate(d.getDate() + minDaysAhead);
-  while (d.getDay() !== weekday) d.setDate(d.getDate() + 1);
-  d.setHours(19, 30, 0, 0);
-  return d;
 }
 
 function renderCalendarRow(e, apiOnline = true) {
@@ -3511,19 +3897,25 @@ function setCalendarApiState(online, source, updatedAt = new Date(), nextEvent =
   updateCalendarMonitorUI();
 }
 
+function calendarStatusInfo() {
+  if (calendarManualOverride) return { emoji: '🟠', text: 'OVERRIDE (admin)', state: 'warn' };
+  switch (calendarStatus) {
+    case 'verified': return { emoji: '🟢', text: 'CALENDAR VERIFIED', state: 'ok' };
+    case 'updating': return { emoji: '🟡', text: 'CALENDAR UPDATING', state: 'warn' };
+    case 'high_impact': return { emoji: '🔴', text: 'HIGH IMPACT NEWS ACTIVE', state: 'bad' };
+    case 'unavailable': return { emoji: '🟠', text: 'NEWS UNAVAILABLE', state: 'warn' };
+    default: return { emoji: '⚪', text: 'NOT CHECKED', state: 'warn' };
+  }
+}
 function updateCalendarMonitorUI() {
-  const statusText = calendarManualOverride
-    ? '🟠 OVERRIDE ACTIVE'
-    : calendarApiOnline
-      ? '🟢 ONLINE'
-      : calendarSourceName === 'Fetching...'
-        ? '🟠 FETCHING'
-        : '🔴 OFFLINE';
-  safeText('calendarApiStatusEl', statusText);
+  const info = calendarStatusInfo();
+  const retryTxt = calendarRetryCount > 0 ? ' · retry ' + calendarRetryCount : '';
+  safeText('calendarApiStatusEl', info.emoji + ' ' + info.text + retryTxt);
   safeText('calendarSourceEl', calendarSourceName || '--');
   safeText('calendarLastUpdateEl', calendarLastUpdatedAt ? calendarLastUpdatedAt.toLocaleTimeString('id-ID') : '--');
-  safeText('calendarNextEventEl', nextCalendarEvent ? (nextCalendarEvent.title || nextCalendarEvent.event || '--') : '--');
-  safeText('calendarNextCountdownEl', nextCalendarEvent ? getEventCountdown(nextCalendarEvent.date) : '--');
+  const nxt = nextHighImpactNews || nextCalendarEvent;
+  safeText('calendarNextEventEl', nxt ? ((nxt.title || nxt.event || '--') + (nxt.currency ? ' (' + nxt.currency + ')' : '')) : (calendarValidated ? 'Tidak ada' : '--'));
+  safeText('calendarNextCountdownEl', nxt ? getEventCountdown(nxt.date) : (calendarValidated ? '—' : '--'));
 
   const btn = document.getElementById('calendarOverrideBtn');
   if (btn) {
@@ -3534,16 +3926,14 @@ function updateCalendarMonitorUI() {
 
 function toggleCalendarManualOverride(forceState) {
   calendarManualOverride = typeof forceState === 'boolean' ? forceState : !calendarManualOverride;
+  // Override = admin menanggung risiko news. Tidak lagi mengubah newsRiskUnknown
+  // (offline tetap informational; AI diblok HANYA oleh high-impact tERVERIFIKASI tanpa override).
   if (calendarManualOverride) {
-    newsRiskUnknown = false;
-    if (!highImpactNewsDetected) setSystemStatus('calendar', 'warn', 'Override');
-    showToast('Manual Override calendar aktif. Analisis dapat dilanjutkan meski API calendar bermasalah.', 'info');
-    addLog('Calendar manual override enabled by admin.', 'info');
+    showToast('Manual Override ON — risiko news ditanggung admin.', 'info');
+    addLog('[CALENDAR] Manual override ON.', 'info');
   } else {
-    newsRiskUnknown = !calendarApiOnline;
-    setSystemStatus('calendar', calendarApiOnline ? 'ok' : 'bad', calendarApiOnline ? 'Online' : 'Offline');
-    showToast('Manual Override calendar dimatikan.', 'info');
-    addLog('Calendar manual override disabled.', 'info');
+    showToast('Manual Override OFF — gunakan hasil validasi kalender.', 'info');
+    addLog('[CALENDAR] Manual override OFF.', 'info');
   }
   updateCalendarMonitorUI();
   updateNewsHardBlockUI();
@@ -3617,7 +4007,7 @@ function buildTradingPlanPayload() {
     confidence: document.getElementById('finalConf')?.innerText || '',
     confluence: document.getElementById('finalConfl')?.innerText || '',
     trend: `${m.trend.label} | strength ${m.trend.strength}% | ${m.trend.reason}`,
-    news: highImpactNewsDetected ? `WAIT NEWS: ${highImpactNewsLabel}` : newsRiskUnknown ? 'NEWS CHECK REQUIRED' : 'USD High Impact Clear',
+    news: highImpactNewsDetected ? `WAIT NEWS: ${highImpactNewsLabel}` : (calendarValidated ? 'USD High Impact Clear (verified)' : (calendarManualOverride ? 'Override ON' : 'Calendar unverified (offline)')),
     dom: m.side === 'BUY' ? (lastPctChange >= 0 ? 'Buyer momentum proxy aligned' : 'Buyer momentum proxy weak') : m.side === 'SELL' ? (lastPctChange <= 0 ? 'Seller momentum proxy aligned' : 'Seller momentum proxy weak') : 'No directional DOM proxy',
     aiExplanation,
     screenshotChart: captureChartPlaceholder(),
@@ -3630,8 +4020,12 @@ function buildTradingPlanPayload() {
 
 // Sinkron ke Google Sheets di background, tidak blocking dan tidak spam toast (dipakai otomatis saat lock).
 async function syncPlanToSheetsSilent(payload) {
+  const requestUrl = getSheetsRequestUrl();
+  if (!requestUrl) {
+    setSystemStatus('sheets', 'warn', 'Setup');
+    return; // Sheets belum dikonfigurasi — journal tetap tersimpan lokal (secure-by-default)
+  }
   try {
-    const requestUrl = getSheetsRequestUrl();
     await fetchWithTimeout(requestUrl, {
       method: 'POST',
       mode: 'no-cors',
@@ -3662,7 +4056,7 @@ function updateJournalRow(tradeId, patch) {
 function autoRecordLockedTrade() {
   // Kalau ada trade sebelumnya yang masih OPEN (mis. plan diganti/auto-renew sebelum kena TP/SL), tandai CANCELLED biar tidak nyangkut selamanya.
   if (currentOpenTradeId) {
-    updateJournalRow(currentOpenTradeId, { resultTrade: 'CANCELLED', pnl: 0, closedAt: new Date().toISOString(), traderNotes: 'Plan diperbarui/auto-renew sebelum TP/SL tercapai.' });
+    updateJournalRow(currentOpenTradeId, { resultTrade: 'CANCELLED', closedAt: new Date().toISOString(), traderNotes: 'Plan diperbarui/auto-renew sebelum TP/SL tercapai.' });
     currentOpenTradeId = null;
   }
   const payload = buildTradingPlanPayload();
@@ -3672,7 +4066,8 @@ function autoRecordLockedTrade() {
   syncPlanToSheetsSilent(payload);
 }
 
-// Dipanggil tiap tick: cek apakah trade OPEN yang sedang dipantau sudah kena TP1/TP2/TP3 atau SL, lalu tutup otomatis di journal.
+// Dipanggil tiap tick: cek apakah trade OPEN yang sedang dipantau sudah kena TP1/TP2/TP3 atau SL,
+// lalu tutup secara PARSIAL sesuai tier (TP1=50%, TP2=30%, TP3=20% sisanya). SL menutup sisa.
 function checkOpenTradeOutcome(price = lastWsPrice) {
   if (!currentOpenTradeId || !Number.isFinite(price)) return;
   const rows = getJournalHistory();
@@ -3682,35 +4077,74 @@ function checkOpenTradeOutcome(price = lastWsPrice) {
   const side = row.action;
   const entry = Number(row.entry), sl = Number(row.stopLoss);
   const tp1 = Number(row.tp1), tp2 = Number(row.tp2), tp3 = Number(row.tp3);
-  if (!Number.isFinite(entry) || !Number.isFinite(sl) || side !== 'BUY' && side !== 'SELL') return;
+  if (!Number.isFinite(entry) || !Number.isFinite(sl) || (side !== 'BUY' && side !== 'SELL')) return;
+
+  const totalLot = Number(row.lotSize) || GOLD_PLAN.minLot;
+  const closedLot = Number(row.closedLot) || 0;
+  const remaining = totalLot - closedLot;
+  if (remaining <= 0.0001) {
+    updateJournalRow(currentOpenTradeId, { resultTrade: 'WIN (FULL TP)' });
+    currentOpenTradeId = null;
+    return;
+  }
 
   const slHit = side === 'BUY' ? price <= sl : price >= sl;
   const tp3Hit = Number.isFinite(tp3) && (side === 'BUY' ? price >= tp3 : price <= tp3);
   const tp2Hit = Number.isFinite(tp2) && (side === 'BUY' ? price >= tp2 : price <= tp2);
   const tp1Hit = Number.isFinite(tp1) && (side === 'BUY' ? price >= tp1 : price <= tp1);
 
-  const lot = Number(row.lotSize) || GOLD_PLAN.minLot;
-  const pnlAt = (target) => (side === 'BUY' ? (target - entry) : (entry - target)) * lot * GOLD_PLAN.contractSize;
+  // Target kumulatif lot yang harus tertutup per tier: TP1=50%, TP2=80%, TP3/SL=100%.
+  let targetCum = null, exitPrice = null, tier = null;
+  if (slHit) { targetCum = 1.0; exitPrice = sl; tier = 'SL'; }
+  else if (tp3Hit) { targetCum = 1.0; exitPrice = tp3; tier = 'TP3'; }
+  else if (tp2Hit) { targetCum = 0.80; exitPrice = tp2; tier = 'TP2'; }
+  else if (tp1Hit) { targetCum = 0.50; exitPrice = tp1; tier = 'TP1'; }
+  if (targetCum === null) return;
 
-  let result = null, pnl = 0, exitPrice = null, label = '';
-  if (slHit) { result = 'LOSS (SL)'; pnl = pnlAt(sl); exitPrice = sl; label = `🔴 LOSS — SL tersentuh @ ${formatPrice(sl)}`; }
-  else if (tp3Hit) { result = 'WIN (TP3)'; pnl = pnlAt(tp3); exitPrice = tp3; label = `🟢 WIN — TP3 tercapai @ ${formatPrice(tp3)}`; }
-  else if (tp2Hit) { result = 'WIN (TP2)'; pnl = pnlAt(tp2); exitPrice = tp2; label = `🟢 WIN — TP2 tercapai @ ${formatPrice(tp2)}`; }
-  else if (tp1Hit) { result = 'WIN (TP1)'; pnl = pnlAt(tp1); exitPrice = tp1; label = `🟢 WIN — TP1 tercapai @ ${formatPrice(tp1)}`; }
-  if (!result) return;
+  const targetClosedLot = totalLot * targetCum;
+  if (closedLot >= targetClosedLot - 0.0001) return; // tier ini sudah tertutup, tunggu tier berikutnya
+  const closeLot = Math.min(remaining, targetClosedLot - closedLot);
+  const valueAt = (side === 'BUY' ? (exitPrice - entry) : (entry - exitPrice)) * GOLD_PLAN.contractSize;
+  const realized = valueAt * closeLot;
+  const accPnl = Number(row.pnl) || 0;
+  const newClosedLot = closedLot + closeLot;
+  const fullyClosed = newClosedLot >= totalLot * 0.999;
+  const newPnl = accPnl + realized;
 
-  updateJournalRow(currentOpenTradeId, { resultTrade: result, pnl: Number(pnl.toFixed(2)), exitPrice, closedAt: new Date().toISOString() });
-  addLog(`Trade ditutup otomatis: ${label} | PnL ${formatMoney(pnl)}.`, pnl >= 0 ? 'success' : 'error');
-  showToast(`${label} (PnL ${formatMoney(pnl)}) — masuk rekap journal.`, pnl >= 0 ? 'success' : 'error');
-  currentOpenTradeId = null;
+  const patch = {
+    closedLot: Number(newClosedLot.toFixed(2)),
+    pnl: Number(newPnl.toFixed(2)),
+    exitPrice: fullyClosed ? exitPrice : (Number(row.exitPrice) || exitPrice),
+    closedAt: fullyClosed ? new Date().toISOString() : (row.closedAt || '')
+  };
+
+  let label;
+  if (tier === 'SL') {
+    patch.resultTrade = newPnl >= 0 ? 'CLOSED (SL, BE+)' : 'LOSS (SL)';
+    label = `${newPnl >= 0 ? '🟠' : '🔴'} SL — sisa ${closeLot.toFixed(2)} lot @ ${formatPrice(sl)}`;
+  } else {
+    patch.resultTrade = fullyClosed ? 'WIN (FULL TP)' : 'OPEN';
+    label = `🟢 PARTIAL ${tier} — ${closeLot.toFixed(2)} lot @ ${formatPrice(exitPrice)} (+${formatMoney(realized)})`;
+  }
+
+  updateJournalRow(currentOpenTradeId, patch);
+
+  if (fullyClosed || tier === 'SL') {
+    addLog(`Trade ditutup penuh: ${label} | Total PnL ${formatMoney(newPnl)}.`, newPnl >= 0 ? 'success' : 'error');
+    showToast(`${label} | Total PnL ${formatMoney(newPnl)}.`, newPnl >= 0 ? 'success' : 'error');
+    currentOpenTradeId = null;
+  } else {
+    addLog(`Partial ${tier}: ${label}. Sisa ${Number((totalLot - newClosedLot).toFixed(2))} lot masih OPEN.`, 'success');
+    showToast(`${label}. Sisa lot masih dipantau.`, 'info');
+  }
 
   const st = getSettings();
   if (st.notifyTelegramOnLock !== false && st.telegramToken && st.telegramChatId) {
     sendTelegramAlert({
-      action: `${label}`, entry: formatPrice(entry), stopLoss: formatPrice(sl),
+      action: label, entry: formatPrice(entry), stopLoss: formatPrice(sl),
       tp1: formatPrice(tp1), tp2: formatPrice(tp2), tp3: formatPrice(tp3),
-      lotSize: lot.toFixed(2), confidence: '-',
-      aiExplanation: `Trade ${side} ditutup otomatis. PnL: ${formatMoney(pnl)}.`
+      lotSize: totalLot.toFixed(2), confidence: '-',
+      aiExplanation: `Trade ${side} ${tier}: ${closeLot.toFixed(2)} lot @ ${formatPrice(exitPrice)}. PnL akumulatif: ${formatMoney(newPnl)}.`
     }).catch(() => {});
   }
 }
@@ -3725,7 +4159,7 @@ function runSmartSheetAnalysis() {
     if (!output) return;
     output.innerHTML = `
       <div class="p-3 rounded bg-slate-900 border border-emerald-500/35 space-y-2">
-        <div class="flex justify-between text-emerald-400 font-bold"><span>Status: BERHASIL</span><span>Confidence: ${document.getElementById('finalConf')?.innerText || '94%'}</span></div>
+        <div class="flex justify-between text-emerald-400 font-bold"><span>Status: BERHASIL</span><span>Confidence: ${document.getElementById('finalConf')?.innerText || '—'}</span></div>
         <div>• Pair aktif: ${escapeHtml(cfg.display)} @ ${escapeHtml(formatPrice(lastWsPrice))}</div>
         <div>• Trend Engine: ${escapeHtml(analyzeMarketTrend(lastWsPrice).label)} / Strength ${escapeHtml(String(analyzeMarketTrend(lastWsPrice).strength))}%</div>
         <div>• SMC Proxy: ${escapeHtml(getSMCState().smcOrderBlock[1])} di ${escapeHtml(formatPrice(lastWsPrice))}</div>
@@ -3759,5 +4193,457 @@ async function testTelegramAlert() {
   showToast(ok ? 'Test Telegram alert terkirim.' : 'Telegram belum terkirim. Cek Bot Token & Chat ID di Settings.', ok ? 'success' : 'info');
 }
 </script>
-</body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PRO UPGRADE v5.8 — additive layer
+     Module terpisah (IIFE). Hanya MEMBACA output inti v5.7.0
+     (getTradeMetrics / assessTradingReadiness / getJournalHistory /
+     buildAIReasons / getTradingSession / dxyState …). TIDAK mengubah
+     logika trading, scoring AI, maupun aliran harga.
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  // ─────────────── DOM CACHE (kurangi query berulang) ───────────────
+  const $ = function (id) { return document.getElementById(id); };
+  const has = function (id) { return $(id) !== null; };
+
+  // ─────────────── UTIL ───────────────
+  function fmtPrice(v) { return (typeof formatPrice === 'function') ? formatPrice(v) : '--'; }
+  function fmtMoney(v) { return (typeof formatMoney === 'function') ? formatMoney(v) : '$0.00'; }
+  function safeSet(id, txt) { const e = $(id); if (e) e.innerText = txt; }
+  function setHTML(id, html) { const e = $(id); if (e) e.innerHTML = html; }
+  function throttle(fn, ms) {
+    let t = 0, lastArgs;
+    return function () {
+      const now = Date.now(), self = this, args = arguments;
+      lastArgs = args;
+      if (now - t >= ms) { t = now; fn.apply(self, args); }
+    };
+  }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function msToHMS(ms) {
+    if (!Number.isFinite(ms) || ms < 0) return '--:--';
+    const s = Math.floor(ms / 1000);
+    return pad2(Math.floor(s / 3600)) + ':' + pad2(Math.floor((s % 3600) / 60)) + ':' + pad2(s % 60);
+  }
+  function escapeHtmlLocal(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ─────────────── STATE PRO (lokal) ───────────────
+  const VALIDITY_MS = 15 * 60 * 1000; // validity window entry
+  let entryValidSince = 0;
+  let journalFilter = 'all';
+  let connStart = 0, lastConn = false;
+  let notifFlags = { nearEntry: false, weekend: false, biasSide: '' };
+
+  // ─────────────── DATA READERS (dari inti) ───────────────
+  function readCore() {
+    try {
+      const price = (typeof lastWsPrice !== 'undefined') ? lastWsPrice : NaN;
+      const decision = (typeof currentPlanDecision !== 'undefined' && currentPlanDecision) || (typeof assessTradingReadiness === 'function' ? assessTradingReadiness(price) : null);
+      const metrics = (typeof getTradeMetrics === 'function') ? getTradeMetrics(price) : null;
+      const trend = (typeof analyzeMarketTrend === 'function') ? analyzeMarketTrend(price) : null;
+      const session = (typeof getTradingSession === 'function') ? getTradingSession() : null;
+      const dataOk = (typeof livePriceVerified !== 'undefined') && livePriceVerified && !(typeof usingSimulatedPrice !== 'undefined' && usingSimulatedPrice) && (typeof recentPrices !== 'undefined') && recentPrices.length >= (typeof MIN_TREND_SAMPLES !== 'undefined' ? MIN_TREND_SAMPLES : 12);
+      return { price, decision, metrics, trend, session, dataOk };
+    } catch (e) { return { price: NaN, decision: null, metrics: null, trend: null, session: null, dataOk: false }; }
+  }
+
+  // ─────────────── ENTRY GUIDANCE ───────────────
+  function mapGuidance(code) {
+    switch (code) {
+      case 'ENTRY_VALID': return { label: 'ENTRY SEKARANG', tone: 'green', action: 'Eksekusi market/pending sesuai order type. Jangan menunda.' };
+      case 'WAIT_PULLBACK': return { label: 'TUNGGU LIMIT', tone: 'orange', action: 'Pasang limit & tunggu harga masuk zona entry.' };
+      case 'WAIT_BREAKOUT': return { label: 'WAIT KONFIRMASI', tone: 'orange', action: 'Tunggu konfirmasi breakout/rejection sebelum entry.' };
+      case 'ENTRY_INVALID': return { label: 'SETUP BATAL', tone: 'red', action: 'Setup invalid (SL terlewati). Tunggu plan baru.' };
+      case 'WAIT_NEWS': return { label: 'WAIT KONFIRMASI', tone: 'orange', action: 'Tunggu high-impact news selesai dahulu.' };
+      case 'WAIT_RECHECK': return { label: 'WAIT KONFIRMASI', tone: 'orange', action: 'Harga sudah lewat entry — jangan kejar, tunggu re-test.' };
+      default: return { label: 'JANGAN ENTRY', tone: 'orange', action: 'Filter belum valid / data offline. Tidak entry.' };
+    }
+  }
+  function renderEntryGuidance(core) {
+    const card = $('entryGuidanceCard'); if (!card) return;
+    const d = core.decision;
+    const code = d ? d.code : 'NO_TRADE';
+    const g = mapGuidance(code);
+    card.className = 'guidance-card guidance-' + g.tone;
+    const st = $('guidanceStatus');
+    if (st) { st.innerText = g.label; st.style.color = g.tone === 'green' ? 'var(--green)' : g.tone === 'red' ? 'var(--red)' : 'var(--orange)'; }
+    safeSet('guidanceReason', d ? d.reason : 'Menunggu data live & validasi filter.');
+    safeSet('guidanceAction', g.action);
+
+    // validity countdown
+    const pill = $('validityPill');
+    if (code === 'ENTRY_VALID') {
+      if (!entryValidSince) entryValidSince = Date.now();
+      const remain = Math.max(0, VALIDITY_MS - (Date.now() - entryValidSince));
+      if (pill) {
+        pill.className = 'validity-pill badge badge-green';
+        const mins = Math.floor(remain / 60000), secs = Math.floor((remain % 60000) / 1000);
+        pill.innerHTML = '<i class="fas fa-clock mr-1"></i> Valid ' + mins + 'm ' + pad2(secs) + 's';
+      }
+    } else {
+      entryValidSince = 0;
+      if (pill) { pill.className = 'validity-pill badge badge-orange'; pill.innerHTML = '<i class="fas fa-clock mr-1"></i> Valid —'; }
+    }
+  }
+
+  // ─────────────── ENTRY CHECKLIST ───────────────
+  function renderChecklist(core) {
+    const grid = $('checklistGrid'); if (!grid) return;
+    const { trend, metrics, session, dataOk } = core;
+    const newsClear = (typeof calendarManualOverride !== 'undefined' && calendarManualOverride) || !(typeof highImpactNewsDetected !== 'undefined' && highImpactNewsDetected);
+    const items = [];
+    const push = (label, pass, vital) => items.push({ label, pass, vital });
+    push('Live Feed', !!(typeof connected !== 'undefined' && connected && dataOk), true);
+    push('Trend', trend && (trend.direction === 'BULLISH' || trend.direction === 'BEARISH'), true);
+    push('Market Structure (BOS)', !!(typeof getSMCState === 'function' && getSMCState().smcBos[2]), true);
+    push('Liquidity Sweep', !!(typeof getSMCState === 'function' && getSMCState().smcSweep[2]), false);
+    push('Order Block', !!(typeof getSMCState === 'function' && getSMCState().smcOrderBlock[2]), false);
+    const emaOk = trend && Number.isFinite(trend.fast) && Number.isFinite(trend.slow) && trend.fast !== trend.slow && (trend.direction === 'BULLISH' ? trend.fast > trend.slow : trend.direction === 'BEARISH' ? trend.fast < trend.slow : false);
+    push('EMA Alignment', !!emaOk, false);
+    push('Volume / Momentum', !!(trend && Math.abs(trend.momentumPct || 0) > 0.01), false);
+    push('News Filter', !!newsClear, true);
+    push('Session Aktif', !!(session && session.active), false);
+    const atrOk = (typeof lastAtrValue !== 'undefined') && Number.isFinite(lastAtrValue) && lastAtrValue > 0;
+    push('ATR Valid', !!atrOk, false);
+    const rr1 = metrics && metrics.side !== 'WAIT' ? metrics.rr(metrics.tp1) : 0;
+    push('Risk : Reward ≥ 1', metrics && metrics.side !== 'WAIT' && rr1 >= 1, true);
+    push('Spread', null, false); // butuh broker L2 → netral
+
+    const passCount = items.filter(i => i.pass === true).length;
+    safeSet('checklistScore', passCount + '/' + items.length);
+    grid.innerHTML = items.map(function (it) {
+      const cls = it.pass === true ? 'check-pass' : it.pass === false ? 'check-fail' : 'check-warn';
+      const icon = it.pass === true ? '<i class="fas fa-check"></i>' : it.pass === false ? '<i class="fas fa-xmark"></i>' : '<i class="fas fa-minus"></i>';
+      const vit = it.vital ? ' <span style="color:var(--gold);font-size:9px">★</span>' : '';
+      return '<div class="check-item ' + cls + '"><span class="ci-dot">' + icon + '</span><span>' + escapeHtmlLocal(it.label) + vit + '</span></div>';
+    }).join('');
+  }
+
+  // ─────────────── AI DECISION BREAKDOWN ───────────────
+  function renderAIBreakdown(core) {
+    if (!has('aiBreakdownCard')) return;
+    const d = core.decision;
+    const m = core.metrics;
+    const confTxt = $('finalConf') ? $('finalConf').innerText : '--';
+    const confNum = Math.max(0, Math.min(100, parseInt(confTxt, 10) || 0));
+    const gauge = $('aiConfGauge');
+    if (gauge) gauge.style.setProperty('--p', confNum);
+    safeSet('aiConfGaugeTxt', confNum + '%');
+    safeSet('aiBdBias', m ? (m.side + ' · ' + m.bias) : 'WAIT');
+    safeSet('aiBdRec', d ? d.title : 'Menunggu data live.');
+    if (d) { const r = $('aiBdRec'); if (r) r.style.color = d.tone === 'green' ? 'var(--green)' : d.tone === 'red' ? 'var(--red)' : 'var(--orange)'; }
+    safeSet('aiBdReason', d ? d.reason : '—');
+
+    let pros = [], cons = [];
+    try { if (typeof buildAIReasons === 'function' && d) { const all = buildAIReasons(d); pros = all.filter(r => r.ok); cons = all.filter(r => !r.ok); } } catch (e) {}
+    const renderCol = function (arr, color, icon) {
+      if (!arr.length) return '<div class="text-muted">Tidak ada.</div>';
+      return arr.map(function (r) { return '<div class="pc-row"><i class="fas ' + icon + '" style="color:' + color + '"></i><span>' + escapeHtmlLocal(r.text) + '</span></div>'; }).join('');
+    };
+    setHTML('aiPros', renderCol(pros, 'var(--green)', 'fa-check'));
+    setHTML('aiCons', renderCol(cons, 'var(--orange)', 'fa-triangle-exclamation'));
+  }
+
+  // ─────────────── SESSION MONITOR ───────────────
+  const SESSIONS = [
+    { name: 'Sydney', start: 21, end: 6 },
+    { name: 'Tokyo', start: 0, end: 9 },
+    { name: 'London', start: 7, end: 16 },
+    { name: 'New York', start: 12, end: 21 }
+  ];
+  function sessionStatus(start, end) {
+    const now = new Date();
+    const h = now.getUTCHours() + now.getUTCMinutes() / 60;
+    const wrap = start > end;
+    const inside = wrap ? (h >= start || h < end) : (h >= start && h < end);
+    // next boundary
+    let nextMs = Infinity, nextLabel = '';
+    for (let d = 0; d < 2; d++) {
+      const open = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + d, start, 0, 0));
+      const close = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + d, end, 0, 0));
+      const cand = inside
+        ? [{ at: close.getTime(), label: 'tutup' }]
+        : [{ at: open.getTime(), label: 'buka' }];
+      for (const c of cand) { if (c.at > Date.now() && c.at - Date.now() < nextMs) { nextMs = c.at - Date.now(); nextLabel = c.label; } }
+    }
+    return { inside, nextMs, nextLabel };
+  }
+  function renderSessionMonitor() {
+    const grid = $('sessionGrid'); if (!grid) return;
+    grid.innerHTML = SESSIONS.map(function (s) {
+      const st = sessionStatus(s.start, s.end);
+      const strength = st.inside ? 90 : 25;
+      return '<div class="session-card ' + (st.inside ? 'live' : '') + '">' +
+        '<div class="session-name">' + s.name + ' <span class="badge ' + (st.inside ? 'badge-green' : 'badge-orange') + ' mono text-[9px]">' + (st.inside ? 'OPEN' : 'CLOSED') + '</span></div>' +
+        '<div class="session-countdown">' + (st.inside ? '⏳ ' : '🔜 ') + capitalize(st.nextLabel) + ' ' + msToHMS(st.nextMs) + '</div>' +
+        '<div class="session-strength"><i style="width:' + strength + '%"></i></div>' +
+        '</div>';
+    }).join('');
+  }
+  function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+  // ─────────────── HEATMAP (jujur: hanya XAUUSD live + DXY) ───────────────
+  function renderHeatmap(core) {
+    const grid = $('heatmapGrid'); if (!grid) return;
+    const cells = [];
+    const live = (typeof livePriceVerified !== 'undefined') && livePriceVerified && Number.isFinite(core.price) && core.price > 0;
+    const chg = (typeof lastPctChange !== 'undefined') ? lastPctChange : 0;
+    cells.push(buildHeatCell('XAUUSD', live ? fmtPrice(core.price) : 'offline', live ? (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%' : 'no live', live ? chg : null));
+    const dxy = (typeof dxyState !== 'undefined') ? dxyState : null;
+    cells.push(buildHeatCell('DXY', dxy && dxy.value ? dxy.value.toFixed(2) : 'offline', dxy && dxy.value ? (dxy.changePct >= 0 ? '+' : '') + dxy.changePct.toFixed(2) + '%' : 'no feed', dxy && dxy.value ? dxy.changePct : null));
+    ['EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'NZD', 'CAD', 'Silver', 'Oil', 'Crypto'].forEach(function (sym) {
+      cells.push(buildHeatCell(sym, '—', 'no feed', null));
+    });
+    grid.innerHTML = cells.join('');
+  }
+  function buildHeatCell(sym, val, chg, chgNum) {
+    const cls = chgNum === null ? 'hm-neutral' : (chgNum > 0 ? 'hm-up' : chgNum < 0 ? 'hm-dn' : 'hm-neutral');
+    return '<div class="hm-cell ' + cls + '"><div class="hm-sym">' + sym + '</div><div class="hm-val">' + escapeHtmlLocal(val) + '</div><div class="hm-chg">' + escapeHtmlLocal(chg) + '</div></div>';
+  }
+
+  // ─────────────── RISK CALCULATOR ───────────────
+  window.recalcRiskCalc = function () {
+    const cs = (typeof GOLD_PLAN !== 'undefined' && GOLD_PLAN.contractSize) ? GOLD_PLAN.contractSize : 100;
+    const acc = Math.max(0, parseFloat($('calcAcc') && $('calcAcc').value) || 0);
+    const risk = Math.min(100, Math.max(0, parseFloat($('calcRisk') && $('calcRisk').value) || 0));
+    const sl = Math.max(0.01, parseFloat($('calcSl') && $('calcSl').value) || 0);
+    const tp = Math.max(0, parseFloat($('calcTp') && $('calcTp').value) || 0);
+    const riskUsd = acc * (risk / 100);
+    const lot = riskUsd / (sl * cs);
+    const profit = tp * cs * lot;
+    const rr = tp > 0 ? (tp / sl) : 0;
+    safeSet('calcRiskUsd', fmtMoney(riskUsd));
+    safeSet('calcLot', lot.toFixed(2) + ' lot');
+    safeSet('calcProfit', fmtMoney(profit));
+    safeSet('calcRR', '1 : ' + rr.toFixed(2));
+    safeSet('calcContract', cs + ' / ' + fmtMoney(cs) + ' per poin per lot');
+  };
+
+  // ─────────────── TRADE JOURNAL TAB ───────────────
+  function resultClass(resultTrade, pnl) {
+    const r = String(resultTrade || '').toUpperCase();
+    if (r === 'OPEN') return 'res-open';
+    if (r.includes('WIN')) return 'res-win';
+    if (r.includes('LOSS') || r.includes('SL')) return 'res-loss';
+    if (Number(pnl) > 0) return 'res-win';
+    if (Number(pnl) < 0) return 'res-loss';
+    return 'res-other';
+  }
+  window.setJournalFilter = function (f) {
+    journalFilter = f;
+    document.querySelectorAll('[data-jrnfilter]').forEach(function (b) {
+      b.classList.toggle('btn-gold', b.getAttribute('data-jrnfilter') === f);
+      b.classList.toggle('btn-outline', b.getAttribute('data-jrnfilter') !== f);
+    });
+    window.renderJournalTable();
+  };
+  window.clearJournal = function () {
+    if (typeof getJournalHistory !== 'function') return;
+    if (!confirm('Hapus seluruh journal lokal? Tindakan ini tidak bisa dibatalkan.')) return;
+    try { setJournalHistory([]); } catch (e) {}
+    window.renderJournalTable();
+    showToast('Journal direset.', 'info');
+  };
+  window.renderJournalTable = function () {
+    if (!has('journalTableBody')) return;
+    const rows = (typeof getJournalHistory === 'function') ? getJournalHistory() : [];
+    const filtered = rows.filter(function (r) {
+      if (journalFilter === 'all') return true;
+      if (journalFilter === 'open') return r.resultTrade === 'OPEN';
+      if (journalFilter === 'win') return /WIN/i.test(String(r.resultTrade || '')) || Number(r.pnl) > 0;
+      if (journalFilter === 'loss') return /LOSS|SL/i.test(String(r.resultTrade || '')) || Number(r.pnl) < 0;
+      return true;
+    }).slice().reverse();
+
+    // stats
+    const closed = rows.filter(r => r.resultTrade && r.resultTrade !== 'OPEN');
+    const wins = closed.filter(r => Number(r.pnl) > 0).length;
+    const grossWin = closed.reduce((a, r) => a + Math.max(0, Number(r.pnl || 0)), 0);
+    const grossLoss = Math.abs(closed.reduce((a, r) => a + Math.min(0, Number(r.pnl || 0)), 0));
+    const pf = grossLoss > 0 ? grossWin / grossLoss : (grossWin > 0 ? Infinity : 0);
+    const net = rows.reduce((a, r) => a + Number(r.pnl || 0), 0);
+    const rrs = closed.map(r => {
+      const e = Number(r.entry), sl = Number(r.stopLoss), t1 = Number(r.tp1);
+      if (!Number.isFinite(e) || !Number.isFinite(sl) || !Number.isFinite(t1) || e === sl) return null;
+      return Math.abs((t1 - e) / (e - sl));
+    }).filter(Number.isFinite);
+    const avgRR = rrs.length ? rrs.reduce((a, b) => a + b, 0) / rrs.length : 0;
+    safeSet('jrnTotal', rows.length);
+    safeSet('jrnWinRate', closed.length ? ((wins / closed.length) * 100).toFixed(1) + '%' : '—');
+    safeSet('jrnPF', Number.isFinite(pf) ? pf.toFixed(2) : '∞');
+    safeSet('jrnNet', fmtMoney(net));
+    safeSet('jrnAvgRR', avgRR ? avgRR.toFixed(2) : '—');
+
+    const body = $('journalTableBody');
+    if (!filtered.length) {
+      body.innerHTML = '<tr><td colspan="10" class="p-4 text-center text-muted">' + (rows.length ? 'Tidak ada trade untuk filter ini.' : 'Belum ada trade. Journal terisi otomatis saat sinyal ENTRY VALID terkunci.') + '</td></tr>';
+      return;
+    }
+    body.innerHTML = filtered.map(function (r) {
+      const d = new Date(r.savedAt || Date.now());
+      const side = r.action || '—';
+      const sideColor = side === 'BUY' ? 'var(--green)' : side === 'SELL' ? 'var(--red)' : 'var(--text-muted)';
+      const pnl = Number(r.pnl || 0);
+      const rc = resultClass(r.resultTrade, pnl);
+      const note = (r.aiExplanation || r.notes || '').toString();
+      const shortNote = note.length > 60 ? note.slice(0, 60) + '…' : note;
+      return '<tr>' +
+        '<td>' + d.toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) + '</td>' +
+        '<td>' + escapeHtmlLocal(r.pair || 'XAUUSD') + '</td>' +
+        '<td style="color:' + sideColor + ';font-weight:700">' + escapeHtmlLocal(side) + '</td>' +
+        '<td>' + escapeHtmlLocal(r.entry != null ? r.entry : '—') + '</td>' +
+        '<td style="color:var(--red)">' + escapeHtmlLocal(r.stopLoss != null ? r.stopLoss : '—') + '</td>' +
+        '<td>' + escapeHtmlLocal([r.tp1, r.tp2, r.tp3].filter(x => x != null && x !== '').join('/')) + '</td>' +
+        '<td>' + escapeHtmlLocal(r.lotSize != null ? r.lotSize : '—') + '</td>' +
+        '<td><span class="res-badge ' + rc + '">' + escapeHtmlLocal(r.resultTrade || 'OPEN') + '</span></td>' +
+        '<td style="color:' + (pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--text-muted)') + ';font-weight:700">' + fmtMoney(pnl) + '</td>' +
+        '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis" title="' + escapeHtmlLocal(note) + '">' + escapeHtmlLocal(shortNote || '—') + '</td>' +
+        '</tr>';
+    }).join('');
+  };
+
+  // ─────────────── FLOATING MINI STATUS ───────────────
+  function renderFloatingStatus(core) {
+    const bar = $('floatingStatus'); if (!bar) return;
+    if (window.matchMedia('(max-width: 900px)').matches) { bar.classList.remove('show'); return; }
+    const d = core.decision, m = core.metrics;
+    const show = !!(typeof connected !== 'undefined' && connected);
+    bar.classList.toggle('show', show);
+    if (!show) return;
+    const live = (typeof livePriceVerified !== 'undefined') && livePriceVerified;
+    safeSet('fsPair', 'XAUUSD');
+    safeSet('fsSide', m ? m.side : 'WAIT');
+    if ($('fsSide')) $('fsSide').style.color = m && m.side === 'BUY' ? 'var(--green)' : m && m.side === 'SELL' ? 'var(--red)' : 'var(--orange)';
+    safeSet('fsEntry', (m && m.side !== 'WAIT' && live) ? fmtPrice(m.entry) : '—');
+    safeSet('fsSl', (m && m.side !== 'WAIT' && live) ? fmtPrice(m.sl) : '—');
+    safeSet('fsTp', (m && m.side !== 'WAIT' && live) ? fmtPrice(m.tp1) : '—');
+    safeSet('fsConf', $('finalConf') ? $('finalConf').innerText : '—');
+    safeSet('fsRun', connStart ? msToHMS(Date.now() - connStart) : '00:00');
+  }
+
+  // ─────────────── BOTTOM NAV ACTIVE ───────────────
+  function updateBottomNav() {
+    const active = document.querySelector('.tab-btn.active');
+    const id = active ? active.id.replace('btn-', '') : '';
+    document.querySelectorAll('.bottom-nav button').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-bn') === id);
+    });
+  }
+
+  // ─────────────── SMART NOTIFICATIONS (read-only) ───────────────
+  function smartNotifications(core) {
+    const d = core.decision, m = core.metrics, price = core.price;
+    // dekat entry
+    if (m && m.side !== 'WAIT' && Number.isFinite(price) && (typeof livePriceVerified !== 'undefined') && livePriceVerified) {
+      const dist = Math.abs(price - m.entry);
+      const near = dist <= ((typeof getEntryBuffer === 'function' ? getEntryBuffer(price) : 1) * 2);
+      if (near && !notifFlags.nearEntry) { notifFlags.nearEntry = true; if (typeof showToast === 'function') showToast('Harga mendekati zona entry ' + m.side + ' (' + fmtPrice(m.entry) + ')', 'info'); }
+      if (!near) notifFlags.nearEntry = false;
+    } else { notifFlags.nearEntry = false; }
+    // weekend / market tutup
+    const now = new Date();
+    const weekend = now.getUTCDay() === 0 || now.getUTCDay() === 6;
+    if (weekend && !notifFlags.weekend) { notifFlags.weekend = true; if (typeof showToast === 'function') showToast('Market forex/logam sedang TUTUP (weekend). Harga mungkin stagnan.', 'info'); }
+    if (!weekend) notifFlags.weekend = false;
+    // bias berubah
+    const curSide = m ? m.side : '';
+    if (curSide && curSide !== notifFlags.biasSide) {
+      if (notifFlags.biasSide && (curSide === 'BUY' || curSide === 'SELL')) {
+        if (typeof addLog === 'function') addLog('AI bias berubah: ' + notifFlags.biasSide + ' → ' + curSide, 'info');
+      }
+      notifFlags.biasSide = curSide;
+    }
+  }
+
+  // ─────────────── MASTER RENDER (throttled) ───────────────
+  const renderAll = throttle(function () {
+    const core = readCore();
+    renderEntryGuidance(core);
+    renderChecklist(core);
+    renderAIBreakdown(core);
+    renderHeatmap(core);
+    renderFloatingStatus(core);
+    updateBottomNav();
+    smartNotifications(core);
+    // connection timer
+    const conn = (typeof connected !== 'undefined') && connected;
+    if (conn && !lastConn) connStart = Date.now();
+    if (!conn) connStart = 0;
+    lastConn = conn;
+  }, 1000);
+
+  // ─────────────── HELP MODAL + KEYBOARD ───────────────
+  const SHORTCUTS = [
+    ['1', 'Dashboard'], ['2', 'Plan Monitor'], ['3', 'Trade Journal'], ['4', 'Economic Calendar'],
+    ['5', 'Multi-TF Confluence'], ['6', 'Order Book / DOM'], ['7', 'AI Sentiment'], ['8', 'Risk Matrix'],
+    ['9', 'Smart Analyzer'], ['0', 'Backtest'], ['G', 'Generate Signal'], ['C', 'Connect Live'],
+    ['X', 'Disconnect'], ['J', 'Journal'], ['S', 'Settings'], ['?', 'Bantuan ini'], ['Esc', 'Tutup modal']
+  ];
+  function buildHelp() {
+    const body = $('helpBody'); if (!body) return;
+    body.innerHTML = SHORTCUTS.map(function (s) {
+      return '<div class="flex items-center justify-between gap-3"><span class="text-muted">' + escapeHtmlLocal(s[1]) + '</span><span class="kbd">' + escapeHtmlLocal(s[0]) + '</span></div>';
+    }).join('') + '<div class="mt-3 text-[10px] text-muted">Shortcut nonaktif saat mengetik di input.</div>';
+  }
+  window.openHelpModal = function () { const m = $('helpModal'); if (m) { m.classList.add('open'); buildHelp(); } };
+  window.closeHelpModal = function () { const m = $('helpModal'); if (m) m.classList.remove('open'); };
+  $('helpModal') && $('helpModal').addEventListener('click', function (e) { if (e.target === this) window.closeHelpModal(); });
+
+  const TAB_KEYS = { '1': 'dashboard', '2': 'tradingplan', '3': 'journal', '4': 'calendar', '5': 'confluence', '6': 'dom', '7': 'sentiment', '8': 'riskmatrix', '9': 'smartanalyzer', '0': 'backtest' };
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tag = (e.target && e.target.tagName) || '';
+    if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+    const k = e.key.toLowerCase();
+    if (k === 'escape') { window.closeHelpModal(); if (typeof closeMobileModules === 'function') closeMobileModules(); return; }
+    if (k === '?') { e.preventDefault(); window.openHelpModal(); return; }
+    if (TAB_KEYS[e.key]) { e.preventDefault(); if (typeof switchTab === 'function') switchTab(TAB_KEYS[e.key]); return; }
+    if (k === 'g') { e.preventDefault(); if (typeof quickGenerateSignal === 'function') quickGenerateSignal(); return; }
+    if (k === 'c') { e.preventDefault(); if (typeof doConnect === 'function') doConnect(); return; }
+    if (k === 'x') { e.preventDefault(); if (typeof doDisconnect === 'function') doDisconnect(); return; }
+    if (k === 'j') { e.preventDefault(); if (typeof switchTab === 'function') switchTab('journal'); return; }
+    if (k === 's') { e.preventDefault(); if (typeof switchTab === 'function') switchTab('settings'); return; }
+  });
+
+  // FAB → generate
+  $('fabGenerate') && $('fabGenerate').addEventListener('click', function () { if (typeof quickGenerateSignal === 'function') quickGenerateSignal(); });
+
+  // show/hide floating status on scroll (desktop)
+  window.addEventListener('scroll', throttle(function () { renderFloatingStatus(readCore()); }, 400), { passive: true });
+
+  // pause saat tab tidak terlihat (hemat CPU)
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) renderAll(); });
+
+  // ─────────────── INIT ───────────────
+  function init() {
+    try {
+      window.recalcRiskCalc();
+      window.renderJournalTable();
+      renderSessionMonitor();
+      // Kartu info collapsible: terbuka di desktop, tertutup di HP (ringankan scroll).
+      const isMob = window.matchMedia('(max-width:900px)').matches;
+      document.querySelectorAll('[data-pro-collapse]').forEach(function (d) { d.open = !isMob; });
+      renderAll();
+      setInterval(function () {
+        renderSessionMonitor();
+        renderAll();
+      }, 1000);
+      // a11y: label ikon-only buttons
+      document.querySelectorAll('button.btn').forEach(function (b) {
+        if (!b.getAttribute('aria-label') && b.innerText.trim() === '' && b.querySelector('i')) {
+          b.setAttribute('aria-label', (b.getAttribute('title') || b.querySelector('i').className || 'button'));
+        }
+      });
+    } catch (e) { if (typeof addLog === 'function') addLog('PRO module init warning: ' + e.message, 'error'); }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a23bc96bbdb56d10',t:'MTc4NTQ5MjM0OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
