@@ -361,6 +361,11 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
         <div class="tp-tier-card flex justify-between"><span class="text-cyan-400">TP 2 (30%):</span> <strong id="tpTier2">--</strong></div>
         <div class="tp-tier-card flex justify-between"><span class="text-purple-400">TP 3 (20%):</span> <strong id="tpTier3">--</strong></div>
       </div>
+      <div class="pt-2 border-t border-slate-800 space-y-1">
+        <div class="flex justify-between items-center"><span class="text-muted">Validitas Setup:</span> <strong id="tpValidityBadge" class="text-muted">--</strong></div>
+        <button class="btn btn-outline text-xs w-full mt-1" onclick="checkSetupValidation()"><i class="fas fa-magnifying-glass"></i> CEK VALIDASI SETUP</button>
+        <div class="text-[11px] text-muted mt-1" id="tpValidityDetail">Klik cek validasi setelah entry terkunci untuk melihat apakah setup masih menuju TP atau sebaiknya ditutup manual.</div>
+      </div>
     </div>
   </div>
 
@@ -426,7 +431,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
     <div class="module-grid">
       <button class="module-btn primary" onclick="goMobileModule('dashboard')"><i class="fas fa-chart-line"></i>Dashboard</button>
       <button class="module-btn primary" onclick="goMobileModule('tradingplan')"><i class="fas fa-clipboard-list"></i>Plan Monitor</button>
-      <button class="module-btn primary" onclick="goMobileModule('calendar'); checkRealEconomicCalendar()"><i class="fas fa-calendar-alt"></i>Calendar</button>
+      <button class="module-btn primary" onclick="goMobileModule('calendar')"><i class="fas fa-calendar-alt"></i>Calendar</button>
     </div>
     <details class="module-group">
       <summary><span><i class="fas fa-chart-pie"></i> Analisis Lanjutan</span></summary>
@@ -444,7 +449,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
         <button class="module-btn" onclick="goMobileModule('backtest')"><i class="fas fa-history"></i>Backtest</button>
         <button class="module-btn" onclick="goMobileModule('settings')"><i class="fas fa-gear"></i>Settings</button>
       </div>
-    </details></div>
+    </details>
   </div>
 </div>
 
@@ -618,11 +623,11 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
       <span><i class="fas fa-calendar-alt"></i> USD HIGH IMPACT CALENDAR FILTER (NFP, CPI, FOMC)</span>
       <div class="calendar-actions">
         <button class="btn btn-gold text-xs py-1" onclick="checkRealEconomicCalendar()"><i class="fas fa-rotate"></i> REFRESH CALENDAR</button>
-        <button class="btn btn-outline text-xs py-1" id="calendarOverrideBtn" onclick="toggleCalendarManualOverride()"><i class="fas fa-user-shield"></i> MANUAL OVERRIDE: OFF</button>
+        <button class="btn btn-outline text-xs py-1 manual-override-active" id="calendarOverrideBtn" onclick="toggleCalendarManualOverride()"><i class="fas fa-user-shield"></i> MANUAL OVERRIDE: ON</button>
       </div>
     </div>
     <div class="calendar-monitor-grid" id="calendarMonitorGrid">
-      <div class="calendar-stat"><div class="calendar-stat-label">API Status</div><div class="calendar-stat-value" id="calendarApiStatusEl">⚪ NOT CHECKED</div></div>
+      <div class="calendar-stat"><div class="calendar-stat-label">API Status</div><div class="calendar-stat-value" id="calendarApiStatusEl">🟠 MANUAL MODE</div></div>
       <div class="calendar-stat"><div class="calendar-stat-label">Source</div><div class="calendar-stat-value" id="calendarSourceEl">--</div></div>
       <div class="calendar-stat"><div class="calendar-stat-label">Last Update</div><div class="calendar-stat-value" id="calendarLastUpdateEl">--</div></div>
       <div class="calendar-stat"><div class="calendar-stat-label">Next News</div><div class="calendar-stat-value" id="calendarNextEventEl">--</div></div>
@@ -644,7 +649,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
         </thead>
         <tbody class="divide-y divide-slate-800/60" id="calendarTableBody">
           <tr>
-            <td class="p-3 text-muted" colspan="8">Belum ada data. Klik REFRESH CALENDAR untuk mengambil feed USD high-impact nyata.</td>
+            <td class="p-3 text-muted" colspan="8">Mode Manual aktif — analisis trading TIDAK ditahan oleh kalender. Cek berita ekonomi (NFP/CPI/FOMC) secara manual di forexfactory.com/calendar, lalu klik REFRESH CALENDAR untuk mencoba mengambil feed otomatis (opsional).</td>
           </tr>
         </tbody>
       </table>
@@ -801,13 +806,13 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
         <h3>Google Sheets</h3>
         <div class="field-stack">
           <label>Google Sheets Web App URL</label><input class="input-field" id="settingSheetsUrl" placeholder="https://script.google.com/macros/s/.../exec">
-          <label>Sheets Token</label><input class="input-field" id="settingSheetsToken" placeholder="token rahasia">
+          <label>Sheets Token</label><input type="password" autocomplete="off" class="input-field" id="settingSheetsToken" placeholder="token rahasia">
         </div>
       </div>
       <div class="settings-section">
         <h3>Telegram Alert</h3>
         <div class="field-stack">
-          <label>Telegram Bot Token</label><input class="input-field" id="settingTelegramToken" placeholder="123456:ABC...">
+          <label>Telegram Bot Token</label><input type="password" autocomplete="off" class="input-field" id="settingTelegramToken" placeholder="123456:ABC...">
           <label>Chat ID</label><input class="input-field" id="settingTelegramChatId" placeholder="chat id / group id">
         </div>
       </div>
@@ -825,6 +830,20 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
           <label>Theme</label><select class="input-field" id="settingTheme"><option value="institutional-dark">Institutional Dark</option><option value="gold-premium">Gold Premium</option></select>
           <label>API Mode</label><select class="input-field" id="settingApiMode"><option value="auto">Live Only (no simulation)</option><option value="simulation" disabled>Simulation Removed (CLEAN-125)</option></select>
           <div class="grid grid-cols-2 gap-2 mt-2"><button class="btn btn-outline" onclick="autoBackupJournal()">Backup</button><button class="btn btn-outline" onclick="restoreBackupJournal()">Restore</button></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Data Proxy (OHLC / Multi-TF / DXY)</h3>
+        <div class="field-stack">
+          <label>Proxy Base URL</label><input class="input-field" id="settingProxyBaseUrl" placeholder="https://xau-proxy.example.workers.dev">
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Notifikasi</h3>
+        <div class="field-stack">
+          <label class="flex items-center gap-2"><input type="checkbox" id="settingNotifyBrowser" checked> Browser Notification</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="settingNotifySound" checked> Sound Alert</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="settingNotifyTelegramOnLock" checked> Telegram Alert saat Entry Locked</label>
         </div>
       </div>
     </div>
@@ -939,7 +958,7 @@ let recentPrices = [];
 let lastPctChange = 0;
 let highImpactNewsDetected = false;
 let highImpactNewsLabel = '';
-let newsRiskUnknown = true;
+let newsRiskUnknown = false;
 let currentPlanDecision = null;
 let deferredPwaPrompt = null;
 let appSettings = null;
@@ -952,11 +971,12 @@ let calendarCountdownTimer = null;
 let calendarApiOnline = false;
 let calendarSourceName = 'Not checked';
 let calendarLastUpdatedAt = null;
-let calendarManualOverride = false;
+let calendarManualOverride = true; // default manual: API kalender eksternal sering diblokir CORS di browser
 let nextCalendarEvent = null;
 let dxyState = { value: null, changePct: 0, bias: 'UNKNOWN', source: 'not checked' };
 let newsHardBlockActive = false;
 let breakEvenSuggested = false;
+let bestFavorProgress = 0;
 let lastNotifiedLockCode = null;
 let lastDecisionCode = null;
 let notifyPermissionAsked = false;
@@ -1030,6 +1050,12 @@ function setInitialPlan(price = lastWsPrice) {
   lockedOrderType = plan.orderType;
   autoRenewAwayCount = 0;
   breakEvenSuggested = false;
+  bestFavorProgress = 0;
+  const detailEl = document.getElementById('tpValidityDetail');
+  if (detailEl) {
+    detailEl.innerHTML = 'Plan baru dikunci. Klik "CEK VALIDASI SETUP" kapan saja untuk melihat apakah setup masih menuju TP atau sebaiknya ditutup manual.';
+    detailEl.className = 'text-[11px] text-muted mt-1';
+  }
 }
 
 function tickClock() {
@@ -2088,7 +2114,10 @@ window.addEventListener('DOMContentLoaded', () => {
   registerPWAServiceWorker();
   updatePwaInstallButton();
   doConnect();
-  setTimeout(() => checkRealEconomicCalendar(), 900);
+  // Mode manual aktif secara default (API kalender eksternal sering diblokir CORS di browser).
+  // Tidak lagi auto-fetch saat startup; cukup render status manual. Tekan REFRESH CALENDAR jika ingin coba ambil feed otomatis.
+  updateCalendarMonitorUI();
+  updateNewsHardBlockUI();
 });
 
 
@@ -2664,6 +2693,121 @@ function checkBreakEvenSuggestion(price = lastWsPrice) {
   }
 }
 
+// ================= SETUP VALIDITY CHECK (manual close guidance) =================
+// Menilai apakah setup yang sudah di-lock masih layak ditunggu sampai TP,
+// atau momentumnya sudah melemah/berbalik sehingga lebih baik ditutup manual.
+function getSetupValidation(price = lastWsPrice) {
+  const d = getSymbolConfig().decimals;
+  if (lockedTradeSide !== 'BUY' && lockedTradeSide !== 'SELL') {
+    return { status: 'NONE', tone: 'orange', badge: 'BELUM ADA SETUP', title: 'Belum Ada Setup Terkunci', detail: 'Belum ada posisi yang di-lock. Tekan GENERATE SIGNAL dan tunggu status ENTRY VALID agar plan terkunci.', recommendation: 'Tunggu entry terkunci sebelum cek validasi.' };
+  }
+  if (!Number.isFinite(lockedEntryPrice) || !Number.isFinite(lockedSL)) {
+    return { status: 'NONE', tone: 'orange', badge: 'DATA BELUM SIAP', title: 'Data Plan Belum Lengkap', detail: 'Entry/SL belum tersedia untuk dievaluasi.', recommendation: 'Coba lagi setelah harga live masuk.' };
+  }
+
+  const m = getTradeMetrics(price);
+  const tp1Dist = Math.abs(m.tp1 - lockedEntryPrice) || 1;
+  const progress = lockedTradeSide === 'BUY' ? (price - lockedEntryPrice) : (lockedEntryPrice - price);
+  const progressPct = progress / tp1Dist;
+  bestFavorProgress = Math.max(bestFavorProgress, progressPct);
+
+  const slHit = lockedTradeSide === 'BUY' ? price <= lockedSL : price >= lockedSL;
+  const trend = analyzeMarketTrend(price);
+  const trendAgainst = trend.side !== 'WAIT' && trend.side !== lockedTradeSide;
+  const floatingUsd = progress; // dalam satuan harga (poin), sejalan dengan tampilan lain di app
+  const distToSl = Math.abs(price - lockedSL);
+
+  if (slHit) {
+    return {
+      status: 'INVALID', tone: 'red', badge: '🔴 TIDAK VALID', title: '🔴 SETUP TIDAK VALID — SL TERTEMBUS',
+      detail: `Harga (${formatPrice(price, d)}) sudah melewati level Stop Loss ${formatPrice(lockedSL, d)}. Setup ${lockedTradeSide} ini sudah rusak.`,
+      recommendation: 'Tutup posisi manual sekarang jika masih terbuka di broker, jangan tunggu TP.'
+    };
+  }
+
+  if (progressPct >= 1) {
+    return {
+      status: 'TP1_HIT', tone: 'green', badge: '🟢 TP1 TERCAPAI', title: '🟢 TP1 SUDAH TERCAPAI',
+      detail: `Harga sudah mencapai/lewat area TP1 (${formatPrice(m.tp1, d)}). Floating +${floatingUsd.toFixed(2)} poin dari entry ${formatPrice(lockedEntryPrice, d)}.`,
+      recommendation: 'Pertimbangkan partial close di TP1 dan geser SL mengikuti (trailing) untuk kunci profit sisanya menuju TP2/TP3.'
+    };
+  }
+
+  if (bestFavorProgress >= 0.25 && progressPct <= 0.05) {
+    return {
+      status: 'WEAK', tone: 'orange', badge: '⚠️ MOMENTUM MELEMAH', title: '⚠️ SETUP MELEMAH — SEMPAT PROFIT, KINI BALIK KE ENTRY',
+      detail: `Harga sempat bergerak ${(bestFavorProgress * 100).toFixed(0)}% menuju TP1 tapi sekarang balik ke dekat area entry (progress saat ini ${(progressPct * 100).toFixed(0)}%). Ini pola gagal lanjut (failed breakout) — indikasi TP1 kemungkinan tidak tercapai dalam waktu dekat.`,
+      recommendation: 'Pertimbangkan tutup manual untuk kunci breakeven/kerugian kecil, atau perketat SL ke area entry, daripada menunggu sampai kena SL penuh.'
+    };
+  }
+
+  if (trendAgainst && progressPct < 0.15) {
+    return {
+      status: 'WEAK', tone: 'orange', badge: '⚠️ TREN BERBALIK', title: '⚠️ SETUP MELEMAH — TREN JANGKA PENDEK BERBALIK ARAH',
+      detail: `Tren jangka pendek saat ini terbaca ${trend.direction} (${trend.reason || ''}), berlawanan dengan posisi ${lockedTradeSide} yang terkunci. Jarak ke SL: ${distToSl.toFixed(2)} poin.`,
+      recommendation: 'Pantau ketat 1-2 candle berikutnya. Jika tren tetap berlawanan, pertimbangkan tutup manual sebelum harga mendekati SL.'
+    };
+  }
+
+  if (progressPct < 0) {
+    return {
+      status: 'CAUTION', tone: 'orange', badge: '🟠 BERGERAK MELAWAN', title: '🟠 HARGA BERGERAK MELAWAN ARAH ENTRY',
+      detail: `Harga masih ${Math.abs(progress).toFixed(2)} poin di sisi berlawanan dari entry ${formatPrice(lockedEntryPrice, d)}, belum menyentuh SL (${formatPrice(lockedSL, d)}).`,
+      recommendation: 'Belum wajib close manual, tapi waspada. Cek ulang beberapa menit lagi kalau belum ada perbaikan arah.'
+    };
+  }
+
+  return {
+    status: 'ON_TRACK', tone: 'green', badge: '🟢 MASIH VALID', title: '🟢 SETUP MASIH VALID MENUJU TP',
+    detail: `Progress ${Math.max(0, progressPct * 100).toFixed(0)}% menuju TP1 (${formatPrice(m.tp1, d)}), tren jangka pendek (${trend.direction}) masih mendukung arah ${lockedTradeSide}.`,
+    recommendation: 'Lanjutkan monitor, belum ada alasan untuk close manual.'
+  };
+}
+
+// Badge ringan yang auto-update tiap tick (tanpa toast/log, biar tidak spam).
+function updateSetupValidityBadge(price = lastWsPrice) {
+  const el = document.getElementById('tpValidityBadge');
+  if (!el) return;
+  if (lockedTradeSide !== 'BUY' && lockedTradeSide !== 'SELL') {
+    el.innerText = '--';
+    el.className = 'text-muted';
+    return;
+  }
+  const v = getSetupValidation(price);
+  el.innerText = v.badge;
+  el.className = v.tone === 'red' ? 'text-red-400 font-bold' : v.tone === 'green' ? 'text-emerald-400 font-bold' : 'text-orange-400 font-bold';
+}
+
+// Dipanggil tombol "CEK VALIDASI SETUP" — pengecekan mendalam + rekomendasi eksplisit.
+function checkSetupValidation() {
+  const v = getSetupValidation(lastWsPrice);
+  updateSetupValidityBadge(lastWsPrice);
+  const detailEl = document.getElementById('tpValidityDetail');
+  if (detailEl) {
+    detailEl.innerHTML = `<strong>${v.title}</strong><br>${v.detail}<br><span class="text-amber-300">Rekomendasi: ${v.recommendation}</span>`;
+    detailEl.className = v.tone === 'red' ? 'text-[11px] text-red-300 mt-1' : v.tone === 'green' ? 'text-[11px] text-emerald-300 mt-1' : 'text-[11px] text-orange-300 mt-1';
+  }
+  const toastType = v.tone === 'red' ? 'error' : v.tone === 'green' ? 'success' : 'info';
+  showToast(`${v.badge}: ${v.recommendation}`, toastType);
+  addLog(`Cek Validasi Setup: ${v.status} — ${v.recommendation}`, v.tone === 'red' ? 'error' : v.tone === 'orange' ? 'info' : 'success');
+
+  if (v.tone !== 'green' && v.status !== 'NONE') {
+    const st = getSettings();
+    if (st.telegramToken && st.telegramChatId) {
+      sendTelegramAlert({
+        action: `CEK VALIDASI: ${v.badge}`,
+        entry: formatPrice(lockedEntryPrice),
+        stopLoss: formatPrice(lockedSL),
+        tp1: '-', tp2: '-', tp3: '-', lotSize: '-',
+        confidence: '-',
+        aiExplanation: `${v.title}. ${v.detail} Rekomendasi: ${v.recommendation}`
+      }).catch(() => {});
+    }
+  }
+}
+
+
+
 function updatePriceDisplay(price, pctChange) {
   const cfg = getSymbolConfig();
   lastPctChange = Number.isFinite(pctChange) ? pctChange : 0;
@@ -2686,6 +2830,7 @@ function updatePriceDisplay(price, pctChange) {
     updateDomTable(p);
     updateTradingPlanValues(p);
     checkBreakEvenSuggestion(p);
+    updateSetupValidityBadge(p);
     updateDashboardSummary();
     updateRiskManagement();
     updateSMCGrid();
