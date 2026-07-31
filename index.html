@@ -268,9 +268,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
   #tradingPlanCard .tp-action-row .btn,
   #tab-tradingplan .tp-action-row .btn{width:100%;min-height:42px;justify-content:center}
   #tradingPlanCard .tp-action-row .btn:nth-child(3),
-  #tradingPlanCard .tp-action-row .btn:nth-child(4),
-  #tab-tradingplan .tp-action-row .btn:nth-child(3),
-  #tab-tradingplan .tp-action-row .btn:nth-child(4){grid-column:1 / -1}
+  #tab-tradingplan .tp-action-row .btn:nth-child(3){grid-column:1 / -1}
   /* On mobile, monitor sits high; system health can collapse under it */
   #tradingPlanCard{order:-1}
 }
@@ -364,6 +362,7 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
       <div class="pt-2 border-t border-slate-800 space-y-1">
         <div class="flex justify-between items-center"><span class="text-muted">Validitas Setup:</span> <strong id="tpValidityBadge" class="text-muted">--</strong></div>
         <button class="btn btn-outline text-xs w-full mt-1" onclick="checkSetupValidation()"><i class="fas fa-magnifying-glass"></i> CEK VALIDASI SETUP</button>
+        <button class="btn btn-outline text-xs w-full mt-1" style="border-color:var(--red);color:var(--red)" onclick="closeSetupManual()"><i class="fas fa-ban"></i> TUTUP MANUAL / CANCEL SETUP</button>
         <div class="text-[11px] text-muted mt-1" id="tpValidityDetail">Klik cek validasi setelah entry terkunci untuk melihat apakah setup masih menuju TP atau sebaiknya ditutup manual.</div>
       </div>
     </div>
@@ -373,7 +372,6 @@ html{scroll-behavior:smooth}.card,.tab-btn,.btn,.badge,.input-field{will-change:
     <button class="btn btn-green text-xs" onclick="doConnect()"><i class="fas fa-plug"></i> START LIVE</button>
     <button class="btn btn-gold text-xs" data-generate-signal="1" onclick="quickGenerateSignal()"><i class="fas fa-bolt"></i> GENERATE SIGNAL</button>
     <button class="btn btn-outline text-xs" onclick="checkRealEconomicCalendar()"><i class="fas fa-calendar-check"></i> CHECK NEWS</button>
-    <button class="btn btn-gold text-xs" onclick="saveTradingPlanToSheets()"><i class="fas fa-floppy-disk"></i> SIMPAN PLAN</button>
   </div>
 </section>
 
@@ -977,6 +975,7 @@ let dxyState = { value: null, changePct: 0, bias: 'UNKNOWN', source: 'not checke
 let newsHardBlockActive = false;
 let breakEvenSuggested = false;
 let bestFavorProgress = 0;
+let currentOpenTradeId = null;
 let lastNotifiedLockCode = null;
 let lastDecisionCode = null;
 let notifyPermissionAsked = false;
@@ -2806,6 +2805,61 @@ function checkSetupValidation() {
   }
 }
 
+// Tutup setup aktif secara manual (mis. sudah ditutup di broker) — dicatat ke journal dengan PnL riil,
+// lalu setup direset ke WAIT supaya sistem bisa mencari/mengunci plan baru.
+function closeSetupManual() {
+  if (lockedTradeSide !== 'BUY' && lockedTradeSide !== 'SELL') {
+    showToast('Tidak ada setup aktif untuk ditutup.', 'info');
+    return;
+  }
+  const price = lastWsPrice;
+  const confirmMsg = `Tutup manual setup ${lockedTradeSide} @ ${formatPrice(lockedEntryPrice)} pada harga sekarang ${formatPrice(price)}?\n\nSetup akan dibatalkan dan dicatat ke journal. Tindakan ini tidak bisa dibatalkan.`;
+  if (!window.confirm(confirmMsg)) return;
+
+  if (currentOpenTradeId) {
+    const rows = getJournalHistory();
+    const row = rows.find(r => r.tradeId === currentOpenTradeId && r.resultTrade === 'OPEN');
+    if (row) {
+      const entry = Number(row.entry);
+      const lot = Number(row.lotSize) || GOLD_PLAN.minLot;
+      const pnl = (lockedTradeSide === 'BUY' ? (price - entry) : (entry - price)) * lot * GOLD_PLAN.contractSize;
+      const result = pnl >= 0 ? 'CLOSED MANUAL (WIN)' : 'CLOSED MANUAL (LOSS)';
+      updateJournalRow(currentOpenTradeId, { resultTrade: result, pnl: Number(pnl.toFixed(2)), exitPrice: price, closedAt: new Date().toISOString(), traderNotes: 'Ditutup manual oleh trader (bukan TP/SL otomatis).' });
+      showToast(`Setup ditutup manual: ${result} (PnL ${formatMoney(pnl)}).`, pnl >= 0 ? 'success' : 'error');
+      addLog(`Setup ditutup manual oleh trader: ${result} @ ${formatPrice(price)}, PnL ${formatMoney(pnl)}.`, pnl >= 0 ? 'success' : 'error');
+
+      const st = getSettings();
+      if (st.notifyTelegramOnLock !== false && st.telegramToken && st.telegramChatId) {
+        sendTelegramAlert({
+          action: `TUTUP MANUAL: ${result}`, entry: formatPrice(entry), stopLoss: formatPrice(lockedSL),
+          tp1: '-', tp2: '-', tp3: '-', lotSize: lot.toFixed(2), confidence: '-',
+          aiExplanation: `Setup ${lockedTradeSide} ditutup manual oleh trader di ${formatPrice(price)}. PnL: ${formatMoney(pnl)}.`
+        }).catch(() => {});
+      }
+    }
+    currentOpenTradeId = null;
+  } else {
+    showToast('Setup dibatalkan (belum sempat tercatat sebagai trade OPEN).', 'info');
+  }
+
+  lockedTradeSide = 'WAIT';
+  lockedEntryPrice = null;
+  lockedSL = null;
+  lockedOrderType = 'NO TRADE';
+  bestFavorProgress = 0;
+  breakEvenSuggested = false;
+  lastNotifiedLockCode = null;
+
+  const detailEl = document.getElementById('tpValidityDetail');
+  if (detailEl) {
+    detailEl.innerHTML = 'Setup dibatalkan manual. Tekan GENERATE SIGNAL untuk mencari plan baru.';
+    detailEl.className = 'text-[11px] text-muted mt-1';
+  }
+  updateSetupValidityBadge(price);
+  applyTradingReadiness(price);
+  updateTradingPlanValues(price);
+}
+
 
 
 function updatePriceDisplay(price, pctChange) {
@@ -2831,6 +2885,7 @@ function updatePriceDisplay(price, pctChange) {
     updateTradingPlanValues(p);
     checkBreakEvenSuggestion(p);
     updateSetupValidityBadge(p);
+    checkOpenTradeOutcome(p);
     updateDashboardSummary();
     updateRiskManagement();
     updateSMCGrid();
@@ -3038,6 +3093,8 @@ async function notifyExecutionLocked(decision) {
       addLog(`Telegram lock alert gagal: ${err.message}`, 'error');
     }
   }
+
+  autoRecordLockedTrade();
 }
 
 function onDecisionChanged(decision) {
@@ -3528,13 +3585,19 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
-async function saveTradingPlanToSheets() {
-  const m = getTradeMetrics(lastWsPrice);
+function generateTradeId() {
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function buildTradingPlanPayload() {
+  const price = lastWsPrice;
+  const m = getTradeMetrics(price);
   const d = m.cfg.decimals;
-  const decision = currentPlanDecision || assessTradingReadiness(lastWsPrice);
+  const decision = currentPlanDecision || assessTradingReadiness(price);
   const hasActionableSide = m.side === 'BUY' || m.side === 'SELL';
   const aiExplanation = buildAIReasons(decision).map(r => `${r.ok ? '✔' : '⚠'} ${r.text}`).join(' | ');
-  const payload = {
+  return {
+    tradeId: generateTradeId(),
     date: new Date().toLocaleDateString('id-ID'),
     time: new Date().toLocaleTimeString('id-ID'),
     timestamp: new Date().toISOString(),
@@ -3561,34 +3624,98 @@ async function saveTradingPlanToSheets() {
     resultTrade: 'OPEN',
     traderNotes: '',
     status: decision.title || document.getElementById('finalStatus')?.innerText || 'READY TO TRADE',
-    notes: `${decision.reason || 'No readiness note'} | Saved from AI Trading Signal System at ${new Date().toLocaleString('id-ID')}`
+    notes: `${decision.reason || 'No readiness note'} | Auto-saved saat Entry Locked pada ${new Date().toLocaleString('id-ID')}`
   };
+}
 
-  const requestUrl = getSheetsRequestUrl();
-
+// Sinkron ke Google Sheets di background, tidak blocking dan tidak spam toast (dipakai otomatis saat lock).
+async function syncPlanToSheetsSilent(payload) {
   try {
-    showToast('Mengirim trading plan ke Google Sheets...', 'info');
-    setSystemStatus('sheets', 'warn', 'Syncing');
-
+    const requestUrl = getSheetsRequestUrl();
     await fetchWithTimeout(requestUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload)
     }, 12000);
-
-    recordJournal(payload);
-    await sendTelegramAlert(payload);
     setSystemStatus('sheets', 'ok', 'Synced');
-    showToast('Plan dikirim ke Google Sheets & journal lokal tersimpan.', 'success');
-    addLog(`Trading plan ${payload.pair} dikirim: entry ${formatPrice(payload.entry, d)} / SL ${formatPrice(payload.stopLoss, d)} / confidence ${payload.confidence}.`, 'success');
+    addLog(`Trade ${payload.action} @ ${payload.entry} auto-synced ke Google Sheets.`, 'success');
   } catch (err) {
-    recordJournal(payload);
     setSystemStatus('sheets', 'bad', 'Error');
-    showToast(`Gagal mengirim ke Google Sheets: ${err.message}. Journal lokal tetap tersimpan.`, 'error');
-    addLog(`Google Sheets sync gagal: ${err.message}`, 'error');
+    addLog(`Auto-sync ke Google Sheets gagal: ${err.message}. Trade tetap tersimpan di journal lokal.`, 'error');
   }
 }
+
+function updateJournalRow(tradeId, patch) {
+  const rows = getJournalHistory();
+  const idx = rows.findIndex(r => r.tradeId === tradeId);
+  if (idx === -1) return null;
+  rows[idx] = { ...rows[idx], ...patch };
+  setJournalHistory(rows);
+  updateDashboardSummary();
+  updateRiskManagement();
+  if (typeof renderBacktestCharts === 'function') { try { renderBacktestCharts(); } catch (e) {} }
+  return rows[idx];
+}
+
+// Dipanggil tiap kali status berubah jadi ENTRY VALID (lock baru): otomatis simpan sebagai trade OPEN.
+function autoRecordLockedTrade() {
+  // Kalau ada trade sebelumnya yang masih OPEN (mis. plan diganti/auto-renew sebelum kena TP/SL), tandai CANCELLED biar tidak nyangkut selamanya.
+  if (currentOpenTradeId) {
+    updateJournalRow(currentOpenTradeId, { resultTrade: 'CANCELLED', pnl: 0, closedAt: new Date().toISOString(), traderNotes: 'Plan diperbarui/auto-renew sebelum TP/SL tercapai.' });
+    currentOpenTradeId = null;
+  }
+  const payload = buildTradingPlanPayload();
+  recordJournal(payload);
+  currentOpenTradeId = payload.tradeId;
+  addLog(`Trade otomatis tercatat di journal: ${payload.action} @ ${payload.entry} (SL ${payload.stopLoss} / TP1 ${payload.tp1}).`, 'success');
+  syncPlanToSheetsSilent(payload);
+}
+
+// Dipanggil tiap tick: cek apakah trade OPEN yang sedang dipantau sudah kena TP1/TP2/TP3 atau SL, lalu tutup otomatis di journal.
+function checkOpenTradeOutcome(price = lastWsPrice) {
+  if (!currentOpenTradeId || !Number.isFinite(price)) return;
+  const rows = getJournalHistory();
+  const row = rows.find(r => r.tradeId === currentOpenTradeId && r.resultTrade === 'OPEN');
+  if (!row) { currentOpenTradeId = null; return; }
+
+  const side = row.action;
+  const entry = Number(row.entry), sl = Number(row.stopLoss);
+  const tp1 = Number(row.tp1), tp2 = Number(row.tp2), tp3 = Number(row.tp3);
+  if (!Number.isFinite(entry) || !Number.isFinite(sl) || side !== 'BUY' && side !== 'SELL') return;
+
+  const slHit = side === 'BUY' ? price <= sl : price >= sl;
+  const tp3Hit = Number.isFinite(tp3) && (side === 'BUY' ? price >= tp3 : price <= tp3);
+  const tp2Hit = Number.isFinite(tp2) && (side === 'BUY' ? price >= tp2 : price <= tp2);
+  const tp1Hit = Number.isFinite(tp1) && (side === 'BUY' ? price >= tp1 : price <= tp1);
+
+  const lot = Number(row.lotSize) || GOLD_PLAN.minLot;
+  const pnlAt = (target) => (side === 'BUY' ? (target - entry) : (entry - target)) * lot * GOLD_PLAN.contractSize;
+
+  let result = null, pnl = 0, exitPrice = null, label = '';
+  if (slHit) { result = 'LOSS (SL)'; pnl = pnlAt(sl); exitPrice = sl; label = `🔴 LOSS — SL tersentuh @ ${formatPrice(sl)}`; }
+  else if (tp3Hit) { result = 'WIN (TP3)'; pnl = pnlAt(tp3); exitPrice = tp3; label = `🟢 WIN — TP3 tercapai @ ${formatPrice(tp3)}`; }
+  else if (tp2Hit) { result = 'WIN (TP2)'; pnl = pnlAt(tp2); exitPrice = tp2; label = `🟢 WIN — TP2 tercapai @ ${formatPrice(tp2)}`; }
+  else if (tp1Hit) { result = 'WIN (TP1)'; pnl = pnlAt(tp1); exitPrice = tp1; label = `🟢 WIN — TP1 tercapai @ ${formatPrice(tp1)}`; }
+  if (!result) return;
+
+  updateJournalRow(currentOpenTradeId, { resultTrade: result, pnl: Number(pnl.toFixed(2)), exitPrice, closedAt: new Date().toISOString() });
+  addLog(`Trade ditutup otomatis: ${label} | PnL ${formatMoney(pnl)}.`, pnl >= 0 ? 'success' : 'error');
+  showToast(`${label} (PnL ${formatMoney(pnl)}) — masuk rekap journal.`, pnl >= 0 ? 'success' : 'error');
+  currentOpenTradeId = null;
+
+  const st = getSettings();
+  if (st.notifyTelegramOnLock !== false && st.telegramToken && st.telegramChatId) {
+    sendTelegramAlert({
+      action: `${label}`, entry: formatPrice(entry), stopLoss: formatPrice(sl),
+      tp1: formatPrice(tp1), tp2: formatPrice(tp2), tp3: formatPrice(tp3),
+      lotSize: lot.toFixed(2), confidence: '-',
+      aiExplanation: `Trade ${side} ditutup otomatis. PnL: ${formatMoney(pnl)}.`
+    }).catch(() => {});
+  }
+}
+
+
 
 function runSmartSheetAnalysis() {
   showToast('Menjalankan Smart Technical Analysis...', 'success');
