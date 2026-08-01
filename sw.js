@@ -10,9 +10,9 @@ const APP_SHELL = [
   './tailwind.css',
   './app.js',
   './manifest.webmanifest',
-  './pwa/favicon-64.png',
-  './pwa/icon-192.png',
-  './pwa/icon-512.png'
+  './favicon-64.png',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
