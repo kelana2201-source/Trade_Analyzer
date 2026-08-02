@@ -978,7 +978,18 @@ function isBreakoutPlan(trend) {
   return trend.strength >= GOLD_PLAN.breakoutStrength && Math.abs(trend.momentumPct) >= GOLD_PLAN.breakoutMomentumPct;
 }
 
-function getOrderType(side, entry, currentPrice) {
+// Menentukan tipe order berdasarkan posisi entry relatif ke harga sekarang:
+//   - Kalau harga SUDAH di dalam buffer entry (selisih <= toleransi spread) → NOW (market execution),
+//     bukan STOP/LIMIT lagi, karena order pending sudah tidak relevan saat harga sudah menyentuh level itu.
+//   - BUY, entry > harga sekarang & belum tersentuh → BUY STOP (breakout, tunggu harga naik ke entry)
+//   - BUY, entry < harga sekarang & belum tersentuh → BUY LIMIT (retracement, tunggu harga turun ke entry)
+//   - SELL, entry < harga sekarang & belum tersentuh → SELL STOP (breakout, tunggu harga turun ke entry)
+//   - SELL, entry > harga sekarang & belum tersentuh → SELL LIMIT (retracement, tunggu harga naik ke entry)
+function getOrderType(side, entry, currentPrice, buffer = getEntryBuffer(currentPrice)) {
+  if (Number.isFinite(entry) && Number.isFinite(currentPrice) && Math.abs(entry - currentPrice) <= buffer) {
+    if (side === 'BUY') return 'BUY NOW';
+    if (side === 'SELL') return 'SELL NOW';
+  }
   if (side === 'BUY') return entry > currentPrice ? 'BUY STOP' : 'BUY LIMIT';
   if (side === 'SELL') return entry < currentPrice ? 'SELL STOP' : 'SELL LIMIT';
   return 'NO TRADE';
@@ -989,7 +1000,9 @@ function getOrderNarrative(orderType) {
     'BUY STOP': 'Menunggu harga pecah ke atas / breakout bullish.',
     'BUY LIMIT': 'Menunggu harga turun ke area diskon / retracement.',
     'SELL STOP': 'Menunggu harga pecah ke bawah / breakout bearish.',
-    'SELL LIMIT': 'Menunggu harga naik dulu ke supply / retracement sell.'
+    'SELL LIMIT': 'Menunggu harga naik dulu ke supply / retracement sell.',
+    'BUY NOW': 'Harga sudah tepat di area entry — eksekusi market BUY sekarang, tidak perlu pasang pending order lagi.',
+    'SELL NOW': 'Harga sudah tepat di area entry — eksekusi market SELL sekarang, tidak perlu pasang pending order lagi.'
   }[orderType] || 'Tidak ada order aktif.';
 }
 
@@ -2301,7 +2314,24 @@ function assessTradingReadiness(price = lastWsPrice) {
   if (invalid) return { code:'ENTRY_INVALID', tone:'red', action:'NO TRADE', side:m.side, setup:'ENTRY INVALID / SETUP BROKEN', state:'ENTRY INVALID', title:'🔴 ENTRY INVALID', badge:'REPLAN REQUIRED', signal:'🔴 ENTRY INVALID', final:'🔴 ENTRY INVALID', reason:`Harga sudah melewati area SL ${formatPrice(m.sl, d)} untuk setup ${m.orderType}. Setup lama invalid, tunggu plan baru.` };
 
   const inEntryZone = price >= entryLower && price <= entryUpper;
-  if (inEntryZone) return { code:'ENTRY_VALID', tone:'green', action:m.side, side:m.side, setup:`${m.orderType} READY`, state:'ENTRY VALID', title:`🟢 ENTRY VALID - ${m.orderType}`, badge:'ENTRY ZONE VALID', signal:`${m.side === 'BUY' ? '🟢 BUY' : '🔴 SELL'} SIGNAL (${m.orderType})`, final:`🟢 ENTRY VALID ${m.orderType}`, reason:`Harga berada di area entry ${formatPrice(m.entry, d)} ± ${formatPrice(buffer, d)} untuk ${m.orderType}. ${m.orderNarrative}` };
+  if (inEntryZone) {
+    const isMarketNow = m.orderType === 'BUY NOW' || m.orderType === 'SELL NOW';
+    return {
+      code: 'ENTRY_VALID',
+      tone: 'green',
+      action: m.side,
+      side: m.side,
+      setup: isMarketNow ? m.orderType : `${m.orderType} READY`,
+      state: 'ENTRY VALID',
+      title: isMarketNow ? `🟢 ${m.orderType} - EKSEKUSI MARKET` : `🟢 ENTRY VALID - ${m.orderType}`,
+      badge: isMarketNow ? 'MARKET EXECUTION' : 'ENTRY ZONE VALID',
+      signal: `${m.side === 'BUY' ? '🟢 BUY' : '🔴 SELL'} SIGNAL (${m.orderType})`,
+      final: `🟢 ENTRY VALID ${m.orderType}`,
+      reason: isMarketNow
+        ? `Harga ${formatPrice(price, d)} sudah tepat di level entry ${formatPrice(m.entry, d)}. ${m.orderNarrative}`
+        : `Harga berada di area entry ${formatPrice(m.entry, d)} ± ${formatPrice(buffer, d)} untuk ${m.orderType}. ${m.orderNarrative}`
+    };
+  }
 
   const waitingBreakout = (m.orderType === 'BUY STOP' && price < entryLower) || (m.orderType === 'SELL STOP' && price > entryUpper);
   if (waitingBreakout) return { code:'WAIT_BREAKOUT', tone:'orange', action:'WAIT BREAKOUT', side:m.side, setup:`WAIT BREAKOUT (${m.orderType})`, state:'WAIT BREAKOUT', title:`🟠 WAIT BREAKOUT - ${m.orderType}`, badge:'NO MARKET EXECUTION', signal:'🟠 WAIT BREAKOUT', final:'🟠 WAIT BREAKOUT', reason:`${m.orderType}: entry ${formatPrice(m.entry, d)} belum tersentuh. ${m.orderNarrative}` };
