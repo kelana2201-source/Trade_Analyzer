@@ -3565,6 +3565,7 @@ async function testTelegramAlert() {
   function mapGuidance(code) {
     switch (code) {
       case 'ENTRY_VALID': return { label: 'ENTRY SEKARANG', tone: 'green', action: 'Eksekusi market/pending sesuai order type. Jangan menunda.' };
+      case 'ENTRY_VALID_HOLD': return { label: 'SETUP MASIH BERLAKU', tone: 'green', action: 'Entry sudah pernah tersentuh — status tetap berlaku sampai SL kena atau Anda klik Tutup Manual.' };
       case 'WAIT_PULLBACK': return { label: 'TUNGGU LIMIT', tone: 'orange', action: 'Pasang limit & tunggu harga masuk zona entry.' };
       case 'WAIT_BREAKOUT': return { label: 'WAIT KONFIRMASI', tone: 'orange', action: 'Tunggu konfirmasi breakout/rejection sebelum entry.' };
       case 'ENTRY_INVALID': return { label: 'SETUP BATAL', tone: 'red', action: 'Setup invalid (SL terlewati). Tunggu plan baru.' };
@@ -3586,7 +3587,7 @@ async function testTelegramAlert() {
 
     // validity countdown
     const pill = $('validityPill');
-    if (code === 'ENTRY_VALID') {
+    if (code === 'ENTRY_VALID' || code === 'ENTRY_VALID_HOLD') {
       if (!entryValidSince) entryValidSince = Date.now();
       const remain = Math.max(0, VALIDITY_MS - (Date.now() - entryValidSince));
       if (pill) {
@@ -3601,30 +3602,32 @@ async function testTelegramAlert() {
   }
 
   // ─────────────── ENTRY CHECKLIST ───────────────
+  // Disinkronkan dengan mesin scoring baru (getEntryScoreAnalysis): Market Structure jadi satu-satunya
+  // syarat wajib (★), faktor lain (S&D, Trend, Candlestick) menambah Confidence Score, bukan syarat mutlak.
   function renderChecklist(core) {
     const grid = $('checklistGrid'); if (!grid) return;
-    const { trend, metrics, session, dataOk } = core;
+    const { session, dataOk } = core;
     const newsClear = (typeof calendarManualOverride !== 'undefined' && calendarManualOverride) || !(typeof highImpactNewsDetected !== 'undefined' && highImpactNewsDetected);
+    const analysis = (typeof lastEntryScoreAnalysis !== 'undefined' && lastEntryScoreAnalysis) || (typeof getEntryScoreAnalysis === 'function' ? getEntryScoreAnalysis() : null);
+    const metrics = core.metrics;
     const items = [];
     const push = (label, pass, vital) => items.push({ label, pass, vital });
+
     push('Live Feed', !!(typeof connected !== 'undefined' && connected && dataOk), true);
-    push('Trend', trend && (trend.direction === 'BULLISH' || trend.direction === 'BEARISH'), true);
-    push('Market Structure (BOS)', !!(typeof getSMCState === 'function' && getSMCState().smcBos[2]), true);
-    push('Liquidity Sweep', !!(typeof getSMCState === 'function' && getSMCState().smcSweep[2]), false);
-    push('Order Block', !!(typeof getSMCState === 'function' && getSMCState().smcOrderBlock[2]), false);
-    const emaOk = trend && Number.isFinite(trend.fast) && Number.isFinite(trend.slow) && trend.fast !== trend.slow && (trend.direction === 'BULLISH' ? trend.fast > trend.slow : trend.direction === 'BEARISH' ? trend.fast < trend.slow : false);
-    push('EMA Alignment', !!emaOk, false);
-    push('Volume / Momentum', !!(trend && Math.abs(trend.momentumPct || 0) > 0.01), false);
+    push('Market Structure (BOS/CHoCH)', !!(analysis && analysis.structure && analysis.structure.valid), true);
+    push('Supply & Demand', !!(analysis && analysis.supplyDemand && analysis.supplyDemand.valid), false);
+    push('Trend H1/H4', !!(analysis && analysis.trend && analysis.trend.aligned), false);
+    push('Candlestick Confirmation', !!(analysis && analysis.candlestick && analysis.candlestick.valid), false);
     push('News Filter', !!newsClear, true);
     push('Session Aktif', !!(session && session.active), false);
-    const atrOk = (typeof lastAtrValue !== 'undefined') && Number.isFinite(lastAtrValue) && lastAtrValue > 0;
-    push('ATR Valid', !!atrOk, false);
     const rr1 = metrics && metrics.side !== 'WAIT' ? metrics.rr(metrics.tp1) : 0;
-    push('Risk : Reward ≥ 1', metrics && metrics.side !== 'WAIT' && rr1 >= 1, true);
+    push('Risk : Reward ≥ 1', !!(metrics && metrics.side !== 'WAIT' && rr1 >= 1), true);
     push('Spread', null, false); // butuh broker L2 → netral
 
     const passCount = items.filter(i => i.pass === true).length;
     safeSet('checklistScore', passCount + '/' + items.length);
+    const scoreEl = $('checklistConfidenceScore');
+    if (scoreEl && analysis) scoreEl.innerText = analysis.score + '/100 — ' + (analysis.band === 'NO_TRADE' ? 'No Trade' : analysis.band === 'STRONG' ? 'Strong' : analysis.band === 'VALID_ENTRY' ? 'Valid Entry' : 'Entry Agresif');
     grid.innerHTML = items.map(function (it) {
       const cls = it.pass === true ? 'check-pass' : it.pass === false ? 'check-fail' : 'check-warn';
       const icon = it.pass === true ? '<i class="fas fa-check"></i>' : it.pass === false ? '<i class="fas fa-xmark"></i>' : '<i class="fas fa-minus"></i>';
