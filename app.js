@@ -96,6 +96,12 @@ const STORAGE_KEYS = {
   stats: 'aiTradingDailyStats.v1',
   lockedPlan: 'aiTradingLockedPlanState.v1'
 };
+const STRATEGY_PRESETS = {
+  scalping: { weights: { structure: 35, supplyDemand: 25, trend: 15, candlestick: 25 }, minConfidenceScore: 55 },
+  intraday: { weights: { structure: 40, supplyDemand: 30, trend: 20, candlestick: 10 }, minConfidenceScore: 60 },
+  swing:    { weights: { structure: 45, supplyDemand: 30, trend: 20, candlestick: 5  }, minConfidenceScore: 70 }
+};
+
 const DEFAULT_SETTINGS = {
   sheetsUrl: GOOGLE_SHEETS_WEBHOOK_URL,
   sheetsToken: GOOGLE_SHEETS_TOKEN,
@@ -110,7 +116,10 @@ const DEFAULT_SETTINGS = {
   notifySound: true,
   notifyTelegramOnLock: true,
   useWs: true,
-  proxyBaseUrl: 'https://xau-proxy.kelana2201.workers.dev'
+  proxyBaseUrl: 'https://xau-proxy.kelana2201.workers.dev',
+  strategyPreset: 'intraday',
+  entryScoreWeights: { ...STRATEGY_PRESETS.intraday.weights },
+  minConfidenceScore: STRATEGY_PRESETS.intraday.minConfidenceScore
 };
 
 
@@ -135,6 +144,10 @@ let highImpactNewsDetected = false;
 let highImpactNewsLabel = '';
 let newsRiskUnknown = false;
 let currentPlanDecision = null;
+let lastEntryScoreAnalysis = null;
+let entryTriggered = false;      // true begitu harga pertama kali menyentuh zona entry plan yang sedang terkunci
+let entryTouchLog = [];          // riwayat tiap kali harga masuk zona entry: [{index, price, time}]
+let entryZoneInsidePrev = false; // dipakai buat anti-spam: cegah 1 sentuhan dihitung berkali-kali saat harga cuma gonjang-ganjing tipis
 let deferredPwaPrompt = null;
 let appSettings = null;
 let lastApiResponseMs = 0;
@@ -236,6 +249,10 @@ function setInitialPlan(price = lastWsPrice) {
   autoRenewAwayCount = 0;
   breakEvenSuggested = false;
   bestFavorProgress = 0;
+  entryTriggered = false;
+  entryTouchLog = [];
+  entryZoneInsidePrev = false;
+  updateEntryTouchLogUi();
   const detailEl = document.getElementById('tpValidityDetail');
   if (detailEl) {
     detailEl.innerHTML = 'Plan baru dikunci. Klik "CEK VALIDASI SETUP" kapan saja untuk melihat apakah setup masih menuju TP atau sebaiknya ditutup manual.';
@@ -250,6 +267,7 @@ function saveLockedPlanState() {
     localStorage.setItem(STORAGE_KEYS.lockedPlan, JSON.stringify({
       lockedTradeSide, lockedEntryPrice, lockedSL, lockedOrderType,
       currentOpenTradeId, bestFavorProgress,
+      entryTriggered, entryTouchLog,
       savedAt: new Date().toISOString()
     }));
   } catch (e) { /* storage penuh/diblokir, abaikan diam-diam */ }
@@ -276,6 +294,10 @@ function restoreLockedPlanState() {
   lockedOrderType = saved.lockedOrderType || 'NO TRADE';
   currentOpenTradeId = openTradeId;
   bestFavorProgress = Number.isFinite(saved.bestFavorProgress) ? saved.bestFavorProgress : 0;
+  entryTriggered = Boolean(saved.entryTriggered);
+  entryTouchLog = Array.isArray(saved.entryTouchLog) ? saved.entryTouchLog : [];
+  entryZoneInsidePrev = false; // aman: biar sentuhan pertama pasca-reload dievaluasi ulang, bukan diasumsikan masih "di dalam"
+  updateEntryTouchLogUi();
 
   const detailEl = document.getElementById('tpValidityDetail');
   if (detailEl) {
@@ -531,6 +553,9 @@ function getSettings() {
   if (!appSettings.proxyBaseUrl || !String(appSettings.proxyBaseUrl).trim()) {
     appSettings.proxyBaseUrl = DEFAULT_SETTINGS.proxyBaseUrl || 'https://xau-proxy.kelana2201.workers.dev';
   }
+  // Deep-merge bobot entry-score supaya settingan lama yang belum punya field ini tetap dapat default lengkap.
+  appSettings.entryScoreWeights = { ...DEFAULT_SETTINGS.entryScoreWeights, ...(appSettings.entryScoreWeights || {}) };
+  if (!Number.isFinite(appSettings.minConfidenceScore)) appSettings.minConfidenceScore = DEFAULT_SETTINGS.minConfidenceScore;
   return appSettings;
 }
 
@@ -554,6 +579,13 @@ function loadSettingsToForm() {
   if (nt) nt.checked = st.notifyTelegramOnLock !== false;
   const uw = document.getElementById('settingUseWs');
   if (uw) uw.checked = st.useWs !== false;
+  const w = st.entryScoreWeights || DEFAULT_SETTINGS.entryScoreWeights;
+  safeSetValue('settingWeightStructure', w.structure);
+  safeSetValue('settingWeightSupplyDemand', w.supplyDemand);
+  safeSetValue('settingWeightTrend', w.trend);
+  safeSetValue('settingWeightCandlestick', w.candlestick);
+  safeSetValue('settingMinConfidenceScore', Number.isFinite(st.minConfidenceScore) ? st.minConfidenceScore : DEFAULT_SETTINGS.minConfidenceScore);
+  updateWeightTotalHint();
   setSystemStatus('telegram', st.telegramToken && st.telegramChatId ? 'ok' : 'warn', st.telegramToken && st.telegramChatId ? 'Ready' : 'Setup');
   setSystemStatus('sheets', st.sheetsUrl && st.sheetsToken ? 'ok' : 'warn', st.sheetsUrl && st.sheetsToken ? 'Ready' : 'Setup');
 }
@@ -564,6 +596,28 @@ function safeSetValue(id, value) {
 }
 
 function saveSettings() {
+  const rawWeights = {
+    structure: Number(document.getElementById('settingWeightStructure')?.value ?? DEFAULT_SETTINGS.entryScoreWeights.structure),
+    supplyDemand: Number(document.getElementById('settingWeightSupplyDemand')?.value ?? DEFAULT_SETTINGS.entryScoreWeights.supplyDemand),
+    trend: Number(document.getElementById('settingWeightTrend')?.value ?? DEFAULT_SETTINGS.entryScoreWeights.trend),
+    candlestick: Number(document.getElementById('settingWeightCandlestick')?.value ?? DEFAULT_SETTINGS.entryScoreWeights.candlestick)
+  };
+  const weightSum = rawWeights.structure + rawWeights.supplyDemand + rawWeights.trend + rawWeights.candlestick;
+  let entryScoreWeights = rawWeights;
+  if (!Number.isFinite(weightSum) || weightSum <= 0) {
+    entryScoreWeights = { ...DEFAULT_SETTINGS.entryScoreWeights };
+    showToast('Bobot tidak valid, dikembalikan ke default.', 'error');
+  } else if (Math.round(weightSum) !== 100) {
+    // Normalisasi proporsional supaya totalnya tetap 100, bukan menolak simpan.
+    const factor = 100 / weightSum;
+    entryScoreWeights = {
+      structure: Math.round(rawWeights.structure * factor),
+      supplyDemand: Math.round(rawWeights.supplyDemand * factor),
+      trend: Math.round(rawWeights.trend * factor),
+      candlestick: Math.round(rawWeights.candlestick * factor)
+    };
+    showToast(`Total bobot ${weightSum}% dinormalisasi otomatis jadi 100%.`, 'info');
+  }
   const st = {
     sheetsUrl: document.getElementById('settingSheetsUrl')?.value?.trim() || '',
     sheetsToken: document.getElementById('settingSheetsToken')?.value?.trim() || '',
@@ -578,13 +632,35 @@ function saveSettings() {
     notifySound: document.getElementById('settingNotifySound')?.checked !== false,
     notifyTelegramOnLock: document.getElementById('settingNotifyTelegramOnLock')?.checked !== false,
     useWs: document.getElementById('settingUseWs')?.checked !== false,
-    proxyBaseUrl: document.getElementById('settingProxyBaseUrl')?.value?.trim() || ''
+    proxyBaseUrl: document.getElementById('settingProxyBaseUrl')?.value?.trim() || '',
+    entryScoreWeights,
+    minConfidenceScore: Math.max(0, Math.min(100, Number(document.getElementById('settingMinConfidenceScore')?.value ?? DEFAULT_SETTINGS.minConfidenceScore))),
+    strategyPreset: appSettings?.strategyPreset || DEFAULT_SETTINGS.strategyPreset
   };
   appSettings = { ...DEFAULT_SETTINGS, ...st };
   localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(appSettings));
   applySettingsToRuntime();
+  loadSettingsToForm();
   showToast('Settings berhasil disimpan', 'success');
   addLog('Settings saved.', 'success');
+}
+
+// Terapkan preset dari tombol Settings UI, lalu refresh form supaya angka bobot langsung kelihatan.
+function applyStrategyPresetUi(name) {
+  applyStrategyPreset(name);
+  loadSettingsToForm();
+}
+
+// Kasih indikator visual kalau total bobot yang sedang diketik user di form belum pas 100%
+// (tetap boleh disimpan — saveSettings() akan menormalisasi otomatis — ini cuma bantuan visual).
+function updateWeightTotalHint() {
+  const el = document.getElementById('weightTotalHint');
+  if (!el) return;
+  const vals = ['settingWeightStructure','settingWeightSupplyDemand','settingWeightTrend','settingWeightCandlestick']
+    .map(id => Number(document.getElementById(id)?.value || 0));
+  const total = vals.reduce((a,b) => a+b, 0);
+  el.textContent = `Total bobot: ${total}%` + (total !== 100 ? ' (akan dinormalisasi ke 100% saat disimpan)' : '');
+  el.className = total === 100 ? 'text-[10px] text-emerald-400 mt-1' : 'text-[10px] text-orange-400 mt-1';
 }
 
 function applySettingsToRuntime() {
@@ -956,21 +1032,14 @@ function analyzeMarketTrend(price = lastWsPrice) {
   return { direction: 'NEUTRAL', side: 'WAIT', label: 'Neutral / mixed', strength, slopePct, rangePct, fast, slow, momentumPct, reason: `EMA/slope belum searah. Spread EMA ${emaSpreadPct.toFixed(4)}%, slope ${slopePct.toFixed(3)}%.` };
 }
 
+// Sumber kebenaran tunggal untuk arah trade: Market Structure (wajib) + S&D + Trend H1/H4 + Candlestick.
+// Parameter `trend` dipertahankan untuk kompatibilitas pemanggil lama, tapi keputusan akhir
+// sepenuhnya mengikuti getEntryScoreAnalysis() — lihat definisinya di atas.
 function deriveTradeSide(trend = analyzeMarketTrend(lastWsPrice)) {
-  const tfs = getMultiTfTrends();
-  const higherBull = [tfs.H1, tfs.H4].filter(function (t) { return t.direction === 'BULLISH'; }).length;
-  const higherBear = [tfs.H1, tfs.H4].filter(function (t) { return t.direction === 'BEARISH'; }).length;
-  if (trend.direction === 'BULLISH' || higherBull >= 2) {
-    if (higherBear >= 2) return 'WAIT';
-    if (dxyState.bias === 'USD_STRONG' && (trend.strength || 0) < 70) return 'WAIT';
-    if (trend.direction === 'BULLISH' || higherBull >= 2) return 'BUY';
-  }
-  if (trend.direction === 'BEARISH' || higherBear >= 2) {
-    if (higherBull >= 2) return 'WAIT';
-    if (dxyState.bias === 'USD_WEAK' && (trend.strength || 0) < 70) return 'WAIT';
-    if (trend.direction === 'BEARISH' || higherBear >= 2) return 'SELL';
-  }
-  return 'WAIT';
+  const analysis = getEntryScoreAnalysis(lastWsPrice);
+  lastEntryScoreAnalysis = analysis;
+  if (analysis.side === 'NO_TRADE') return 'WAIT';
+  return analysis.side;
 }
 
 function isBreakoutPlan(trend) {
@@ -1068,20 +1137,221 @@ function updateSMCGrid() {
   updateMultiTfUi();
 }
 
-function getConfidenceComponents(decision = currentPlanDecision) {
-  const trend = analyzeMarketTrend(lastWsPrice);
+// ═══════════════════════════════════════════════════════════
+//  ENTRY SCORE ENGINE — Market Structure (wajib) + S&D + Trend H1/H4 + Candlestick
+//  Menggantikan logika lama "semua indikator harus terpenuhi" dengan sistem scoring
+//  fleksibel: hanya Market Structure yang jadi syarat mutlak, faktor lain menambah skor.
+// ═══════════════════════════════════════════════════════════
+
+// Deteksi swing high/low sederhana (metode fractal) dari candle OHLC, lalu klasifikasi
+// struktur HH/HL (uptrend) atau LH/LL (downtrend), dan cek apakah closing terakhir
+// menembus swing terakhir (BOS = melanjutkan struktur, CHoCH = membalik struktur).
+function detectSwingStructure(candles) {
+  if (!Array.isArray(candles) || candles.length < 10) {
+    // Fallback: kalau candle OHLC broker/proxy belum tersedia, pakai trend-engine berbasis tick
+    // sebagai proxy struktur (ditandai jelas sebagai proxy, bukan BOS/CHoCH asli dari candle).
+    const trend = analyzeMarketTrend(lastWsPrice);
+    const bosOk = ['BULLISH', 'BEARISH'].includes(trend.direction) && trend.strength >= 35;
+    if (!bosOk) {
+      return { valid: false, bias: 'UNKNOWN', bos: false, choch: false, side: 'WAIT', isProxy: true,
+        reason: 'Data candle OHLC belum cukup, dan trend tick-proxy juga belum menunjukkan struktur yang jelas.' };
+    }
+    return { valid: true, bias: trend.direction, bos: true, choch: false, side: trend.side, isProxy: true,
+      reason: `[Proxy tick — candle OHLC belum tersedia] BOS ${trend.direction} terdeteksi dari trend engine, strength ${trend.strength}%.` };
+  }
+
+  const lookback = 2;
+  const swings = [];
+  for (let i = lookback; i < candles.length - lookback; i++) {
+    const win = candles.slice(i - lookback, i + lookback + 1);
+    const h = candles[i].h, l = candles[i].l;
+    if (Number.isFinite(h) && h === Math.max(...win.map(c => c.h))) swings.push({ type: 'high', index: i, price: h });
+    if (Number.isFinite(l) && l === Math.min(...win.map(c => c.l))) swings.push({ type: 'low', index: i, price: l });
+  }
+  if (swings.length < 4) {
+    return { valid: false, bias: 'UNKNOWN', bos: false, choch: false, side: 'WAIT', isProxy: false,
+      reason: 'Swing point belum cukup terbentuk dari candle yang tersedia untuk menentukan struktur.' };
+  }
+
+  const highs = swings.filter(s => s.type === 'high').slice(-3);
+  const lows = swings.filter(s => s.type === 'low').slice(-3);
+  const lastClose = candles[candles.length - 1].c;
+
+  let structureBias = 'UNKNOWN';
+  if (highs.length >= 2 && lows.length >= 2) {
+    const hh = highs[highs.length - 1].price > highs[highs.length - 2].price;
+    const hl = lows[lows.length - 1].price > lows[lows.length - 2].price;
+    const lh = highs[highs.length - 1].price < highs[highs.length - 2].price;
+    const ll = lows[lows.length - 1].price < lows[lows.length - 2].price;
+    if (hh && hl) structureBias = 'BULLISH';
+    else if (lh && ll) structureBias = 'BEARISH';
+  }
+
+  const lastSwingHigh = highs[highs.length - 1] || null;
+  const lastSwingLow = lows[lows.length - 1] || null;
+  let bos = false, choch = false, side = 'WAIT';
+
+  if (structureBias === 'BULLISH') {
+    if (lastSwingHigh && lastClose > lastSwingHigh.price) { bos = true; side = 'BUY'; }
+    else if (lastSwingLow && lastClose < lastSwingLow.price) { choch = true; side = 'SELL'; }
+  } else if (structureBias === 'BEARISH') {
+    if (lastSwingLow && lastClose < lastSwingLow.price) { bos = true; side = 'SELL'; }
+    else if (lastSwingHigh && lastClose > lastSwingHigh.price) { choch = true; side = 'BUY'; }
+  }
+
+  const valid = bos || choch;
+  let reason;
+  if (!valid) {
+    reason = structureBias === 'UNKNOWN'
+      ? 'Struktur belum jelas — pola HH/HL (uptrend) atau LH/LL (downtrend) belum konsisten terbentuk.'
+      : `Struktur ${structureBias} (HH/HL atau LH/LL) sudah terbentuk, tapi harga belum menembus swing terakhir untuk konfirmasi BOS/CHoCH.`;
+  } else if (bos) {
+    reason = `BOS ${side} terkonfirmasi — closing terakhir (${lastClose}) menembus swing ${side === 'BUY' ? 'high' : 'low'} sebelumnya (${side === 'BUY' ? lastSwingHigh.price : lastSwingLow.price}), melanjutkan struktur ${structureBias}.`;
+  } else {
+    reason = `CHoCH terdeteksi — struktur sebelumnya ${structureBias}, tapi closing terakhir (${lastClose}) menembus balik ke arah ${side}, indikasi potensi reversal.`;
+  }
+
+  return { valid, bias: structureBias, bos, choch, side, isProxy: false,
+    lastSwingHigh: lastSwingHigh ? lastSwingHigh.price : null, lastSwingLow: lastSwingLow ? lastSwingLow.price : null, reason };
+}
+
+// Skor Supply & Demand / Support-Resistance: valid kalau harga ada di zona S&D yang sejalan
+// dengan side, skor makin tinggi kalau makin dekat ke zona dan ada rejection candle.
+function getSupplyDemandScore(side, price, smc, candles, weight) {
+  if (side === 'WAIT' || !smc.smcSupplyDemand[2]) {
+    return { score: 0, valid: false, reason: 'Belum ada zona supply/demand yang teridentifikasi sejalan dengan arah ini.' };
+  }
+  const m = getTradeMetrics(price);
+  const dist = Math.abs(price - m.entry);
+  const buffer = getEntryBuffer(price);
+  const proximityScore = Math.max(0, 1 - Math.min(1, dist / (buffer * 6)));
+  const rejection = candles && candles.length ? detectCandlestickConfirmation(candles, side).valid : false;
+  const raw = 0.55 + proximityScore * 0.30 + (rejection ? 0.15 : 0);
+  const score = Math.round(Math.min(1, raw) * weight);
+  return {
+    score, valid: true,
+    reason: `Harga di zona ${side === 'BUY' ? 'Demand' : 'Supply'} (${formatPrice(m.entry)}), jarak ${dist.toFixed(2)} poin dari zona${rejection ? ', disertai rejection candle' : ''}.`
+  };
+}
+
+// Konfluensi trend H1 & H4 — minimal salah satu searah sudah cukup menambah skor (tidak wajib keduanya).
+function getTrendConfluenceScore(side, weight) {
+  const tfs = getMultiTfTrends();
+  const h1Aligned = side === 'BUY' ? tfs.H1.direction === 'BULLISH' : tfs.H1.direction === 'BEARISH';
+  const h4Aligned = side === 'BUY' ? tfs.H4.direction === 'BULLISH' : tfs.H4.direction === 'BEARISH';
+  const alignedCount = (h1Aligned ? 1 : 0) + (h4Aligned ? 1 : 0);
+  const score = Math.round(weight * (alignedCount / 2));
+  return {
+    score, h1: tfs.H1.direction, h4: tfs.H4.direction, aligned: alignedCount > 0,
+    reason: alignedCount === 0
+      ? `Trend H1 (${tfs.H1.direction}) dan H4 (${tfs.H4.direction}) belum ada yang searah dengan ${side}.`
+      : `Trend ${alignedCount === 2 ? 'H1 & H4 sama-sama' : (h1Aligned ? 'H1' : 'H4')} mendukung arah ${side}.`
+  };
+}
+
+// Konfirmasi candlestick (opsional, tidak wajib): engulfing atau pin bar/rejection kuat.
+function detectCandlestickConfirmation(candles, side) {
+  if (!Array.isArray(candles) || candles.length < 2) return { valid: false, pattern: null, reason: 'Data candle belum cukup untuk cek pola candlestick.' };
+  const last = candles[candles.length - 1];
+  const prev = candles[candles.length - 2];
+  if (![last.o, last.h, last.l, last.c, prev.o, prev.c].every(Number.isFinite)) {
+    return { valid: false, pattern: null, reason: 'Data OHLC candle terakhir tidak lengkap.' };
+  }
+  const body = Math.abs(last.c - last.o);
+  const range = Math.max(1e-9, last.h - last.l);
+  const upperWick = last.h - Math.max(last.c, last.o);
+  const lowerWick = Math.min(last.c, last.o) - last.l;
+
+  const bullishEngulf = last.c > last.o && prev.c < prev.o && last.c >= prev.o && last.o <= prev.c;
+  const bearishEngulf = last.c < last.o && prev.c > prev.o && last.o >= prev.c && last.c <= prev.o;
+  const bullishPin = lowerWick >= body * 2 && (lowerWick / range) >= 0.5 && last.c >= last.o;
+  const bearishPin = upperWick >= body * 2 && (upperWick / range) >= 0.5 && last.c <= last.o;
+
+  if (side === 'BUY' && (bullishEngulf || bullishPin)) {
+    return { valid: true, pattern: bullishEngulf ? 'Bullish Engulfing' : 'Bullish Pin Bar / Rejection',
+      reason: `Candle terakhir ${bullishEngulf ? 'bullish engulfing' : 'pin bar penolakan ke bawah'}, mendukung entry BUY.` };
+  }
+  if (side === 'SELL' && (bearishEngulf || bearishPin)) {
+    return { valid: true, pattern: bearishEngulf ? 'Bearish Engulfing' : 'Bearish Pin Bar / Rejection',
+      reason: `Candle terakhir ${bearishEngulf ? 'bearish engulfing' : 'pin bar penolakan ke atas'}, mendukung entry SELL.` };
+  }
+  return { valid: false, pattern: null, reason: 'Tidak ada pola candlestick konfirmasi di candle terakhir (opsional, tidak wajib).' };
+}
+
+// Fungsi utama: gabungkan semua faktor jadi satu Confidence Score (0-100) dengan
+// Market Structure sebagai syarat wajib (gate). Kalau struktur tidak valid -> langsung NO TRADE.
+function getEntryScoreAnalysis(price = lastWsPrice) {
+  const st = getSettings();
+  const w = { ...DEFAULT_SETTINGS.entryScoreWeights, ...(st.entryScoreWeights || {}) };
+  const minScore = Number.isFinite(st.minConfidenceScore) ? st.minConfidenceScore : DEFAULT_SETTINGS.minConfidenceScore;
+  const candles = (OHLC_CACHE.H1 && OHLC_CACHE.H1.length >= 10) ? OHLC_CACHE.H1 : (OHLC_CACHE.M15 || []);
+  const structure = detectSwingStructure(candles);
+
+  if (!structure.valid) {
+    return {
+      side: 'NO_TRADE', rawSide: 'WAIT', band: 'NO_TRADE', score: 0,
+      structure,
+      supplyDemand: { valid: false, score: 0, reason: 'Dilewati — Market Structure belum valid (syarat wajib).' },
+      trend: { aligned: false, score: 0, h1: 'UNKNOWN', h4: 'UNKNOWN', reason: 'Dilewati — Market Structure belum valid (syarat wajib).' },
+      candlestick: { valid: false, score: 0, pattern: null, reason: 'Dilewati — Market Structure belum valid (syarat wajib).' },
+      weights: w, minScore,
+      summary: `NO TRADE — Market Structure belum valid. ${structure.reason}`
+    };
+  }
+
+  const side = structure.side;
   const smc = getSMCState();
-  const dataOk = livePriceVerified && !usingSimulatedPrice && recentPrices.length >= MIN_TREND_SAMPLES;
-  // [CALENDAR FIX] News Filter: full saat verified/clear, parsial saat unverified (bukan 0/block), 0 saat high-impact.
-  const newsClear = calendarManualOverride || !highImpactNewsDetected;
-  const newsScore = !newsClear ? 0 : (calendarValidated || calendarManualOverride ? 10 : 6);
-  const smcActive = Object.values(smc).filter(v => v[2]).length;
-  const side = getTradeMetrics(lastWsPrice).side;
-  const domAligned = side === 'BUY' ? lastPctChange >= 0 : side === 'SELL' ? lastPctChange <= 0 : false;
-  const trendValue = dataOk && ['BULLISH','BEARISH'].includes(trend.direction) ? Math.round(20 * Math.min(1, trend.strength / 100)) : 0;
-  const structureValue = dataOk ? Math.round(15 * Math.min(1, smcActive / 4)) : 0;
+  const sd = getSupplyDemandScore(side, price, smc, candles, w.supplyDemand);
+  const trendC = getTrendConfluenceScore(side, w.trend);
+  const candle = detectCandlestickConfirmation(candles, side);
+  const candleScore = candle.valid ? w.candlestick : 0;
+  const structureScore = w.structure;
+  const total = Math.min(100, structureScore + sd.score + trendC.score + candleScore);
+
+  let band = 'NO_TRADE';
+  if (total >= 90) band = 'STRONG';
+  else if (total >= 75) band = 'VALID_ENTRY';
+  else if (total >= 60) band = 'AGGRESSIVE';
+  if (total < minScore) band = 'NO_TRADE';
+
+  const bandLabel = band === 'STRONG' ? `Strong ${side}` : band === 'VALID_ENTRY' ? 'Valid Entry' : band === 'AGGRESSIVE' ? 'Entry Agresif (risiko lebih tinggi)' : 'No Trade';
+
+  return {
+    side: band === 'NO_TRADE' ? 'NO_TRADE' : side, rawSide: side, band, score: total,
+    structure,
+    supplyDemand: sd,
+    trend: trendC,
+    candlestick: { valid: candle.valid, score: candleScore, pattern: candle.pattern, reason: candle.reason },
+    weights: w, minScore,
+    summary: band === 'NO_TRADE'
+      ? `NO TRADE — total score ${total}/100 di bawah ambang minimum ${minScore}.`
+      : `${side} — ${bandLabel}, score ${total}/100.`
+  };
+}
+
+// Terapkan preset strategi (Scalping/Intraday/Swing) — mengubah bobot & ambang minimum sekaligus.
+function applyStrategyPreset(name) {
+  const preset = STRATEGY_PRESETS[name];
+  if (!preset) { showToast(`Preset "${name}" tidak dikenal.`, 'error'); return; }
+  const st = getSettings();
+  st.strategyPreset = name;
+  st.entryScoreWeights = { ...preset.weights };
+  st.minConfidenceScore = preset.minConfidenceScore;
+  appSettings = { ...appSettings, ...st };
+  localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(appSettings));
+  showToast(`Preset strategi "${name}" diterapkan (min score ${preset.minConfidenceScore}).`, 'success');
+  addLog(`Strategy preset diubah ke "${name}": bobot=${JSON.stringify(preset.weights)}, minScore=${preset.minConfidenceScore}.`, 'info');
+}
+window.applyStrategyPreset = applyStrategyPreset;
+
+function getConfidenceComponents(decision = currentPlanDecision) {
+  const analysis = lastEntryScoreAnalysis || getEntryScoreAnalysis(lastWsPrice);
+  const w = analysis.weights;
   return [
-    { name:'Trend Analysis', value: trendValue, max:20 }, { name:'Market Structure', value: structureValue, max:15 }, { name:'Liquidity', value: dataOk && smc.smcSweep[2] ? 12 : 0, max:12 }, { name:'Order Block', value: dataOk && smc.smcOrderBlock[2] ? 15 : 0, max:15 }, { name:'Volume/Momentum', value: dataOk ? Math.min(10, Math.round(Math.abs(trend.momentumPct) * 180)) : 0, max:10 }, { name:'DOM Proxy', value: dataOk && domAligned ? 10 : dataOk ? 4 : 0, max:10 }, { name:'News Filter', value: newsScore, max:10 }, { name:'Multi-Timeframe', value: dataOk && ['BULLISH','BEARISH'].includes(trend.direction) ? 8 : 0, max:8 }
+    { name: 'Market Structure (BOS/CHoCH)', value: analysis.structure.valid ? w.structure : 0, max: w.structure },
+    { name: 'Supply & Demand / S-R', value: analysis.supplyDemand.score, max: w.supplyDemand },
+    { name: 'Trend H1 & H4', value: analysis.trend.score, max: w.trend },
+    { name: 'Candlestick Confirmation', value: analysis.candlestick.score, max: w.candlestick }
   ].map(c => ({ ...c, pct: Math.round((c.value / c.max) * 100) }));
 }
 function updateAIIntelligence(decision = currentPlanDecision) {
@@ -1100,23 +1370,19 @@ function updateAIIntelligence(decision = currentPlanDecision) {
   if (breakdown) breakdown.innerHTML = comps.map(c => `<div class="score-row"><span>${escapeHtml(c.name)}</span><div class="score-track"><div class="score-fill" style="width:${c.pct}%"></div></div><strong>${c.value}%</strong></div>`).join('') + `<div class="mt-2 text-right text-amber-400 font-bold mono">Total ${Math.min(100, Math.round(total))}%</div><div class="mt-1 text-right text-[10px] text-muted">SMC/DOM memakai proxy harga intrabar; validasi OHLC broker tetap diperlukan.</div>`;
 }
 function buildAIReasons(decision) {
-  const trend = analyzeMarketTrend(lastWsPrice);
-  const smc = getSMCState();
   const m = getTradeMetrics(lastWsPrice);
   const dataOk = livePriceVerified && !usingSimulatedPrice && recentPrices.length >= MIN_TREND_SAMPLES;
-  const domAligned = m.side === 'BUY' ? lastPctChange >= 0 : m.side === 'SELL' ? lastPctChange <= 0 : false;
+  const analysis = lastEntryScoreAnalysis || getEntryScoreAnalysis(lastWsPrice);
   return [
     { ok:dataOk, text:dataOk ? `Live price verified dari ${lastDataSource}` : usingSimulatedPrice ? 'Harga simulasi aktif — sinyal entry diblokir' : `Data tren belum cukup (${recentPrices.length}/${MIN_TREND_SAMPLES} tick)` },
-    { ok:['BULLISH','BEARISH'].includes(trend.direction), text:`Trend engine: ${trend.label} | strength ${trend.strength}% | ${trend.reason}` },
-    { ok:m.side !== 'WAIT', text:m.side === 'WAIT' ? 'Tidak ada bias BUY/SELL yang valid' : `Bias aksi terukur: ${m.side} (${m.bias})` },
-    { ok:smc.smcBos[2], text:`BOS proxy: ${smc.smcBos[1]}` },
-    { ok:smc.smcChoch[2] || smc.smcSweep[2], text:`CHOCH/Sweep proxy: ${smc.smcChoch[1]} / ${smc.smcSweep[1]}` },
-    { ok:smc.smcOrderBlock[2], text:`Order Block proxy: ${smc.smcOrderBlock[1]}` },
+    { ok:analysis.structure.valid, text:`Market Structure (wajib): ${analysis.structure.reason}` },
+    { ok:analysis.supplyDemand.valid, text:`Supply & Demand: ${analysis.supplyDemand.reason}` },
+    { ok:analysis.trend.aligned, text:`Trend H1/H4: ${analysis.trend.reason}` },
+    { ok:analysis.candlestick.valid, text:`Candlestick: ${analysis.candlestick.reason}` },
     { ok:calendarManualOverride || !highImpactNewsDetected, text: calendarManualOverride ? 'Override kalender ON (admin tanggung risiko news)' : calendarStatus === 'high_impact' ? ('High Impact News: ' + (highImpactNewsLabel || 'aktif')) : calendarStatus === 'verified' ? 'Calendar TERVERIFIKASI — tidak ada high-impact dekat' : calendarStatus === 'unavailable' ? 'Calendar offline — belum diverifikasi (AI tetap analisis harga)' : 'Calendar belum dicek' },
-    { ok:domAligned, text:domAligned ? `DOM/momentum proxy selaras dengan ${m.side}` : 'DOM/momentum proxy belum selaras dengan arah trade' },
     { ok:dxyState.bias !== 'UNKNOWN', text:`DXY monitor: ${dxyState.bias} (${dxyState.source})` },
     { ok:getTradingSession().active, text:`Session checker: ${getTradingSession().name} / ${getTradingSession().risk}` },
-    { ok:decision.tone === 'green', text:decision.reason }
+    { ok:analysis.band !== 'NO_TRADE', text:`Kesimpulan: ${analysis.summary}` }
   ];
 }
 
@@ -2192,6 +2458,10 @@ function closeSetupManual() {
   bestFavorProgress = 0;
   breakEvenSuggested = false;
   lastNotifiedLockCode = null;
+  entryTriggered = false;
+  entryTouchLog = [];
+  entryZoneInsidePrev = false;
+  updateEntryTouchLogUi();
 
   const detailEl = document.getElementById('tpValidityDetail');
   if (detailEl) {
@@ -2292,6 +2562,43 @@ function getEntryBuffer(price = lastWsPrice) {
   return Math.max(0.55, price * 0.00018);
 }
 
+// Mencatat "sentuhan" baru tiap kali harga MASUK zona entry (dengan jeda anti-spam: harga harus
+// keluar zona minimal 2x buffer dulu sebelum re-entry berikutnya dihitung sentuhan baru, supaya
+// harga yang cuma gonjang-ganjing tipis di pinggir zona tidak membuat log membengkak).
+function trackEntryTouch(price, inEntryZoneNow, buffer) {
+  if (lockedTradeSide !== 'BUY' && lockedTradeSide !== 'SELL') return;
+  if (inEntryZoneNow) {
+    if (!entryZoneInsidePrev) {
+      entryTriggered = true;
+      entryTouchLog.push({ index: entryTouchLog.length + 1, price, time: new Date().toISOString() });
+      if (entryTouchLog.length > 50) entryTouchLog.shift();
+      updateEntryTouchLogUi();
+      saveLockedPlanState();
+    }
+    entryZoneInsidePrev = true;
+  } else if (Math.abs(price - lockedEntryPrice) > buffer * 2) {
+    entryZoneInsidePrev = false;
+  }
+}
+
+function updateEntryTouchLogUi() {
+  const countEl = document.getElementById('entryTouchCount');
+  const listEl = document.getElementById('entryTouchLogList');
+  if (countEl) countEl.textContent = `(${entryTouchLog.length})`;
+  if (!listEl) return;
+  if (!entryTouchLog.length) {
+    listEl.innerHTML = 'Belum ada sentuhan entry sejak plan ini dikunci.';
+    return;
+  }
+  const cfg = getSymbolConfig();
+  listEl.innerHTML = entryTouchLog.slice().reverse().map((t) => {
+    const time = new Date(t.time);
+    const timeStr = isNaN(time.getTime()) ? '--' : time.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    return `<div class="flex justify-between"><span class="text-emerald-400">Valid #${t.index}</span><span class="mono">${formatPrice(t.price, cfg.decimals)} — ${timeStr}</span></div>`;
+  }).join('');
+}
+window.updateEntryTouchLogUi = updateEntryTouchLogUi;
+
 function assessTradingReadiness(price = lastWsPrice) {
   const m = getTradeMetrics(price);
   const d = m.cfg.decimals;
@@ -2302,6 +2609,8 @@ function assessTradingReadiness(price = lastWsPrice) {
   const buffer = getEntryBuffer(price);
   const entryUpper = m.entry + buffer;
   const entryLower = m.entry - buffer;
+  const inEntryZoneNow = price >= entryLower && price <= entryUpper;
+  trackEntryTouch(price, inEntryZoneNow, buffer);
   if (!connected) return { code:'NO_TRADE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / DATA OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - DATA OFFLINE', badge:'LIVE DATA REQUIRED', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason:'Live stream sedang OFFLINE. Hindari eksekusi sampai harga/data tervalidasi kembali.' };
   if (usingSimulatedPrice) return { code:'NO_TRADE_OFFLINE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / LIVE FEED OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - LIVE FEED OFFLINE', badge:'LIVE PRICE REQUIRED', signal:'🟠 NO TRADE / OFFLINE', final:'🟠 NO TRADE', reason:'Feed harga live tidak tersedia. Mode simulasi dinonaktifkan (CLEAN-125). Entry diblokir sampai API live terverifikasi.' };
   if (recentPrices.length < MIN_TREND_SAMPLES) return { code:'NO_TRADE_WARMUP', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / DATA WARMUP', state:'NO TRADE', title:'🟠 NO TRADE - DATA WARMUP', badge:'TREND DATA REQUIRED', signal:'🟠 NO TRADE / WARMUP', final:'🟠 NO TRADE', reason:`Belum cukup tick live untuk analisis tren (${recentPrices.length}/${MIN_TREND_SAMPLES}). Tunggu data valid.` };
@@ -2313,8 +2622,7 @@ function assessTradingReadiness(price = lastWsPrice) {
   const invalid = m.side === 'BUY' ? price <= m.sl : price >= m.sl;
   if (invalid) return { code:'ENTRY_INVALID', tone:'red', action:'NO TRADE', side:m.side, setup:'ENTRY INVALID / SETUP BROKEN', state:'ENTRY INVALID', title:'🔴 ENTRY INVALID', badge:'REPLAN REQUIRED', signal:'🔴 ENTRY INVALID', final:'🔴 ENTRY INVALID', reason:`Harga sudah melewati area SL ${formatPrice(m.sl, d)} untuk setup ${m.orderType}. Setup lama invalid, tunggu plan baru.` };
 
-  const inEntryZone = price >= entryLower && price <= entryUpper;
-  if (inEntryZone) {
+  if (inEntryZoneNow) {
     const isMarketNow = m.orderType === 'BUY NOW' || m.orderType === 'SELL NOW';
     return {
       code: 'ENTRY_VALID',
@@ -2330,6 +2638,25 @@ function assessTradingReadiness(price = lastWsPrice) {
       reason: isMarketNow
         ? `Harga ${formatPrice(price, d)} sudah tepat di level entry ${formatPrice(m.entry, d)}. ${m.orderNarrative}`
         : `Harga berada di area entry ${formatPrice(m.entry, d)} ± ${formatPrice(buffer, d)} untuk ${m.orderType}. ${m.orderNarrative}`
+    };
+  }
+
+  // Sudah pernah tersentuh entry sebelumnya (SL belum kena — sudah dicek di atas). Status tetap
+  // ditampilkan sebagai ENTRY VALID (bukan balik ke WAIT BREAKOUT/PULLBACK) sampai user klik
+  // Tutup Manual, supaya tidak membingungkan trader yang sudah eksekusi berdasarkan sinyal NOW.
+  if (entryTriggered) {
+    return {
+      code: 'ENTRY_VALID_HOLD',
+      tone: 'green',
+      action: m.side,
+      side: m.side,
+      setup: `${m.orderType} (SUDAH TERSENTUH)`,
+      state: 'ENTRY VALID',
+      title: `🟢 ENTRY VALID - ${m.orderType} (bertahan sejak tersentuh)`,
+      badge: 'SETUP MASIH BERLAKU',
+      signal: `${m.side === 'BUY' ? '🟢 BUY' : '🔴 SELL'} SIGNAL (${m.orderType})`,
+      final: `🟢 ENTRY VALID ${m.orderType}`,
+      reason: `Entry ${formatPrice(m.entry, d)} sudah tersentuh ${entryTouchLog.length}x sejak plan ini dikunci. Status tetap berlaku sampai SL kena atau Anda klik Tutup Manual.`
     };
   }
 

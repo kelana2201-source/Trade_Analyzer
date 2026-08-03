@@ -271,6 +271,10 @@
 <button class="btn btn-outline text-xs w-full mt-1" onclick="checkSetupValidation()"><i class="fas fa-magnifying-glass"></i> CEK VALIDASI SETUP</button>
 <button class="btn btn-outline text-xs w-full mt-1" onclick="closeSetupManual()" style="border-color:var(--red);color:var(--red)"><i class="fas fa-ban"></i> TUTUP MANUAL / CANCEL SETUP</button>
 <div class="text-[11px] text-muted mt-1" id="tpValidityDetail">Klik cek validasi setelah entry terkunci untuk melihat apakah setup masih menuju TP atau sebaiknya ditutup manual.</div>
+<details class="mt-2 border-t border-slate-800 pt-2">
+<summary class="text-[11px] text-muted cursor-pointer select-none">📜 Riwayat Sentuhan Entry <span id="entryTouchCount">(0)</span></summary>
+<div class="text-[11px] mt-2 space-y-1" id="entryTouchLogList">Belum ada sentuhan entry sejak plan ini dikunci.</div>
+</details>
 </div>
 </div>
 </div>
@@ -618,6 +622,23 @@
 <label class="flex items-center gap-2"><input checked="" id="settingNotifyBrowser" type="checkbox"/> Browser Notification</label>
 <label class="flex items-center gap-2"><input checked="" id="settingNotifySound" type="checkbox"/> Sound Alert</label>
 <label class="flex items-center gap-2"><input checked="" id="settingNotifyTelegramOnLock" type="checkbox"/> Telegram Alert saat Entry Locked</label>
+</div>
+</div>
+<div class="settings-section">
+<h3>Strategy Engine (Entry Score)</h3>
+<div class="field-stack">
+<label>Preset Strategi</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="btn btn-outline text-[10px] py-1" onclick="applyStrategyPresetUi('scalping')" type="button">Scalping</button>
+<button class="btn btn-outline text-[10px] py-1" onclick="applyStrategyPresetUi('intraday')" type="button">Intraday</button>
+<button class="btn btn-outline text-[10px] py-1" onclick="applyStrategyPresetUi('swing')" type="button">Swing</button>
+</div>
+<label class="mt-2">Bobot Market Structure (%) <span class="text-muted">wajib</span></label><input class="input-field" id="settingWeightStructure" max="100" min="0" oninput="updateWeightTotalHint()" type="number"/>
+<label>Bobot Supply &amp; Demand (%)</label><input class="input-field" id="settingWeightSupplyDemand" max="100" min="0" oninput="updateWeightTotalHint()" type="number"/>
+<label>Bobot Trend H1/H4 (%)</label><input class="input-field" id="settingWeightTrend" max="100" min="0" oninput="updateWeightTotalHint()" type="number"/>
+<label>Bobot Candlestick (%)</label><input class="input-field" id="settingWeightCandlestick" max="100" min="0" oninput="updateWeightTotalHint()" type="number"/>
+<div class="text-[10px] mt-1" id="weightTotalHint">Total bobot: 100%</div>
+<label class="mt-2">Minimal Confidence Score untuk Entry</label><input class="input-field" id="settingMinConfidenceScore" max="100" min="0" type="number"/>
 </div>
 </div>
 </div>
