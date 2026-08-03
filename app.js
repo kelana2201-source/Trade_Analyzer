@@ -2617,7 +2617,10 @@ function assessTradingReadiness(price = lastWsPrice) {
   // [CALENDAR FIX] API kalender gagal BUKAN alasan mengunci AI. Hanya High Impact News
   // TERVERIFIKASI yang menahan entry — dan tetap bisa di-override admin.
   if (highImpactNewsDetected && !calendarManualOverride) return { code:'WAIT_NEWS', tone:'orange', action:'WAIT NEWS', side:m.side, setup:'WAIT NEWS / HIGH IMPACT', state:'WAIT NEWS', title:'🟠 WAIT NEWS - HIGH IMPACT', badge:'NEWS FILTER ACTIVE', signal:'🟠 WAIT NEWS', final:'🟠 WAIT NEWS', reason:`High-impact news terverifikasi: ${highImpactNewsLabel || 'event penting'}. Entry ditahan sampai risiko mereda (atau aktifkan Manual Override).` };
-  if (m.side === 'WAIT') return { code:'NO_TRADE_NO_TREND', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / NO TREND EDGE', state:'NO TRADE', title:'🟠 NO TRADE - NO TREND EDGE', badge:'NO DIRECTIONAL EDGE', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason:`Trend engine belum memberikan arah BUY/SELL yang valid: ${m.trend.reason}` };
+  if (m.side === 'WAIT') {
+    const analysis = lastEntryScoreAnalysis || getEntryScoreAnalysis(price);
+    return { code:'NO_TRADE_NO_TREND', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / NO SETUP', state:'NO TRADE', title:'🟠 NO TRADE - BELUM ADA SETUP VALID', badge:'NO DIRECTIONAL EDGE', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason: analysis.summary + (analysis.structure ? ` ${analysis.structure.reason}` : '') };
+  }
   if (isSidewaysMarket(price)) return { code:'WAIT_BREAKOUT', tone:'orange', action:'WAIT BREAKOUT', side:m.side, setup:`WAIT BREAKOUT / ${m.orderType}`, state:'WAIT BREAKOUT', title:`🟠 WAIT BREAKOUT - ${m.orderType}`, badge:'RANGE TOO TIGHT', signal:'🟠 WAIT BREAKOUT', final:'🟠 WAIT BREAKOUT', reason:`Range harga terlalu sempit secara persentase (<${SIDEWAYS_RANGE_PCT}%). Tunggu breakout/rejection.` };
   const invalid = m.side === 'BUY' ? price <= m.sl : price >= m.sl;
   if (invalid) return { code:'ENTRY_INVALID', tone:'red', action:'NO TRADE', side:m.side, setup:'ENTRY INVALID / SETUP BROKEN', state:'ENTRY INVALID', title:'🔴 ENTRY INVALID', badge:'REPLAN REQUIRED', signal:'🔴 ENTRY INVALID', final:'🔴 ENTRY INVALID', reason:`Harga sudah melewati area SL ${formatPrice(m.sl, d)} untuk setup ${m.orderType}. Setup lama invalid, tunggu plan baru.` };

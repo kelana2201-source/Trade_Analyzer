@@ -1,8 +1,12 @@
 // Service Worker — Institutional Trading Terminal (XAUUSD)
 // Hanya meng-cache "app shell" (file statis) agar app bisa dibuka offline / install sebagai PWA.
 // TIDAK menyentuh request live (harga, Telegram, Sheets, calendar, WebSocket) — itu semua harus selalu network-fresh.
+//
+// STRATEGI: network-first (bukan cache-first). App ini sering di-update, jadi versi terbaru harus
+// langsung kepakai begitu online — cache cuma jadi fallback kalau offline, bukan sumber utama.
+// Naikkan CACHE_VERSION setiap kali app.js/index.html/style.css diubah, supaya cache lama otomatis dibuang.
 
-const CACHE_VERSION = 'trading-terminal-shell-v1';
+const CACHE_VERSION = 'trading-terminal-shell-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -43,18 +47,14 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(req).then((cached) => {
-      const network = fetch(req)
-        .then((res) => {
-          if (res && res.status === 200) {
-            const clone = res.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone));
-          }
-          return res;
-        })
-        .catch(() => cached); // offline → fallback ke cache kalau ada
-      // Cache-first untuk shell: kalau ada di cache, tampilkan cepat, tapi tetap update cache di background.
-      return cached || network;
-    })
+    fetch(req)
+      .then((res) => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone));
+        }
+        return res;
+      })
+      .catch(() => caches.match(req)) // offline → fallback ke cache terakhir yang berhasil disimpan
   );
 });
