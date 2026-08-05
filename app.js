@@ -566,8 +566,37 @@ function getWsUrl() {
   }
 }
 
+const MAX_ALLOWED_LATENCY_MS = 2500; // 2.5 detik maksimal untuk keakuratan sinyal institusional
+const MAX_OUTLIER_DELTA_PTS = 15.0; // Maksimal lompatan harga per tick tanpa event gap
+
+function validateLivePriceTick(newPrice, sourceLabel, latencyMs) {
+  if (!Number.isFinite(newPrice) || newPrice <= 0) return { valid: false, reason: 'Invalid price' };
+
+  // 1. VALIDASI LATENSI & STALE DATA GUARD
+  if (Number.isFinite(latencyMs) && latencyMs > MAX_ALLOWED_LATENCY_MS) {
+    addLog(`[STALE DATA GUARD] Paket harga ditolak: latency (${latencyMs} ms) melebihi batas aman (${MAX_ALLOWED_LATENCY_MS} ms).`, 'info');
+    AppState.prices.staleData = true;
+    return { valid: false, reason: `Latency terlalu tinggi (${latencyMs} ms)` };
+  }
+  AppState.prices.staleData = false;
+
+  // 2. MULTI-SOURCE & OUTLIER BAD-TICK CROSS-VALIDATION
+  if (Number.isFinite(lastWsPrice) && lastWsPrice > 0 && recentPrices.length >= 3) {
+    const delta = Math.abs(newPrice - lastWsPrice);
+    if (delta > MAX_OUTLIER_DELTA_PTS) {
+      addLog(`[CROSS-VAL GUARD] Bad tick ditolak dari ${sourceLabel}: harga ${newPrice} melenceng ${delta.toFixed(2)} poin dari harga terakhir (${lastWsPrice}).`, 'error');
+      return { valid: false, reason: `Bad tick outlier delta ${delta.toFixed(2)} pts` };
+    }
+  }
+
+  return { valid: true, reason: 'OK' };
+}
+
 function applyLiveTick(newPrice, sourceLabel, latencyMs) {
   if (!Number.isFinite(newPrice) || newPrice <= 0) return;
+  const check = validateLivePriceTick(newPrice, sourceLabel, latencyMs);
+  if (!check.valid) return;
+
   const startedAt = performance.now();
   usingSimulatedPrice = false;
   livePriceVerified = true;
@@ -778,6 +807,9 @@ async function fetchRealLivePrice() {
   handleGoldAutoRenew(newPrice);
 
   lastLatencyMs = Math.round(performance.now() - startedAt);
+  const check = validateLivePriceTick(newPrice, sourceLabel, lastLatencyMs);
+  if (!check.valid) return;
+
   lastDataSource = sourceLabel;
   lastWsPrice = newPrice;
   updatePriceDisplay(newPrice, pctChange);
@@ -1255,24 +1287,44 @@ function updateMultiTfUi() {
     el.className = t.direction === 'BULLISH' ? 'text-emerald-400 font-bold text-sm' : t.direction === 'BEARISH' ? 'text-red-400 font-bold text-sm' : 'text-orange-400 font-bold text-sm';
   });
 }
+let isOhlcSyncing = false;
 async function refreshOhlcFromProxy() {
   if (!getProxyBase()) return false;
+  if (isOhlcSyncing) {
+    addLog('[OHLC MUTEX] Sinkronisasi multi-TF sedang berjalan. Mengabaikan request simultan (race condition guarded).', 'info');
+    return false;
+  }
+  isOhlcSyncing = true;
   try {
     const specs = [{ key: 'M15', tf: 15 }, { key: 'H1', tf: 60 }, { key: 'H4', tf: 240 }, { key: 'D1', tf: 1440 }];
+    const tempCache = {};
     await Promise.all(specs.map(async (s) => {
       const res = await fetchWithTimeout(proxyUrl('/ohlc?tf=' + s.tf + '&limit=120'), { cache: 'no-store' }, 12000);
       if (!res.ok) return;
       const data = await res.json();
-      if (Array.isArray(data.candles) && data.candles.length) OHLC_CACHE[s.key] = data.candles;
+      if (Array.isArray(data.candles) && data.candles.length) {
+        // Validasi integritas geometri candle (h >= max(o,c), l <= min(o,c), volume >= 0)
+        const validCandles = data.candles.filter(c =>
+          Number.isFinite(c.o) && Number.isFinite(c.h) && Number.isFinite(c.l) && Number.isFinite(c.c) &&
+          c.h >= c.l && c.h >= Math.max(c.o, c.c) && c.l <= Math.min(c.o, c.c)
+        );
+        if (validCandles.length > 0) tempCache[s.key] = validCandles;
+      }
     }));
+    // Atomic commit: hanya salin ke OHLC_CACHE utama setelah semua timeframe selesai divalidasi
+    Object.keys(tempCache).forEach(k => {
+      OHLC_CACHE[k] = tempCache[k];
+    });
     OHLC_CACHE.updatedAt = Date.now();
     updateMultiTfUi();
     updateSMCGrid();
-    addLog('OHLC multi-TF diperbarui via proxy.', 'success');
+    addLog('OHLC multi-TF berhasil disinkronisasi & divalidasi secara atomic.', 'success');
     return true;
   } catch (err) {
-    addLog('OHLC proxy gagal: ' + err.message, 'error');
+    addLog('OHLC atomic proxy gagal: ' + err.message, 'info');
     return false;
+  } finally {
+    isOhlcSyncing = false;
   }
 }
 
@@ -2876,6 +2928,21 @@ function updatePriceDisplay(price, pctChange) {
  * @param {number} [price=lastWsPrice]
  * @returns {object} metrics: {side, entry, sl, tp1, tp2, tp3, orderType, orderNarrative, rr, ...}
  */
+function assertValidRiskCalculation(entry, sl, atr, riskAmt, side) {
+  if (!Number.isFinite(entry) || entry <= 0 || !Number.isFinite(sl) || sl <= 0) {
+    if (typeof addLog === 'function') addLog(`[RISK BOUNDARY ASSERTION] Entry (${entry}) atau SL (${sl}) bukan angka valid. Fallback batas aman diterapkan.`, 'error');
+  }
+  const validAtr = (Number.isFinite(atr) && atr >= 1.0 && atr <= 150.0) ? atr : GOLD_PLAN.slDistance;
+  const rawSlDist = Math.abs(entry - sl);
+  const minAllowedSlDist = Math.max(0.50, validAtr * 0.35); // Zero-div & boundary protection: minimal 0.50 poin / 35% ATR
+  const slDist = (side === 'WAIT' || rawSlDist < minAllowedSlDist)
+    ? Math.max(validAtr, minAllowedSlDist)
+    : rawSlDist;
+  const rawLot = (Number.isFinite(slDist) && slDist > 0) ? (riskAmt / (slDist * GOLD_PLAN.contractSize)) : GOLD_PLAN.minLot;
+  const lotSize = Number.isFinite(rawLot) ? Math.min(GOLD_PLAN.maxLot, Math.max(GOLD_PLAN.minLot, rawLot)) : GOLD_PLAN.minLot;
+  return { slDist, rawLot, lotSize, validAtr };
+}
+
 function getTradeMetrics(price = lastWsPrice) {
   const cfg = getSymbolConfig();
   const trend = analyzeMarketTrend(price);
@@ -2906,10 +2973,10 @@ function getTradeMetrics(price = lastWsPrice) {
   const riskAmt = acc * (risk / 100);
   const safeEntry = Number.isFinite(entry) && entry > 0 ? entry : (Number.isFinite(price) ? price : SYMBOL_CONFIG['OANDA:XAUUSD'].initial);
   const safeSl = Number.isFinite(sl) && sl > 0 ? sl : safeEntry;
-  const rawSlDist = Math.abs(safeEntry - safeSl);
-  const slDist = side === 'WAIT' ? dyn.slDistance : Math.max(0.01, Math.max(rawSlDist, dyn.slDistance * 0.85));
-  const rawLot = (Number.isFinite(slDist) && slDist > 0) ? (riskAmt / (slDist * GOLD_PLAN.contractSize)) : GOLD_PLAN.minLot;
-  const lotSize = Number.isFinite(rawLot) ? Math.min(GOLD_PLAN.maxLot, Math.max(GOLD_PLAN.minLot, rawLot)) : GOLD_PLAN.minLot;
+  const rAssert = assertValidRiskCalculation(safeEntry, safeSl, dyn.atr, riskAmt, side);
+  const slDist = rAssert.slDist;
+  const rawLot = rAssert.rawLot;
+  const lotSize = rAssert.lotSize;
   const lotCapped = rawLot > GOLD_PLAN.maxLot;
   const rr = (tp) => side === 'WAIT' ? 0 : Math.abs((tp - entry) / (entry - sl));
   const bias = side === 'BUY' ? 'Bullish' : side === 'SELL' ? 'Bearish' : 'Neutral / Wait';
@@ -3003,6 +3070,21 @@ function assessTradingReadiness(price = lastWsPrice) {
   const inEntryZoneNow = price >= entryLower && price <= entryUpper;
   trackEntryTouch(price, inEntryZoneNow, buffer);
   if (!connected) return { code:'NO_TRADE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / DATA OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - DATA OFFLINE', badge:'LIVE DATA REQUIRED', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason:'Live stream sedang OFFLINE. Hindari eksekusi sampai harga/data tervalidasi kembali.' };
+  if (AppState.prices.staleData || lastLatencyMs > MAX_ALLOWED_LATENCY_MS) {
+    return {
+      code:'NO_TRADE_STALE_DATA',
+      tone:'orange',
+      action:'NO TRADE',
+      side:m.side,
+      setup:'NO TRADE / DATA STALE',
+      state:'NO TRADE',
+      title:'🟠 NO TRADE - DATA STALE / LATENCY TINGGI',
+      badge:'STALE DATA BLOCKED',
+      signal:'🟠 NO TRADE',
+      final:'🟠 NO TRADE',
+      reason:`Keterlambatan harga live (latency ${lastLatencyMs} ms) melebihi ambang aman ${MAX_ALLOWED_LATENCY_MS} ms. Eksekusi ditahan sampai latency kembali normal.`
+    };
+  }
   if (usingSimulatedPrice) return { code:'NO_TRADE_OFFLINE', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / LIVE FEED OFFLINE', state:'NO TRADE', title:'🟠 NO TRADE - LIVE FEED OFFLINE', badge:'LIVE PRICE REQUIRED', signal:'🟠 NO TRADE / OFFLINE', final:'🟠 NO TRADE', reason:'Feed harga live tidak tersedia. Mode simulasi dinonaktifkan (CLEAN-125). Entry diblokir sampai API live terverifikasi.' };
   if (recentPrices.length < MIN_TREND_SAMPLES) return { code:'NO_TRADE_WARMUP', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / DATA WARMUP', state:'NO TRADE', title:'🟠 NO TRADE - DATA WARMUP', badge:'TREND DATA REQUIRED', signal:'🟠 NO TRADE / WARMUP', final:'🟠 NO TRADE', reason:`Belum cukup tick live untuk analisis tren (${recentPrices.length}/${MIN_TREND_SAMPLES}). Tunggu data valid.` };
   // [CALENDAR FIX] API kalender gagal BUKAN alasan mengunci AI. Hanya High Impact News
