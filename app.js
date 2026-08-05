@@ -822,21 +822,30 @@ async function fetchRealLivePrice() {
 }
 
 function handleGoldAutoRenew(price) {
-  if (!Number.isFinite(price) || !lockedEntryPrice || lockedTradeSide === 'WAIT') return;
+  // 1. KUNCI STABILITAS INSTITUSIONAL:
+  // Jika order sudah pernah tersentuh (entryTriggered = true) atau posisi aktif, JANGAN PERNAH auto-renew!
+  // Plan harus tetap stabil menemani posisi aktif sampai TP, SL, atau ditutup manual oleh trader.
+  if (entryTriggered || !Number.isFinite(price) || !lockedEntryPrice || lockedTradeSide === 'WAIT') {
+    autoRenewAwayCount = 0;
+    return;
+  }
   const distanceFromEntry = Math.abs(price - lockedEntryPrice);
+  const dyn = getDynamicPlanDistances(price);
+  const renewDist = Math.max(18.0, dyn.autoRenewDistance * 1.6); // Jarak migrasi minimal 18 poin (~$18)
 
-  const renewDist = getDynamicPlanDistances(price).autoRenewDistance;
   if (distanceFromEntry > renewDist) {
     autoRenewAwayCount += 1;
   } else {
     autoRenewAwayCount = 0;
   }
 
-  if (autoRenewAwayCount >= GOLD_PLAN.autoRenewConfirmations) {
+  // Butuh minimal 15x konfirmasi berurutan (~45-60 detik stabil menjauh > $18 poin) agar tidak terlalu cepat merubah setup
+  if (autoRenewAwayCount >= 15) {
     const oldEntry = lockedEntryPrice;
     setInitialPlan(price);
-    showToast('Plan Auto-Renewed', 'success');
-    addLog(`Plan Auto-Renewed: harga menjauh $${distanceFromEntry.toFixed(2)} dari entry ${formatPrice(oldEntry)} selama ${GOLD_PLAN.autoRenewConfirmations}x cek. New entry ${formatPrice(lockedEntryPrice)} / SL ${formatPrice(lockedSL)}.`, 'success');
+    autoRenewAwayCount = 0;
+    showToast('Plan Auto-Renewed: harga stabil di zona baru', 'info');
+    addLog(`Plan Auto-Renewed: harga stabil menjauh $${distanceFromEntry.toFixed(2)} dari entry ${formatPrice(oldEntry)} selama >60 detik. Setup baru disesuaikan.`, 'info');
   }
 }
 
@@ -1674,13 +1683,18 @@ function getEntryScoreAnalysis(price = lastWsPrice) {
   const candleScore = candle.valid ? w.candlestick : 0;
   const structureScore = w.structure;
   const rawTotal = structureScore + sd.score + trendC.score + candleScore;
-  const total = Math.min(96, Math.max(78, rawTotal));
+
+  // GERBANG KUALITAS INSTITUSIONAL (ANTI SETUP CEPAT BERUBAH / PREMATUR):
+  // Setup tidak boleh langsung declared VALID_ENTRY jika tidak ada dukungan konfluensi dari
+  // Zona Supply/Demand ataupun dari Trend H1/H4.
+  const hasConfluence = sd.valid || trendC.score > 0 || (typeof lockedTradeSide !== 'undefined' && lockedTradeSide !== 'WAIT');
+  const total = hasConfluence ? Math.min(96, Math.max(78, rawTotal)) : Math.min(64, rawTotal);
 
   let band = 'VALID_ENTRY';
   if (total >= 90) band = 'STRONG';
   else if (total >= 75) band = 'VALID_ENTRY';
   else if (total >= 60) band = 'AGGRESSIVE';
-  if (total < minScore) band = 'NO_TRADE';
+  if (total < Math.max(70, minScore)) band = 'NO_TRADE';
 
   const bandLabel = band === 'STRONG' ? `Strong ${side}` : band === 'VALID_ENTRY' ? 'Valid Entry' : band === 'AGGRESSIVE' ? 'Entry Agresif (risiko lebih tinggi)' : 'No Trade';
 
