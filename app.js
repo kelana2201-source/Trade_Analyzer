@@ -1996,8 +1996,8 @@ async function sendTelegramAlert(payload) {
     addLog('Telegram alert terkirim.', 'success');
     return true;
   } catch (err) {
-    setSystemStatus('telegram','bad','Error');
-    addLog(`Telegram alert gagal: ${err.message}`, 'error');
+    setSystemStatus('telegram', 'warn', 'Offline');
+    addLog(`Telegram alert ditunda (${err.message}). Cek Token & Chat ID di Settings.`, 'info');
     return false;
   }
 }
@@ -2612,7 +2612,7 @@ function checkBreakEvenSuggestion(price = lastWsPrice) {
       addLog(`Break-Even suggested for ${m.side}: SL -> ${formatPrice(m.entry)}.`, 'success');
     }
   } else {
-    el.innerText = `Waiting +$${beTrig.toFixed(2)} (${floatingDistance.toFixed(2)})`;
+    el.innerText = `Waiting +$${beTrig.toFixed(m.cfg.decimals)} (${floatingDistance.toFixed(m.cfg.decimals)})`;
     el.className = 'be-wait';
   }
 }
@@ -2904,9 +2904,12 @@ function getTradeMetrics(price = lastWsPrice) {
   const acc = Math.max(0, parseFloat(document.getElementById('accSize')?.value) || 10000);
   const risk = Math.min(100, Math.max(0, parseFloat(document.getElementById('riskPct')?.value) || 1));
   const riskAmt = acc * (risk / 100);
-  const slDist = side === 'WAIT' ? dyn.slDistance : Math.max(Math.abs(entry - sl), dyn.slDistance * 0.85);
-  const rawLot = riskAmt / (slDist * GOLD_PLAN.contractSize);
-  const lotSize = Math.min(GOLD_PLAN.maxLot, Math.max(GOLD_PLAN.minLot, rawLot));
+  const safeEntry = Number.isFinite(entry) && entry > 0 ? entry : (Number.isFinite(price) ? price : SYMBOL_CONFIG['OANDA:XAUUSD'].initial);
+  const safeSl = Number.isFinite(sl) && sl > 0 ? sl : safeEntry;
+  const rawSlDist = Math.abs(safeEntry - safeSl);
+  const slDist = side === 'WAIT' ? dyn.slDistance : Math.max(0.01, Math.max(rawSlDist, dyn.slDistance * 0.85));
+  const rawLot = (Number.isFinite(slDist) && slDist > 0) ? (riskAmt / (slDist * GOLD_PLAN.contractSize)) : GOLD_PLAN.minLot;
+  const lotSize = Number.isFinite(rawLot) ? Math.min(GOLD_PLAN.maxLot, Math.max(GOLD_PLAN.minLot, rawLot)) : GOLD_PLAN.minLot;
   const lotCapped = rawLot > GOLD_PLAN.maxLot;
   const rr = (tp) => side === 'WAIT' ? 0 : Math.abs((tp - entry) / (entry - sl));
   const bias = side === 'BUY' ? 'Bullish' : side === 'SELL' ? 'Bearish' : 'Neutral / Wait';
@@ -3733,8 +3736,8 @@ async function syncPlanToSheetsSilent(payload) {
     setSystemStatus('sheets', 'ok', 'Synced');
     addLog(`Trade ${payload.action} @ ${payload.entry} auto-synced ke Google Sheets.`, 'success');
   } catch (err) {
-    setSystemStatus('sheets', 'bad', 'Error');
-    addLog(`Auto-sync ke Google Sheets gagal: ${err.message}. Trade tetap tersimpan di journal lokal.`, 'error');
+    setSystemStatus('sheets', 'warn', 'Offline');
+    addLog(`Auto-sync ke Google Sheets ditunda (${err.message}). Trade tetap aman di journal lokal.`, 'info');
   }
 }
 
