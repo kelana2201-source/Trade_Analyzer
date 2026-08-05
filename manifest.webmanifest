@@ -4,9 +4,19 @@
   "description": "Institutional Trading Terminal for XAUUSD with Real-Time DOM, Order Block, and AI Auto-Renewal Plan",
   "start_url": "./index.html",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#060a13",
   "theme_color": "#d4a017",
   "orientation": "any",
+  "categories": [
+    "finance",
+    "productivity",
+    "business"
+  ],
   "icons": [
     {
       "src": "./favicon-64.png",
@@ -24,6 +34,36 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard Live",
+      "short_name": "Dashboard",
+      "description": "Buka ringkasan terminal dan status sistem",
+      "url": "./index.html#dashboard",
+      "icons": [{ "src": "./favicon-64.png", "sizes": "64x64" }]
+    },
+    {
+      "name": "Trading Plan & Eksekusi",
+      "short_name": "Plan",
+      "description": "Buka Rencana Trading XAUUSD dengan level TP/SL",
+      "url": "./index.html#tradingplan",
+      "icons": [{ "src": "./favicon-64.png", "sizes": "64x64" }]
+    },
+    {
+      "name": "Kalender Ekonomi",
+      "short_name": "Calendar",
+      "description": "Cek jadwal berita High-Impact USD",
+      "url": "./index.html#calendar",
+      "icons": [{ "src": "./favicon-64.png", "sizes": "64x64" }]
+    },
+    {
+      "name": "Trading Journal",
+      "short_name": "Journal",
+      "description": "Buka riwayat transaksi & ekspor CSV/Excel",
+      "url": "./index.html#journal",
+      "icons": [{ "src": "./favicon-64.png", "sizes": "64x64" }]
     }
   ]
 }

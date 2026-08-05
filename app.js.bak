@@ -1,79 +1,5 @@
-/* Extracted App Logic - Enterprise Modular Layer (State, Errors, WS Heartbeat, Telemetry) */
+/* Extracted App Logic */
 
-// ═══════════════════════════════════════════════════════════
-//  1. SINGLE UNIFIED APP STATE (AppState) & ERROR HANDLERS
-// ═══════════════════════════════════════════════════════════
-const AppState = {
-  symbol: 'XAUUSD',
-  prices: {
-    recent: [],
-    lastWsPrice: NaN,
-    lastPctChange: 0,
-    usingSimulatedPrice: false,
-    livePriceVerified: false,
-    lastDataSource: 'offline',
-    lastLatencyMs: 0,
-    lastApiResponseMs: 0
-  },
-  tradingPlan: {
-    lockedSide: 'WAIT',
-    lockedEntry: null,
-    lockedSL: null,
-    lockedOrderType: 'NO TRADE',
-    bestFavorProgress: 0,
-    entryTriggered: false,
-    entryTouchLog: [],
-    entryZoneInsidePrev: false,
-    lastNotifiedLockCode: null
-  },
-  market: {
-    ohlcCache: { M15: [], H1: [], H4: [], D1: [], updatedAt: 0 },
-    dxy: { price: null, changePct: 0, status: 'UNKNOWN', latencyMs: 0, updated: 0 },
-    calendar: { status: 'idle', highImpactNewsDetected: false, highImpactNewsLabel: '', manualOverride: false, retryCount: 0 }
-  },
-  network: {
-    connected: false,
-    wsModeActive: false,
-    wsHeartbeatMs: 0,
-    reconnectAttempts: 0,
-    lastPingMs: 0,
-    lastConnStart: 0,
-    heartbeatStatus: 'OK',
-    lastHeartbeatTime: 0
-  },
-  telemetry: {
-    logs: [],
-    errorsCount: 0,
-    warningsCount: 0,
-    wsReconnects: 0,
-    apiLatencyHistory: [],
-    lastDiagnosticsRun: 0,
-    diagnosticsReport: null
-  }
-};
-window.AppState = AppState;
-
-function initGlobalErrorHandlers() {
-  window.onerror = function (message, source, lineno, colno, error) {
-    const errDetail = `${message} (${source?.split('/').pop() || 'script'}:${lineno}:${colno})`;
-    AppState.telemetry.errorsCount++;
-    if (typeof addLog === 'function') addLog(`[GLOBAL ERROR] ${errDetail}`, 'error');
-    if (typeof setSystemStatus === 'function') setSystemStatus('ai', 'warn', 'Recovered');
-    const el = document.getElementById('runtimeErrorsEl');
-    if (el) { el.textContent = String(AppState.telemetry.errorsCount); el.className = 'telemetry-value text-amber-400 font-bold'; }
-    return true; // Mencegah console spam dan menjaga antarmuka tetap stabil
-  };
-
-  window.addEventListener('unhandledrejection', function (event) {
-    const reason = event.reason?.message || String(event.reason || 'Unhandled Promise Rejection');
-    AppState.telemetry.errorsCount++;
-    if (typeof addLog === 'function') addLog(`[ASYNC ERROR] ${reason}`, 'error');
-    if (typeof setSystemStatus === 'function') setSystemStatus('ai', 'warn', 'Recovered');
-    const el = document.getElementById('runtimeErrorsEl');
-    if (el) { el.textContent = String(AppState.telemetry.errorsCount); el.className = 'telemetry-value text-amber-400 font-bold'; }
-  });
-}
-initGlobalErrorHandlers();
 
 // ═══════════════════════════════════════════════════════════
 //  STATE & CONFIGURATION (V5.6 SMART AUTO-FLUSH - REVIEWED)
@@ -600,34 +526,12 @@ function closePriceSocket() {
   }
 }
 
-let wsHeartbeatTimer = null;
-function startWsHeartbeatMonitor() {
-  if (wsHeartbeatTimer) clearInterval(wsHeartbeatTimer);
-  wsHeartbeatTimer = setInterval(() => {
-    const el = document.getElementById('wsHeartbeatEl');
-    if (!wsModeActive || !priceSocket) {
-      if (el) { el.textContent = 'OFFLINE'; el.className = 'telemetry-value text-red-400'; }
-      return;
-    }
-    const elapsedSec = Math.round((Date.now() - AppState.network.lastHeartbeatTime) / 1000);
-    if (elapsedSec > 25) {
-      AppState.network.heartbeatStatus = 'SILENT';
-      if (el) { el.textContent = `SILENT · ${elapsedSec}s`; el.className = 'telemetry-value text-amber-400 font-bold'; }
-      addLog(`[WS HEARTBEAT] Tidak ada frame harga selama ${elapsedSec}d. Memulai koneksi ulang...`, 'error');
-      closePriceSocket();
-      schedulePriceSocketReconnect();
-    } else {
-      AppState.network.heartbeatStatus = 'OK';
-      if (el) { el.textContent = `OK · ${elapsedSec}s`; el.className = 'telemetry-value text-emerald-400'; }
-    }
-  }, 5000);
-}
-
 function schedulePriceSocketReconnect() {
   if (!connected) return;
   if (priceSocketRetries >= WS_MAX_RETRIES) {
     addLog('WebSocket gagal berulang — memakai HTTP poll 3s (interval cadangan sudah aktif).', 'error');
     wsModeActive = false;
+    // Auto-disable WS persisten: connect berikutnya tak mencoba WS lagi → log bersih.
     try {
       const st = getSettings();
       if (st.useWs !== false) {
@@ -641,15 +545,9 @@ function schedulePriceSocketReconnect() {
     if (!wsFailHinted) { wsFailHinted = true; showToast('WebSocket tidak didukung proxy — otomatis dimatikan. HTTP poll tetap jalan.', 'info'); }
     return;
   }
-  // Exponential Backoff dengan Jitter hingga maksimal 60 detik
-  const delay = Math.min(60000, Math.round(1000 * Math.pow(1.8, priceSocketRetries) + Math.random() * 500));
+  const delay = Math.min(10000, 800 * Math.pow(1.6, priceSocketRetries));
   priceSocketRetries += 1;
-  AppState.network.reconnectAttempts = priceSocketRetries;
-  AppState.telemetry.wsReconnects++;
-  const elRec = document.getElementById('wsReconnectsEl');
-  if (elRec) { elRec.textContent = String(AppState.telemetry.wsReconnects); elRec.className = 'telemetry-value text-cyan-400'; }
-
-  addLog(`[WS BACKOFF] Menjadwalkan koneksi ulang (#${priceSocketRetries}) dalam ${(delay / 1000).toFixed(1)} detik...`, 'info');
+  addLog('WebSocket reconnect #' + priceSocketRetries + ' dalam ' + Math.round(delay) + 'ms', 'info');
   priceSocketRetryTimer = setTimeout(function () {
     if (connected) connectPriceSocket();
   }, delay);
@@ -671,23 +569,18 @@ function connectPriceSocket() {
     const sock = new WebSocket(wsUrl);
     priceSocket = sock;
     wsModeActive = true;
-    startWsHeartbeatMonitor();
-    AppState.network.lastHeartbeatTime = Date.now();
 
     sock.onopen = function () {
       priceSocketRetries = 0;
       wsModeActive = true;
-      AppState.network.connected = true;
-      AppState.network.lastHeartbeatTime = Date.now();
       addLog('WebSocket live tick aktif (' + WS_INTERVAL_MS + 'ms).', 'success');
       showToast('WebSocket real-time aktif', 'success');
+      // HTTP poll dibiarkan hidup; ia otomatis skip selama wsModeActive=true,
+      // & resume sendiri bila WS putus (tak perlu menunggu retry habis).
       try { sock.send(JSON.stringify({ type: 'ping' })); } catch (e) { console.warn("Peringatan tertangkap dan diabaikan:", e); }
     };
 
     sock.onmessage = function (ev) {
-      AppState.network.lastHeartbeatTime = Date.now();
-      const el = document.getElementById('wsHeartbeatEl');
-      if (el) { el.textContent = 'OK · 0s'; el.className = 'telemetry-value text-emerald-400'; }
       let msg;
       try { msg = JSON.parse(ev.data); } catch (e) { return; }
       if (!msg || !msg.type) return;
@@ -4284,7 +4177,6 @@ async function testTelegramAlert() {
     renderHeatmap(core);
     renderFloatingStatus(core);
     updateBottomNav();
-    updateTelemetryDashboard();
     smartNotifications(core);
     // connection timer
     const conn = (typeof connected !== 'undefined') && connected;
@@ -4334,105 +4226,6 @@ async function testTelegramAlert() {
 
   // pause saat tab tidak terlihat (hemat CPU)
   document.addEventListener('visibilitychange', function () { if (!document.hidden) renderAll(); });
-
-  // ─────────────── TELEMETRY & DIAGNOSTICS DASHBOARD ───────────────
-  function updateTelemetryDashboard() {
-    const ohlcCount = (OHLC_CACHE.M15?.length || 0) + (OHLC_CACHE.H1?.length || 0);
-    const ohlcEl = document.getElementById('ohlcCacheEl');
-    if (ohlcEl) ohlcEl.textContent = `${ohlcCount} bars`;
-
-    const errEl = document.getElementById('runtimeErrorsEl');
-    if (errEl) {
-      errEl.textContent = String(AppState.telemetry.errorsCount);
-      if (AppState.telemetry.errorsCount > 0) errEl.className = 'telemetry-value text-amber-400 font-bold';
-    }
-
-    const recEl = document.getElementById('wsReconnectsEl');
-    if (recEl) {
-      recEl.textContent = String(AppState.telemetry.wsReconnects);
-      if (AppState.telemetry.wsReconnects > 0) recEl.className = 'telemetry-value text-cyan-400 font-bold';
-    }
-  }
-
-  function runSystemDiagnostics() {
-    showToast('Menjalankan Diagnostik Sistem Menyeluruh...', 'info');
-    addLog('[DIAGNOSTICS] Memulai pengujian mandiri subsistem terminal...', 'info');
-
-    const panel = document.getElementById('diagnosticsReportPanel');
-    const badge = document.getElementById('diagStatusBadge');
-    const summary = document.getElementById('diagSummaryTxt');
-    if (!panel) return;
-
-    panel.classList.remove('hidden');
-    panel.innerHTML = '<div class="text-amber-400">Memeriksa subsistem (WebSocket, Memory, Cache, AI Engine, LocalStorage)...</div>';
-
-    setTimeout(() => {
-      const checks = [];
-      try {
-        localStorage.setItem('diag_test_k', '1');
-        localStorage.removeItem('diag_test_k');
-        checks.push({ name: 'LocalStorage & Persistence', status: 'OK', color: 'text-emerald-400' });
-      } catch (e) {
-        checks.push({ name: 'LocalStorage & Persistence', status: 'ERROR - Blocked', color: 'text-red-400' });
-      }
-
-      const wsOk = connected || livePriceVerified;
-      checks.push({
-        name: 'WebSocket & Live Feed Stream',
-        status: wsOk ? 'OK (Active Stream)' : 'WARN (HTTP Polling/Offline)',
-        color: wsOk ? 'text-emerald-400' : 'text-amber-400'
-      });
-
-      const barCount = (OHLC_CACHE.M15?.length || 0) + (OHLC_CACHE.H1?.length || 0);
-      checks.push({
-        name: 'OHLC Historical Cache',
-        status: barCount > 0 ? `OK (${barCount} candles cached)` : 'PROXY (Using tick proxy mode)',
-        color: barCount > 0 ? 'text-emerald-400' : 'text-cyan-400'
-      });
-
-      const errCount = AppState.telemetry.errorsCount;
-      checks.push({
-        name: 'Runtime Stability & Error Handler',
-        status: errCount === 0 ? 'PERFECT (0 errors)' : `WARNING (${errCount} errors handled)`,
-        color: errCount === 0 ? 'text-emerald-400' : 'text-amber-400'
-      });
-
-      checks.push({
-        name: 'Institutional AI Analysis Engine',
-        status: 'OK (v5.7.0 CLEAN-125 Ready)',
-        color: 'text-emerald-400'
-      });
-
-      AppState.telemetry.lastDiagnosticsRun = Date.now();
-      if (badge) {
-        badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>SYSTEM HEALTHY';
-        badge.className = 'badge badge-green mono text-[10px]';
-      }
-      if (summary) {
-        summary.textContent = `Pemeriksaan selesai: ${checks.filter(c => c.color.includes('emerald')).length}/${checks.length} modul optimal.`;
-      }
-
-      panel.innerHTML = `
-        <div class="flex justify-between items-center pb-1 border-b border-slate-800 text-slate-300 font-bold">
-          <span>SUBSYSTEM NAME</span><span>DIAGNOSTIC STATUS</span>
-        </div>
-        ${checks.map(c => `
-          <div class="flex justify-between items-center py-0.5">
-            <span class="text-slate-400">• ${escapeHtmlLocal(c.name)}</span>
-            <strong class="${c.color}">${escapeHtmlLocal(c.status)}</strong>
-          </div>
-        `).join('')}
-        <div class="pt-1.5 mt-1 border-t border-slate-800/80 text-[10px] text-muted flex justify-between">
-          <span>Timestamp: ${new Date().toLocaleTimeString('id-ID')}</span>
-          <span>WS Reconnects: ${AppState.telemetry.wsReconnects}</span>
-        </div>
-      `;
-
-      showToast('Diagnostik sistem selesai! Sistem dalam kondisi optimal.', 'success');
-      addLog('[DIAGNOSTICS] Hasil pengujian: seluruh modul beroperasi secara harmonis.', 'success');
-    }, 450);
-  }
-  window.runSystemDiagnostics = runSystemDiagnostics;
 
   // ─────────────── INIT ───────────────
   function init() {
