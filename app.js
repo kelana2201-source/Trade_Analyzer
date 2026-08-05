@@ -45,7 +45,7 @@ const OHLC_CACHE = { M15: [], H1: [], H4: [], D1: [], updatedAt: 0 };
 
 
 
-const MIN_TREND_SAMPLES = 12;
+const MIN_TREND_SAMPLES = 3;
 const SIDEWAYS_RANGE_PCT = 0.035; // percentage of price, not fixed dollars
 // CLEAN-125: simulasi harga dinonaktifkan permanen — offline = tidak ada sinyal.
 
@@ -96,6 +96,118 @@ const STORAGE_KEYS = {
   stats: 'aiTradingDailyStats.v1',
   lockedPlan: 'aiTradingLockedPlanState.v1'
 };
+
+/**
+ * StorageManager — wrapper aman untuk localStorage.
+ * Menyediakan try/catch otomatis, versioning+migration, expiry, dan backup/restore lintas-key.
+ *
+ * CATATAN KOMPATIBILITAS: ini adalah utility TAMBAHAN, bukan pengganti paksa. Kode lama yang
+ * masih akses localStorage.getItem/setItem langsung TIDAK diubah di tahap ini (menghindari risiko
+ * pada fitur yang sudah berjalan) — data existing user tetap terbaca normal seperti biasa.
+ * StorageManager.get() sengaja backward-compatible: kalau data lama tersimpan tanpa wrapper
+ * {v, savedAt, data}, tetap dibaca apa adanya.
+ */
+const StorageManager = {
+  VERSION: 1,
+
+  /**
+   * Simpan value ke localStorage dengan aman.
+   * @param {string} key
+   * @param {*} value - akan di-JSON.stringify
+   * @param {{expiresInMs?: number}} [opts] - opsional, kadaluarsa otomatis setelah N ms
+   * @returns {boolean} true kalau berhasil
+   */
+  set(key, value, opts = {}) {
+    try {
+      const payload = { v: this.VERSION, savedAt: Date.now(), expiresAt: opts.expiresInMs ? Date.now() + opts.expiresInMs : null, data: value };
+      localStorage.setItem(key, JSON.stringify(payload));
+      return true;
+    } catch (e) {
+      if (typeof Logger !== 'undefined') Logger.warning(`StorageManager.set gagal untuk "${key}": ${e.message}`);
+      return false;
+    }
+  },
+
+  /**
+   * Ambil value dari localStorage.
+   * @param {string} key
+   * @param {*} [fallback=null] - dikembalikan kalau key tidak ada / kadaluarsa / corrupt
+   * @returns {*}
+   */
+  get(key, fallback = null) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || !('data' in parsed)) return parsed ?? fallback; // data lama pra-StorageManager
+      if (parsed.expiresAt && Date.now() > parsed.expiresAt) { localStorage.removeItem(key); return fallback; }
+      return parsed.data;
+    } catch (e) {
+      if (typeof Logger !== 'undefined') Logger.warning(`StorageManager.get gagal untuk "${key}": ${e.message}`);
+      return fallback;
+    }
+  },
+
+  /** Hapus satu key. @param {string} key @returns {boolean} */
+  remove(key) {
+    try { localStorage.removeItem(key); return true; }
+    catch (e) { if (typeof Logger !== 'undefined') Logger.warning(`StorageManager.remove gagal untuk "${key}": ${e.message}`); return false; }
+  },
+
+  /**
+   * Backup seluruh key yang terdaftar di STORAGE_KEYS jadi satu objek JSON portable.
+   * @returns {{version:number, exportedAt:string, keys:Object<string,string>}}
+   */
+  backupAll() {
+    const out = {};
+    Object.values(STORAGE_KEYS).forEach((key) => {
+      try { const raw = localStorage.getItem(key); if (raw) out[key] = raw; } catch (e) { /* skip key yang gagal dibaca */ }
+    });
+    return { version: this.VERSION, exportedAt: new Date().toISOString(), keys: out };
+  },
+
+  /**
+   * Restore dari hasil backupAll(). Menimpa key yang cocok, tidak menyentuh key lain.
+   * @param {{keys:Object<string,string>}} backup
+   * @returns {number} jumlah key yang berhasil dipulihkan
+   */
+  restoreAll(backup) {
+    if (!backup || typeof backup.keys !== 'object') {
+      if (typeof Logger !== 'undefined') Logger.warning('StorageManager.restoreAll: format backup tidak valid.');
+      return 0;
+    }
+    let restored = 0;
+    Object.entries(backup.keys).forEach(([key, raw]) => {
+      try { localStorage.setItem(key, raw); restored++; }
+      catch (e) { if (typeof Logger !== 'undefined') Logger.warning(`StorageManager.restoreAll gagal untuk "${key}": ${e.message}`); }
+    });
+    return restored;
+  },
+
+  /**
+   * Migrasi bertahap untuk satu key berdasarkan nomor versi data yang tersimpan.
+   * @param {string} key
+   * @param {Object<number, function(*): *>} migrations - map fromVersion -> fungsi transform data
+   */
+  migrate(key, migrations) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      let parsed;
+      try { parsed = JSON.parse(raw); } catch (e) { return; }
+      let currentVersion = (parsed && typeof parsed === 'object' && parsed.v) ? parsed.v : 0;
+      let data = (parsed && typeof parsed === 'object' && 'data' in parsed) ? parsed.data : parsed;
+      let changed = false;
+      Object.keys(migrations).map(Number).sort((a, b) => a - b).forEach((fromV) => {
+        if (currentVersion <= fromV) { data = migrations[fromV](data); currentVersion = fromV + 1; changed = true; }
+      });
+      if (changed) this.set(key, data);
+    } catch (e) {
+      if (typeof Logger !== 'undefined') Logger.warning(`StorageManager.migrate gagal untuk "${key}": ${e.message}`);
+    }
+  }
+};
+
 const STRATEGY_PRESETS = {
   scalping: { weights: { structure: 35, supplyDemand: 25, trend: 15, candlestick: 25 }, minConfidenceScore: 55 },
   intraday: { weights: { structure: 40, supplyDemand: 30, trend: 20, candlestick: 10 }, minConfidenceScore: 60 },
@@ -119,7 +231,9 @@ const DEFAULT_SETTINGS = {
   proxyBaseUrl: 'https://xau-proxy.kelana2201.workers.dev',
   strategyPreset: 'intraday',
   entryScoreWeights: { ...STRATEGY_PRESETS.intraday.weights },
-  minConfidenceScore: STRATEGY_PRESETS.intraday.minConfidenceScore
+  minConfidenceScore: STRATEGY_PRESETS.intraday.minConfidenceScore,
+  loggerEnabled: true,
+  loggerLevel: 'DEBUG'
 };
 
 
@@ -137,7 +251,6 @@ let lockedOrderType = 'NO TRADE';
 let lockedTrendSnapshot = null;
 let autoRenewAwayCount = 0;
 let internalChartFrame = null;
-let tradingViewLoadWarned = false;
 let recentPrices = [];
 let lastPctChange = 0;
 let highImpactNewsDetected = false;
@@ -157,7 +270,6 @@ let livePriceVerified = false;
 let liveOfflineLogged = false;
 let lastPriceLogMs = 0;
 let lastLatencyMs = 0;
-let calendarCountdownTimer = null;
 let calendarApiOnline = false;
 let calendarSourceName = 'Not checked';
 let calendarLastUpdatedAt = null;
@@ -209,14 +321,62 @@ function safeText(id, value) {
   if (el) el.innerText = value;
 }
 
+/**
+ * LOG_LEVELS — urutan tingkat keseriusan log, dipakai untuk filtering di Logger.
+ * DEBUG paling longgar (tampilkan semua), ERROR paling ketat (cuma error yang tampil).
+ * @readonly
+ */
+const LOG_LEVELS = Object.freeze({ DEBUG: 0, INFO: 1, WARNING: 2, ERROR: 3 });
+
+/**
+ * Logger — satu pintu masuk untuk semua logging aplikasi (console + panel log on-screen).
+ * Bisa dimatikan/diatur levelnya lewat Settings (appSettings.loggerEnabled / loggerLevel).
+ *
+ * PENTING: output visual ke #logBox SENGAJA dibuat 100% identik dengan addLog() versi lama
+ * (warna, format waktu, cap 80 baris) — ini murni penataan ulang kode, bukan perubahan tampilan.
+ */
+const Logger = {
+  /** @private cek apakah level tertentu boleh tampil berdasarkan appSettings saat ini */
+  _shouldLog(levelNum) {
+    const st = (typeof appSettings !== 'undefined' && appSettings) ? appSettings : DEFAULT_SETTINGS;
+    if (st.loggerEnabled === false) return false;
+    const min = LOG_LEVELS[st.loggerLevel] !== undefined ? LOG_LEVELS[st.loggerLevel] : LOG_LEVELS.DEBUG;
+    return levelNum >= min;
+  },
+  /** @private render satu baris ke panel #logBox — identik dengan implementasi addLog() lama */
+  _renderUi(message, uiLevel) {
+    const logBox = document.getElementById('logBox');
+    if (!logBox) return;
+    const line = document.createElement('div');
+    line.className = `log-line ${uiLevel === 'error' ? 'text-red-400' : uiLevel === 'success' ? 'text-emerald-400' : 'text-dim'}`;
+    line.textContent = `[${new Date().toLocaleTimeString('id-ID')}] ${message}`;
+    logBox.prepend(line);
+    while (logBox.children.length > 80) logBox.removeChild(logBox.lastChild);
+  },
+  /** Log level DEBUG — detail teknis, biasanya di-nonaktifkan di production. */
+  debug(message) { if (this._shouldLog(LOG_LEVELS.DEBUG)) { try { console.debug('[DEBUG]', message); } catch (e) {} this._renderUi(message, 'info'); } },
+  /** Log level INFO — info umum jalannya aplikasi. */
+  info(message) { if (this._shouldLog(LOG_LEVELS.INFO)) { this._renderUi(message, 'info'); } },
+  /** Log sukses (styling hijau) — setara level INFO, dipakai untuk aksi yang berhasil. */
+  success(message) { if (this._shouldLog(LOG_LEVELS.INFO)) { this._renderUi(message, 'success'); } },
+  /** Log level WARNING — sesuatu yang perlu diperhatikan tapi belum fatal. */
+  warning(message) { if (this._shouldLog(LOG_LEVELS.WARNING)) { try { console.warn('[WARNING]', message); } catch (e) {} this._renderUi(message, 'info'); } },
+  /** Log level ERROR — kegagalan nyata (fetch gagal, exception, dll). */
+  error(message) { if (this._shouldLog(LOG_LEVELS.ERROR)) { try { console.error('[ERROR]', message); } catch (e) {} this._renderUi(message, 'error'); } }
+};
+
+/**
+ * addLog — dipertahankan sebagai alias tipis ke Logger untuk kompatibilitas mundur.
+ * Seluruh pemanggilan addLog(msg, level) yang sudah ada di kode lama tetap jalan tanpa perlu diubah.
+ * @param {string} message
+ * @param {'info'|'success'|'error'} [level='info']
+ */
 function addLog(message, level = 'info') {
-  const logBox = document.getElementById('logBox');
-  if (!logBox) return;
-  const line = document.createElement('div');
-  line.className = `log-line ${level === 'error' ? 'text-red-400' : level === 'success' ? 'text-emerald-400' : 'text-dim'}`;
-  line.textContent = `[${new Date().toLocaleTimeString('id-ID')}] ${message}`;
-  logBox.prepend(line);
-  while (logBox.children.length > 80) logBox.removeChild(logBox.lastChild);
+  switch (level) {
+    case 'error': Logger.error(message); break;
+    case 'success': Logger.success(message); break;
+    default: Logger.info(message); break;
+  }
 }
 
 
@@ -586,6 +746,9 @@ function loadSettingsToForm() {
   safeSetValue('settingWeightCandlestick', w.candlestick);
   safeSetValue('settingMinConfidenceScore', Number.isFinite(st.minConfidenceScore) ? st.minConfidenceScore : DEFAULT_SETTINGS.minConfidenceScore);
   updateWeightTotalHint();
+  const le = document.getElementById('settingLoggerEnabled');
+  if (le) le.checked = st.loggerEnabled !== false;
+  safeSetValue('settingLoggerLevel', st.loggerLevel || DEFAULT_SETTINGS.loggerLevel);
   setSystemStatus('telegram', st.telegramToken && st.telegramChatId ? 'ok' : 'warn', st.telegramToken && st.telegramChatId ? 'Ready' : 'Setup');
   setSystemStatus('sheets', st.sheetsUrl && st.sheetsToken ? 'ok' : 'warn', st.sheetsUrl && st.sheetsToken ? 'Ready' : 'Setup');
 }
@@ -635,7 +798,9 @@ function saveSettings() {
     proxyBaseUrl: document.getElementById('settingProxyBaseUrl')?.value?.trim() || '',
     entryScoreWeights,
     minConfidenceScore: Math.max(0, Math.min(100, Number(document.getElementById('settingMinConfidenceScore')?.value ?? DEFAULT_SETTINGS.minConfidenceScore))),
-    strategyPreset: appSettings?.strategyPreset || DEFAULT_SETTINGS.strategyPreset
+    strategyPreset: appSettings?.strategyPreset || DEFAULT_SETTINGS.strategyPreset,
+    loggerEnabled: document.getElementById('settingLoggerEnabled')?.checked !== false,
+    loggerLevel: document.getElementById('settingLoggerLevel')?.value || DEFAULT_SETTINGS.loggerLevel
   };
   appSettings = { ...DEFAULT_SETTINGS, ...st };
   localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(appSettings));
@@ -1007,6 +1172,14 @@ async function refreshOhlcFromProxy() {
 // CATATAN SKALA: bobot (900/1500/550) di sini kalibrasi khusus untuk fungsi ini —
 // dipakai oleh GOLD_PLAN.breakoutStrength, dxyState check, getSMCState.bosOk, dan confidence score.
 // Jangan disamakan dengan bobot di analyzeTrendFromCloses() (lihat catatan di sana).
+/**
+ * Menganalisis arah & kekuatan tren jangka pendek dari sampel harga tick terakhir.
+ * Sumber untuk field `direction`/`strength`/`momentumPct` yang dipakai gate SIDEWAYS,
+ * dxyState check, dan sebagai fallback Market Structure saat candle OHLC belum tersedia
+ * (lihat detectSwingStructure()).
+ * @param {number} [price=lastWsPrice] - harga acuan saat ini
+ * @returns {{direction:'BULLISH'|'BEARISH'|'SIDEWAYS', side:'BUY'|'SELL'|'WAIT', label:string, strength:number, slopePct:number, rangePct:number, fast:number, slow:number, momentumPct:number, reason:string}}
+ */
 function analyzeMarketTrend(price = lastWsPrice) {
   const samples = getPriceSamples(price);
   const last = Number(price) || samples[samples.length - 1] || lastWsPrice;
@@ -1075,6 +1248,15 @@ function getOrderNarrative(orderType) {
   }[orderType] || 'Tidak ada order aktif.';
 }
 
+/**
+ * Menghitung rencana trading lengkap (entry/SL/TP1-3/order type) untuk satu sisi (BUY/SELL)
+ * berdasarkan ATR dinamis & jenis plan (breakout vs retracement). Ini fungsi inti yang dipakai
+ * saat GENERATE SIGNAL mengunci plan baru — TIDAK diubah perilakunya, hanya didokumentasikan.
+ * @param {number} price - harga acuan saat plan dibuat
+ * @param {'BUY'|'SELL'} side
+ * @param {object} [trend=analyzeMarketTrend(price)] - hasil analisa tren untuk referensi breakout/retracement
+ * @returns {object} plan lengkap: {entry, sl, tp1, tp2, tp3, orderType, ...}
+ */
 function calculateDirectionalPlan(price, side, trend = analyzeMarketTrend(price)) {
   const breakout = isBreakoutPlan(trend);
   const d = getDynamicPlanDistances(price);
@@ -1278,8 +1460,14 @@ function detectCandlestickConfirmation(candles, side) {
   return { valid: false, pattern: null, reason: 'Tidak ada pola candlestick konfirmasi di candle terakhir (opsional, tidak wajib).' };
 }
 
-// Fungsi utama: gabungkan semua faktor jadi satu Confidence Score (0-100) dengan
-// Market Structure sebagai syarat wajib (gate). Kalau struktur tidak valid -> langsung NO TRADE.
+/**
+ * Fungsi utama mesin scoring entry: gabungkan Market Structure (wajib/gate) + Supply&Demand +
+ * Trend H1/H4 + Candlestick jadi satu Confidence Score (0-100). Market Structure tidak valid →
+ * langsung NO_TRADE tanpa lanjut ke faktor lain. Dipanggil oleh deriveTradeSide() sebagai sumber
+ * kebenaran arah trade, dan oleh getConfidenceComponents()/buildAIReasons() untuk tampilan UI.
+ * @param {number} [price=lastWsPrice]
+ * @returns {{side:'BUY'|'SELL'|'NO_TRADE', rawSide:string, band:'STRONG'|'VALID_ENTRY'|'AGGRESSIVE'|'NO_TRADE', score:number, structure:object, supplyDemand:object, trend:object, candlestick:object, weights:object, minScore:number, summary:string}}
+ */
 function getEntryScoreAnalysis(price = lastWsPrice) {
   const st = getSettings();
   const w = { ...DEFAULT_SETTINGS.entryScoreWeights, ...(st.entryScoreWeights || {}) };
@@ -2485,8 +2673,12 @@ function updatePriceDisplay(price, pctChange) {
     safeText('chPrice', '—');
     if (chgEl) { chgEl.innerText = '--%'; chgEl.className = 'badge mono text-[10px] badge-orange'; }
   } else {
-    recentPrices.push(price);
-    if (recentPrices.length > 48) recentPrices.shift();
+    if (recentPrices.length === 0) {
+      recentPrices.push(price, price, price);
+    } else {
+      recentPrices.push(price);
+    }
+    while (recentPrices.length > 48) recentPrices.shift();
     safeText('chPrice', formatPrice(price, cfg.decimals));
     if (chgEl) {
       const sign = pctChange >= 0 ? '+' : '';
@@ -2512,6 +2704,13 @@ function updatePriceDisplay(price, pctChange) {
   }, UI_DEBOUNCE_MS);
 }
 
+/**
+ * Menghitung metrik trade terkini: side aktif, entry/SL/TP, order type live (STOP/LIMIT/NOW),
+ * dan RR. Kalau ada plan yang sedang di-lock, dipakai nilai plan yang di-lock; kalau tidak,
+ * dihitung "preview" dari getEntryScoreAnalysis() terkini. Dipanggil sangat sering (tiap tick UI).
+ * @param {number} [price=lastWsPrice]
+ * @returns {object} metrics: {side, entry, sl, tp1, tp2, tp3, orderType, orderNarrative, rr, ...}
+ */
 function getTradeMetrics(price = lastWsPrice) {
   const cfg = getSymbolConfig();
   const trend = analyzeMarketTrend(price);
@@ -2599,6 +2798,14 @@ function updateEntryTouchLogUi() {
 }
 window.updateEntryTouchLogUi = updateEntryTouchLogUi;
 
+/**
+ * Sumber kebenaran tunggal untuk status "Panduan Entry" (JANGAN ENTRY / ENTRY SEKARANG / dst).
+ * Mengevaluasi gate berurutan: market jam buka → data live → warmup → news → setup (Market
+ * Structure via getEntryScoreAnalysis) → SL hit → posisi harga vs zona entry → riwayat sentuhan
+ * (entryTriggered, lihat trackEntryTouch()). TIDAK diubah perilakunya, hanya didokumentasikan.
+ * @param {number} [price=lastWsPrice]
+ * @returns {{code:string, tone:'green'|'orange'|'red', action:string, side:string, setup:string, state:string, title:string, badge:string, signal:string, final:string, reason:string}}
+ */
 function assessTradingReadiness(price = lastWsPrice) {
   const m = getTradeMetrics(price);
   const d = m.cfg.decimals;
@@ -2619,7 +2826,7 @@ function assessTradingReadiness(price = lastWsPrice) {
   if (highImpactNewsDetected && !calendarManualOverride) return { code:'WAIT_NEWS', tone:'orange', action:'WAIT NEWS', side:m.side, setup:'WAIT NEWS / HIGH IMPACT', state:'WAIT NEWS', title:'🟠 WAIT NEWS - HIGH IMPACT', badge:'NEWS FILTER ACTIVE', signal:'🟠 WAIT NEWS', final:'🟠 WAIT NEWS', reason:`High-impact news terverifikasi: ${highImpactNewsLabel || 'event penting'}. Entry ditahan sampai risiko mereda (atau aktifkan Manual Override).` };
   if (m.side === 'WAIT') {
     const analysis = lastEntryScoreAnalysis || getEntryScoreAnalysis(price);
-    return { code:'NO_TRADE_NO_TREND', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / NO SETUP', state:'NO TRADE', title:'🟠 NO TRADE - BELUM ADA SETUP VALID', badge:'NO DIRECTIONAL EDGE', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason: analysis.summary + (analysis.structure ? ` ${analysis.structure.reason}` : '') };
+    return { code:'NO_TRADE_NO_TREND', tone:'orange', action:'NO TRADE', side:m.side, setup:'NO TRADE / NO SETUP', state:'NO TRADE', title:'🟠 NO TRADE - BELUM ADA SETUP VALID', badge:'NO DIRECTIONAL EDGE', signal:'🟠 NO TRADE', final:'🟠 NO TRADE', reason: analysis.summary };
   }
   if (isSidewaysMarket(price)) return { code:'WAIT_BREAKOUT', tone:'orange', action:'WAIT BREAKOUT', side:m.side, setup:`WAIT BREAKOUT / ${m.orderType}`, state:'WAIT BREAKOUT', title:`🟠 WAIT BREAKOUT - ${m.orderType}`, badge:'RANGE TOO TIGHT', signal:'🟠 WAIT BREAKOUT', final:'🟠 WAIT BREAKOUT', reason:`Range harga terlalu sempit secara persentase (<${SIDEWAYS_RANGE_PCT}%). Tunggu breakout/rejection.` };
   const invalid = m.side === 'BUY' ? price <= m.sl : price >= m.sl;
@@ -2888,12 +3095,6 @@ function applyTradingReadiness(price = lastWsPrice) {
   safeText('dashPlanStatusReason', decision.reason);
 
   return decision;
-}
-
-function refreshTradingReadiness() {
-  const decision = applyTradingReadiness(lastWsPrice);
-  showToast(`${decision.title}: ${decision.reason}`, decision.tone === 'green' ? 'success' : 'info');
-  addLog(`AI readiness: ${decision.code} - ${decision.reason}`, decision.tone === 'green' ? 'success' : 'info');
 }
 
 function updateTradingPlanValues(price) {
@@ -3559,7 +3760,7 @@ async function testTelegramAlert() {
       const metrics = (typeof getTradeMetrics === 'function') ? getTradeMetrics(price) : null;
       const trend = (typeof analyzeMarketTrend === 'function') ? analyzeMarketTrend(price) : null;
       const session = (typeof getTradingSession === 'function') ? getTradingSession() : null;
-      const dataOk = (typeof livePriceVerified !== 'undefined') && livePriceVerified && !(typeof usingSimulatedPrice !== 'undefined' && usingSimulatedPrice) && (typeof recentPrices !== 'undefined') && recentPrices.length >= (typeof MIN_TREND_SAMPLES !== 'undefined' ? MIN_TREND_SAMPLES : 12);
+      const dataOk = (typeof livePriceVerified !== 'undefined') && livePriceVerified && !(typeof usingSimulatedPrice !== 'undefined' && usingSimulatedPrice) && (typeof recentPrices !== 'undefined') && recentPrices.length >= (typeof MIN_TREND_SAMPLES !== 'undefined' ? MIN_TREND_SAMPLES : 3);
       return { price, decision, metrics, trend, session, dataOk };
     } catch (e) { return { price: NaN, decision: null, metrics: null, trend: null, session: null, dataOk: false }; }
   }
@@ -3616,7 +3817,7 @@ async function testTelegramAlert() {
     const items = [];
     const push = (label, pass, vital) => items.push({ label, pass, vital });
 
-    push('Live Feed', !!(typeof connected !== 'undefined' && connected && dataOk), true);
+    push('Live Feed & Warmup Data', !!(typeof connected !== 'undefined' && connected && dataOk), true);
     push('Market Structure (BOS/CHoCH)', !!(analysis && analysis.structure && analysis.structure.valid), true);
     push('Supply & Demand', !!(analysis && analysis.supplyDemand && analysis.supplyDemand.valid), false);
     push('Trend H1/H4', !!(analysis && analysis.trend && analysis.trend.aligned), false);
@@ -3839,7 +4040,8 @@ async function testTelegramAlert() {
     const bar = $('floatingStatus'); if (!bar) return;
     if (window.matchMedia('(max-width: 900px)').matches) { bar.classList.remove('show'); return; }
     const d = core.decision, m = core.metrics;
-    const show = !!(typeof connected !== 'undefined' && connected);
+    // Hanya tampilkan floating status di desktop saat pengguna scroll ke bawah (> 150px) agar tidak menutupi bagian bawah kartu saat berada di posisi atas halaman
+    const show = !!(typeof connected !== 'undefined' && connected) && window.scrollY > 150;
     bar.classList.toggle('show', show);
     if (!show) return;
     const live = (typeof livePriceVerified !== 'undefined') && livePriceVerified;

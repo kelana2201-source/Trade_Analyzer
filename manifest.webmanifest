@@ -1,44 +1,29 @@
 {
-  "name": "Institutional Trading Terminal - XAUUSD",
+  "name": "Institutional Trading Terminal - Institutional Enterprise v5.7.0",
   "short_name": "Trading Signal",
-  "description": "Smart Technical Engine + Real-Time DOM & Order Block + AI Auto-Renewal Plan untuk XAUUSD",
+  "description": "Institutional Trading Terminal for XAUUSD with Real-Time DOM, Order Block, and AI Auto-Renewal Plan",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
-  "orientation": "any",
   "background_color": "#060a13",
   "theme_color": "#d4a017",
-  "lang": "id",
+  "orientation": "any",
   "icons": [
     {
       "src": "./favicon-64.png",
       "sizes": "64x64",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
       "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "./icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }

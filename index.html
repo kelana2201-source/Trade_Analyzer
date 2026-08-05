@@ -9,6 +9,7 @@
 <meta content="#d4a017" name="theme-color"/>
 <meta content="#060a13" name="background-color"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="yes" name="mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="Trading Signal" name="apple-mobile-web-app-title"/>
 <link href="./manifest.webmanifest" rel="manifest"/>
@@ -147,7 +148,19 @@
 <div class="telemetry-item"><div class="telemetry-label">DXY Monitor</div><div class="telemetry-value" id="dxyStatusEl">--</div></div>
 </div>
 </section>
-<!-- ================= TOP BANNER: AI FINAL DECISION ================= -->
+<!-- ================= TOP BANNER: AI FINAL DECISION (DASHBOARD MINI-PREVIEW) ================= -->
+<section class="card glass-card mb-4" id="dashPlanSummaryCard" style="border: 1px solid var(--border); background: linear-gradient(135deg, rgba(17,26,46,0.85) 0%, rgba(42,27,15,0.7) 100%);">
+<div class="flex items-center justify-between flex-wrap gap-3 mb-2">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="badge badge-gold mono" id="dashPlanStatusBadge"><i class="fas fa-robot mr-1"></i>ANALYZING...</span>
+<span class="text-sm font-bold mono" id="dashPlanStatusTitle" style="color: var(--gold);">Menunggu Analisa Live</span>
+</div>
+<button class="btn btn-gold text-xs py-1.5 px-3 ml-auto" onclick="switchTab('tradingplan')">
+<i class="fas fa-clipboard-list mr-1.5"></i>Lihat Trading Plan Lengkap
+</button>
+</div>
+<p class="text-xs text-muted leading-relaxed" id="dashPlanStatusReason">Sistem sedang mengevaluasi struktur market, tren multi-TF, dan news filter untuk menentukan setup terbaik.</p>
+</section>
 <!-- Trade Decision INTELLIGENCE -->
 <!-- ================= Trade Decision BREAKDOWN (pros/cons + confidence gauge) ================= -->
 <!-- ================= ENTRY GUIDANCE + CHECKLIST ================= -->
@@ -640,6 +653,14 @@
 <label>Bobot Candlestick (%)</label><input class="input-field" id="settingWeightCandlestick" max="100" min="0" oninput="updateWeightTotalHint()" type="number"/>
 <div class="text-[10px] mt-1" id="weightTotalHint">Total bobot: 100%</div>
 <label class="mt-2">Minimal Confidence Score untuk Entry</label><input class="input-field" id="settingMinConfidenceScore" max="100" min="0" type="number"/>
+<label class="flex items-center gap-2 mt-3"><input id="settingLoggerEnabled" type="checkbox"/> Aktifkan Logger</label>
+<label class="mt-1">Level Logger Minimum</label>
+<select class="input-field" id="settingLoggerLevel">
+<option value="DEBUG">DEBUG (tampilkan semua)</option>
+<option value="INFO">INFO</option>
+<option value="WARNING">WARNING</option>
+<option value="ERROR">ERROR (hanya error)</option>
+</select>
 </div>
 </div>
 </div>
