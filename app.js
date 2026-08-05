@@ -2555,7 +2555,7 @@ function getSetupValidation(price = lastWsPrice) {
 
   const slHit = lockedTradeSide === 'BUY' ? price <= lockedSL : price >= lockedSL;
   const trend = analyzeMarketTrend(price);
-  const trendAgainst = trend.side !== 'WAIT' && trend.side !== lockedTradeSide;
+  const trendAgainst = (m.side === 'BUY' || m.side === 'SELL') && m.side !== lockedTradeSide;
   const floatingUsd = progress; // dalam satuan harga (poin), sejalan dengan tampilan lain di app
   const distToSl = Math.abs(price - lockedSL);
 
@@ -2586,8 +2586,8 @@ function getSetupValidation(price = lastWsPrice) {
   if (trendAgainst && progressPct < 0.15) {
     return {
       status: 'WEAK', tone: 'orange', badge: '⚠️ TREN BERBALIK', title: '⚠️ SETUP MELEMAH — TREN JANGKA PENDEK BERBALIK ARAH',
-      detail: `Tren jangka pendek saat ini terbaca ${trend.direction} (${trend.reason || ''}), berlawanan dengan posisi ${lockedTradeSide} yang terkunci. Jarak ke SL: ${distToSl.toFixed(2)} poin.`,
-      recommendation: 'Pantau ketat 1-2 candle berikutnya. Jika tren tetap berlawanan, pertimbangkan tutup manual sebelum harga mendekati SL.'
+      detail: `Bias struktur pasar dan tren institusional saat ini terbaca berbalik ke arah ${m.side}, berlawanan dengan posisi ${lockedTradeSide} yang terkunci. Jarak ke SL: ${distToSl.toFixed(2)} poin.`,
+      recommendation: 'Pantau ketat 1-2 candle berikutnya. Jika struktur tetap berlawanan, pertimbangkan tutup manual sebelum harga mendekati SL.'
     };
   }
 
@@ -2601,7 +2601,7 @@ function getSetupValidation(price = lastWsPrice) {
 
   return {
     status: 'ON_TRACK', tone: 'green', badge: '🟢 MASIH VALID', title: '🟢 SETUP MASIH VALID MENUJU TP',
-    detail: `Progress ${Math.max(0, progressPct * 100).toFixed(0)}% menuju TP1 (${formatPrice(m.tp1, d)}), tren jangka pendek (${trend.direction}) masih mendukung arah ${lockedTradeSide}.`,
+    detail: `Progress ${Math.max(0, progressPct * 100).toFixed(0)}% menuju TP1 (${formatPrice(m.tp1, d)}), struktur pasar dan tren dominan masih mendukung arah ${lockedTradeSide}.`,
     recommendation: 'Lanjutkan monitor, belum ada alasan untuk close manual.'
   };
 }
