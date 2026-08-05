@@ -2826,14 +2826,30 @@ function trackEntryTouch(price, inEntryZoneNow, buffer) {
   if (lockedTradeSide !== 'BUY' && lockedTradeSide !== 'SELL') return;
   if (inEntryZoneNow) {
     if (!entryZoneInsidePrev) {
-      entryTriggered = true;
-      entryTouchLog.push({ index: entryTouchLog.length + 1, price, time: new Date().toISOString() });
-      if (entryTouchLog.length > 50) entryTouchLog.shift();
-      updateEntryTouchLogUi();
-      saveLockedPlanState();
+      // ANTI-SPAM INSTITUSIONAL:
+      // Jangan catat sebagai log sentuhan baru apabila:
+      // 1) Sentuhan terakhir terjadi kurang dari 60 detik yang lalu (masih dalam satu event uji zona yang sama), atau
+      // 2) Harganya hampir identik dengan sentuhan sebelumnya (selisih < buffer).
+      const nowMs = Date.now();
+      const lastTouch = entryTouchLog.length ? entryTouchLog[entryTouchLog.length - 1] : null;
+      const lastTimeMs = lastTouch ? new Date(lastTouch.time).getTime() : 0;
+      const timeDiffSec = (nowMs - lastTimeMs) / 1000;
+      const priceDiff = lastTouch ? Math.abs(price - lastTouch.price) : Infinity;
+
+      if (!lastTouch || (timeDiffSec >= 60 && priceDiff >= buffer)) {
+        entryTriggered = true;
+        entryTouchLog.push({ index: entryTouchLog.length + 1, price, time: new Date().toISOString() });
+        if (entryTouchLog.length > 50) entryTouchLog.shift();
+        updateEntryTouchLogUi();
+        saveLockedPlanState();
+      } else {
+        // Tetap tandai entryTriggered agar status posisi aktif, tanpa menduplikasi log riwayat sentuhan
+        entryTriggered = true;
+      }
     }
     entryZoneInsidePrev = true;
-  } else if (Math.abs(price - lockedEntryPrice) > buffer * 2) {
+  } else if (Math.abs(price - lockedEntryPrice) > buffer * 3) {
+    // Harga harus benar-benar keluar minimal 3x buffer (bukan 2x) agar zona dianggap selesai diuji
     entryZoneInsidePrev = false;
   }
 }

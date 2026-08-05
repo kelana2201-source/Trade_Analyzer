@@ -6,7 +6,7 @@
 // langsung kepakai begitu online — cache cuma jadi fallback kalau offline, bukan sumber utama.
 // Naikkan CACHE_VERSION setiap kali app.js/index.html/style.css diubah, supaya cache lama otomatis dibuang.
 
-const CACHE_VERSION = 'trading-terminal-shell-v11';
+const CACHE_VERSION = 'trading-terminal-shell-v12';
 const APP_SHELL = [
   './',
   './index.html',
